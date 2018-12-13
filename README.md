@@ -108,7 +108,7 @@ To integrate Webhooks with [IFTTT](https://ifttt.com), follow these steps:
 5. Click on the “Receive a web request” box.
 6. Give your trigger an event name based on your Craft webhook name, but in `snake_case`.
 7. Finish setting up the applet.
-8. Go to your [Webhooks page] on IFTTT, and click the “Documentation” link.
+8. Go to your [Webhooks page](https://ifttt.com/maker_webhooks) on IFTTT, and click the “Documentation” link.
 9. Type the event name you entered in step 6 into the `{event}` text box.
 10. Copy the URL beginning with `https://maker.ifttt.com/trigger/`.
 11. Go to Webhooks in your Control Panel and click “New webhook”. 
