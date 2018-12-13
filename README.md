@@ -47,9 +47,27 @@ Webhooks listen to [events](https://www.yiiframework.com/doc/guide/2.0/en/concep
 
 The Sender Class can be a subclass of the class that triggers the event. For example, all elements fire an [afterSave](https://docs.craftcms.com/api/v3/craft-base-element.html#event-after-save) event after they’ve been saved, courtesy of their base class, [craft\base\Element](https://docs.craftcms.com/api/v3/craft-base-element.html). However if you’re only interested in sending a webhook when an _entry_ gets saved, you can set the Sender Class to [craft\elements\Entry](https://docs.craftcms.com/api/v3/craft-elements-entry.html).
 
-See [Integrating with Task Automation Tools](#integrating-with-task-automation-tools) for examples on how to get a Webhook URL from various taks automation tools.
+See [Integrating with Task Automation Tools](#integrating-with-task-automation-tools) for examples on how to get a Webhook URL from various task automation tools.
 
-By default, webhooks will send a POST request to the Webhook URL, 
+<img src="./screenshot.png" width="1187" height="677" alt="Screenshot of the Edit Webhook page">
+
+Webhooks will send a POST request with a JSON body, containing the following keys:
+
+- `time` – an ISO-8601-formatted timestamp of the exact moment the event was triggered. (Webhooks are sent via the queue so there will be a slight delay between the time the event was triggered and the webhook was sent.)
+- `user` – an object representing the logged-in user at the time the event was triggered.
+- `name` – the name of the event.
+- `senderClass` – the class name of the event sender.
+- `sender` – an object representing the event sender.
+- `eventClass` – the class name of the event.
+- `event` – an object with keys representing any event class properties that aren’t declared by [yii\base\Event](https://www.yiiframework.com/doc/api/2.0/yii-base-event). (For example, if a [craft\events\ElementEvent](https://docs.craftcms.com/api/v3/craft-events-elementevent.html) is triggered, this will contain [element](https://docs.craftcms.com/api/v3/craft-events-elementevent.html#property-element) and [isNew](https://docs.craftcms.com/api/v3/craft-events-elementevent.html#property-isnew) keys.)
+
+#### Sending More Data
+
+If you need more data than what’s in the default payload, you can fill in the “Extra User Attributes”, “Extra Sender Attributes”, and “Extra Event Attributes” fields.
+
+The attributes listed here (separated by newlines) will be passed to the `$extraFields` argument of the user/sender/event-property’s [toArray()](https://www.yiiframework.com/doc/api/2.0/yii-base-arrayabletrait#toArray()-detail) method (if it has one).
+
+For “Extra Event Attributes”, each attribute should be prefixed with the name of the property and a dot (e.g. `element.author` will include the `author` attribute of an `$element` property).
 
 ## Integrating with Task Automation Tools
 
