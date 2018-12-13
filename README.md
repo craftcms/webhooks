@@ -1,4 +1,6 @@
-# Webhooks for Craft CMS
+<p align="center"><img src="src/icon.svg" width="100" height="100" alt="Webhooks icon"></p>
+
+<h1 align="center">Webhooks for Craft CMS</h1>
 
 This plugin adds the ability to manage “webhooks” in Craft CMS, which will create POST requests when certain events occur.
 
