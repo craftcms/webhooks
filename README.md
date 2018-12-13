@@ -1,4 +1,4 @@
-<p align="center"><img src="src/icon.svg" width="100" height="100" alt="Webhooks icon"></p>
+<p align="center"><img src="./src/icon.svg" width="100" height="100" alt="Webhooks icon"></p>
 
 <h1 align="center">Webhooks for Craft CMS</h1>
 
