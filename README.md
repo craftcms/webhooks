@@ -2,7 +2,7 @@
 
 <h1 align="center">Webhooks for Craft CMS</h1>
 
-This plugin adds the ability to manage “webhooks” in Craft CMS, which will create POST requests when certain events occur.
+This plugin adds the ability to manage “webhooks” in Craft CMS, which will send GET or POST requests when certain events occur.
 
 It can be used to integrate your Craft project with task automation tools like [Zapier](https://zapier.com) and [IFTTT](https://ifttt.com).
 
@@ -55,7 +55,7 @@ See [Integrating with Task Automation Tools](#integrating-with-task-automation-t
 
 ![Screenshot of the Edit Webhook page](./screenshot.png)
 
-Webhooks will send a POST request with a JSON body, containing the following keys:
+Webhooks can either send a GET request, or a POST request with a JSON body containing the following keys:
 
 - `time` – an ISO-8601-formatted timestamp of the exact moment the event was triggered. (Webhooks are sent via the queue so there will be a slight delay between the time the event was triggered and the webhook was sent.)
 - `user` – an object representing the logged-in user at the time the event was triggered.
@@ -67,7 +67,7 @@ Webhooks will send a POST request with a JSON body, containing the following key
 
 #### Sending More Data
 
-If you need more data than what’s in the default payload, you can fill in the “Extra User Attributes”, “Extra Sender Attributes”, and “Extra Event Attributes” fields.
+If you need more data than what’s in the default POST request payload, you can fill in the “Extra User Attributes”, “Extra Sender Attributes”, and “Extra Event Attributes” fields.
 
 The attributes listed here (separated by newlines) will be passed to the `$extraFields` argument of the user/sender/event-property’s [toArray()](https://www.yiiframework.com/doc/api/2.0/yii-base-arrayabletrait#toArray()-detail) method (if it has one).
 
