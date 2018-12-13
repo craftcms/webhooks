@@ -1,0 +1,134 @@
+{% extends '_layouts/cp' %}
+
+{% set fullPageForm = true %}
+
+{% import '_includes/forms' as forms %}
+
+{% block actionButton %}
+    <div class="btngroup">
+        <input type="submit" class="btn submit" value="{{ 'Save'|t('app') }}">
+        {% if webhook.id %}
+            <div class="btn submit menubtn"></div>
+            <div class="menu">
+                <ul>
+                    <li>
+                        <a class="formsubmit error"
+                           data-action="webhooks/webhooks/delete"
+                           data-confirm="{{ 'Are you sure you want to delete the webhook “{name}”?'|t('webhooks', {name: webhook.name}) }}"
+                           data-redirect="{{ ('webhooks' ~ (webhook.groupId ? "/group/#{webhook.groupId}"))|hash }}">
+                            {{ 'Delete webhook'|t('webhooks') }}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+    {% if webhook.id %}<input type="hidden" name="id" value="{{ webhook.id }}">{% endif %}
+    <input type="hidden" name="action" value="webhooks/webhooks/save">
+    <input type="hidden" name="redirect" value="{{ 'webhooks\{\{ groupId ? \'/group/\' ~ groupId \}\}'|hash }}">
+
+    {{ forms.textField({
+        first: true,
+        label: 'Name'|t('webhooks'),
+        required: true,
+        instructions: 'What the webhook will be called within the Control Panel.'|t('webhooks'),
+        id: 'name',
+        name: 'name',
+        value: webhook.name,
+        errors: webhook.getErrors('name')
+    }) }}
+
+    {{ forms.textField({
+        label: 'Sender Class'|t('webhooks'),
+        required: true,
+        instructions: 'The class name the sender must be an instance of.'|t('webhooks'),
+        id: 'class',
+        name: 'class',
+        class: 'code',
+        placeholder: 'craft\\elements\\Entry',
+        value: webhook.class,
+        errors: webhook.getErrors('class')
+    }) }}
+
+    {{ forms.textField({
+        label: 'Event Name'|t('webhooks'),
+        required: true,
+        instructions: 'The name of the event that must be triggered.'|t('webhooks'),
+        id: 'event',
+        name: 'event',
+        class: 'code',
+        placeholder: 'afterSave',
+        value: webhook.event,
+        errors: webhook.getErrors('event')
+    }) }}
+
+    {{ forms.textField({
+        label: 'Webhook URL'|t('webhooks'),
+        required: true,
+        instructions: 'The URL that the webhook should post to (e.g. one provided by your [task automation tool][1]).'|t('webhooks') ~ '\n\n[1]: https://github.com/craftcms/webhooks#integration-with-task-automation-tools',
+        id: 'url',
+        name: 'url',
+        placeholder: 'https://',
+        value: webhook.url,
+        errors: webhook.getErrors('url')
+    }) }}
+
+    {{ forms.textareaField({
+        label: 'Extra User Attributes'|t('webhooks'),
+        instructions: 'List of additional attributes for the logged-in user that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+        id: 'user-attributes',
+        name: 'userAttributes',
+        placeholder: 'photo.url',
+        class: 'code nicetext',
+        value: webhook.userAttributes,
+        errors: webhook.getErrors('userAttributes')
+    }) }}
+
+    {{ forms.textareaField({
+        label: 'Extra Sender Attributes'|t('webhooks'),
+        instructions: 'List of additional attributes for the event sender that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+        id: 'sender-attributes',
+        name: 'senderAttributes',
+        placeholder: 'author.email',
+        class: 'code nicetext',
+        value: webhook.senderAttributes,
+        errors: webhook.getErrors('senderAttributes')
+    }) }}
+
+    {{ forms.textareaField({
+        label: 'Extra Event Attributes'|t('webhooks'),
+        instructions: 'List of additional attributes for the event properties that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+        id: 'event-attributes',
+        name: 'eventAttributes',
+        class: 'code nicetext',
+        value: webhook.eventAttributes,
+        errors: webhook.getErrors('eventAttributes')
+    }) }}
+
+{% endblock %}
+
+{% block details %}
+    <div class="first meta">
+
+        {% if groupOptions|length > 1 %}
+            {{ forms.selectField({
+                first: true,
+                label: 'Group'|t('webhooks'),
+                id: 'group',
+                name: 'groupId',
+                value: webhook.groupId,
+                options: groupOptions
+            }) }}
+        {% endif %}
+
+        {{ forms.lightswitchField({
+            label: 'Enabled',
+            id: 'enabled',
+            name: 'enabled',
+            on: webhook.enabled
+        }) }}
+    </div>
+{% endblock %}

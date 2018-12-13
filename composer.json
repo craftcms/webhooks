@@ -1,0 +1,38 @@
+{
+  "name": "craftcms/webhooks",
+  "description": "Post webhooks when events are triggered in Craft CMS.",
+  "version": "1.0.0",
+  "type": "craft-plugin",
+  "keywords": [
+    "html",
+    "cms",
+    "craftcms",
+    "webhooks",
+    "yii2"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Pixel & Tonic",
+      "homepage": "https://pixelandtonic.com/"
+    }
+  ],
+  "support": {
+    "email": "support@craftcms.com",
+    "issues": "https://github.com/craftcms/webhooks/issues?state=open",
+    "source": "https://github.com/craftcms/webhooks",
+    "docs": "https://github.com/craftcms/webhooks"
+  },
+  "require": {
+    "craftcms/cms": "^3.0.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "craft\\webhooks\\": "src/"
+    }
+  },
+  "extra": {
+    "name": "Webhooks",
+    "handle": "webhooks"
+  }
+}
