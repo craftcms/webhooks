@@ -71,6 +71,9 @@ class Plugin extends \craft\base\Plugin
 
                 // Queue the send request up
                 Craft::$app->getQueue()->push(new SendWebhookJob([
+                    'description' => Craft::t('webhooks', 'Sending webhook “{name}”', [
+                        'name' => $webhook->name,
+                    ]),
                     'url' => $webhook->url,
                     'data' => $data,
                 ]));

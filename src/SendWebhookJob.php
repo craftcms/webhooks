@@ -27,6 +27,14 @@ class SendWebhookJob extends BaseJob
     /**
      * @inheritdoc
      */
+    public function defaultDescription()
+    {
+        return Craft::t('webhooks', 'Sending webhook');
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function execute($queue)
     {
         $client = Craft::createGuzzleClient();
