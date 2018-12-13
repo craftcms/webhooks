@@ -49,7 +49,7 @@ The Sender Class can be a subclass of the class that triggers the event. For exa
 
 See [Integrating with Task Automation Tools](#integrating-with-task-automation-tools) for examples on how to get a Webhook URL from various task automation tools.
 
-<img src="./screenshot.png" width="1187" height="677" alt="Screenshot of the Edit Webhook page">
+![Screenshot of the Edit Webhook page](./screenshot.png)
 
 Webhooks will send a POST request with a JSON body, containing the following keys:
 
