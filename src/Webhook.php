@@ -49,6 +49,11 @@ class Webhook extends Model
     /**
      * @var string
      */
+    public $type = 'post';
+
+    /**
+     * @var string
+     */
     public $url;
 
     /**
@@ -80,10 +85,11 @@ class Webhook extends Model
                     return trim($value, ' \\');
                 }, 'skipOnArray' => true
             ],
-            [['name', 'class', 'event', 'url'], 'required'],
+            [['name', 'class', 'event', 'type', 'url'], 'required'],
             [['name'], UniqueValidator::class, 'targetClass' => WebhookRecord::class],
             [['groupId'], 'number'],
             [['enabled'], 'boolean'],
+            [['type'], 'in', 'range' => ['get', 'post']],
             [['url'], 'url'],
             [
                 ['class'],

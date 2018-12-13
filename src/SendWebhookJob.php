@@ -15,12 +15,17 @@ use GuzzleHttp\RequestOptions;
 class SendWebhookJob extends BaseJob
 {
     /**
+     * @var string The request type ('get' or 'post')
+     */
+    public $type = 'post';
+
+    /**
      * @var string The URL to send a request to
      */
     public $url;
 
     /**
-     * @var array The data to send in the request
+     * @var array|null The data to send in the request
      */
     public $data;
 
@@ -37,9 +42,12 @@ class SendWebhookJob extends BaseJob
      */
     public function execute($queue)
     {
+        $options = [];
+        if ($this->type === 'post' && $this->data !== null) {
+            $options[RequestOptions::JSON] = $this->data;
+        }
+
         $client = Craft::createGuzzleClient();
-        $client->post($this->url, [
-            RequestOptions::JSON => $this->data,
-        ]);
+        $client->request($this->type, $this->url, $options);
     }
 }

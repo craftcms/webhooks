@@ -28,6 +28,11 @@ class Plugin extends \craft\base\Plugin
      */
     public $hasCpSection = true;
 
+    /**
+     * @inheritdoc
+     */
+    public $schemaVersion = '1.1.0';
+
     // Public Methods
     // =========================================================================
 
@@ -47,25 +52,35 @@ class Plugin extends \craft\base\Plugin
         $this->set('webhookManager', $manager);
 
         // Register webhook events
-        foreach ($manager->getEnabledWebhooks() as $webhook) {
-            Event::on($webhook->class, $webhook->event, function(Event $e) use ($webhook) {
-                // Build out the body data
-                $user = Craft::$app->getUser()->getIdentity();
-                $data = [
-                    'time' => (new \DateTime())->format(\DateTime::ATOM),
-                    'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
-                    'name' => $e->name,
-                    'senderClass' => get_class($e->sender),
-                    'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
-                    'eventClass' => get_class($e),
-                    'event' => [],
-                ];
+        try {
+            $webhooks = $manager->getEnabledWebhooks();
+        } catch (\Throwable $e) {
+            Craft::error('Unable to fetch enabled webhooks: ' . $e->getMessage(), __METHOD__);
+            Craft::$app->getErrorHandler()->logException($e);
+            $webhooks = [];
+        }
 
-                $eventAttributes = $webhook->getEventAttributes();
-                foreach ((new \ReflectionObject($e))->getProperties() as $property) {
-                    if ($property->isPublic() && $property->getDeclaringClass()->getName() !== Event::class) {
-                        $name = $property->getName();
-                        $data['event'][$name] = $this->toArray($e->$name, $eventAttributes[$name] ?? []);
+        foreach ($webhooks as $webhook) {
+            Event::on($webhook->class, $webhook->event, function(Event $e) use ($webhook) {
+                if ($webhook->type === 'post') {
+                    // Build out the body data
+                    $user = Craft::$app->getUser()->getIdentity();
+                    $data = [
+                        'time' => (new \DateTime())->format(\DateTime::ATOM),
+                        'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
+                        'name' => $e->name,
+                        'senderClass' => get_class($e->sender),
+                        'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
+                        'eventClass' => get_class($e),
+                        'event' => [],
+                    ];
+
+                    $eventAttributes = $webhook->getEventAttributes();
+                    foreach ((new \ReflectionObject($e))->getProperties() as $property) {
+                        if ($property->isPublic() && $property->getDeclaringClass()->getName() !== Event::class) {
+                            $name = $property->getName();
+                            $data['event'][$name] = $this->toArray($e->$name, $eventAttributes[$name] ?? []);
+                        }
                     }
                 }
 
@@ -74,8 +89,9 @@ class Plugin extends \craft\base\Plugin
                     'description' => Craft::t('webhooks', 'Sending webhook “{name}”', [
                         'name' => $webhook->name,
                     ]),
+                    'type' => $webhook->type,
                     'url' => $webhook->url,
-                    'data' => $data,
+                    'data' => $data ?? null,
                 ]));
             });
         }
