@@ -37,7 +37,11 @@ composer require craftcms/webhooks
 
 To manage your webhooks, go to Settings → Webhooks in your project’s Control Panel.
 
+### Webhook Groups
+
 Webhooks can optionally be organized into groups. You can create a new group by clicking the “New group” button in the sidebar.
+
+If a group is deleted, any webhooks in it will become ungrouped. (They will **not** be deleted along with the group.)
 
 ### Creating Webhooks
 
@@ -68,6 +72,12 @@ If you need more data than what’s in the default payload, you can fill in the 
 The attributes listed here (separated by newlines) will be passed to the `$extraFields` argument of the user/sender/event-property’s [toArray()](https://www.yiiframework.com/doc/api/2.0/yii-base-arrayabletrait#toArray()-detail) method (if it has one).
 
 For “Extra Event Attributes”, each attribute should be prefixed with the name of the property and a dot (e.g. `element.author` will include the `author` attribute of an `$element` property).
+
+### Toggling Webhooks
+
+Webhooks can be enabled or disabled from both the Webhooks index page and within their Edit Webhook pages.
+
+Only enabled webhooks will send webhook requests when their corresponding events are triggered.
 
 ## Integrating with Task Automation Tools
 
