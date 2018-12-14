@@ -65,49 +65,73 @@
         errors: webhook.getErrors('event')
     }) }}
 
-    {{ forms.textField({
-        label: 'Webhook URL'|t('webhooks'),
+    {% set urlInput %}
+        <div class="flex">
+            <div>
+                {{ forms.select({
+                    id: 'type',
+                    name: 'type',
+                    options: {
+                        'get': 'GET',
+                        'post': 'POST'
+                    },
+                    value: webhook.type,
+                    toggle: true,
+                    targetPrefix: 'type-settings--'
+                }) }}
+            </div>
+            <div class="flex-grow">
+                {{ forms.text({
+                    id: 'url',
+                    name: 'url',
+                    placeholder: 'https://',
+                    value: webhook.url
+                }) }}
+            </div>
+        </div>
+    {% endset %}
+
+    {{ forms.field({
+        label: 'Request Type & URL'|t('webhooks'),
         required: true,
-        instructions: 'The URL that the webhook should post to (e.g. one provided by your [task automation tool][1]).'|t('webhooks') ~ '\n\n[1]: https://github.com/craftcms/webhooks#integration-with-task-automation-tools',
+        instructions: 'The request type and URL that the webhook should send. (The URL will be provided by your [task automation tool][1].)'|t('webhooks') ~ '\n\n[1]: https://github.com/craftcms/webhooks#integration-with-task-automation-tools',
         id: 'url',
-        name: 'url',
-        placeholder: 'https://',
-        value: webhook.url,
         errors: webhook.getErrors('url')
-    }) }}
+    }, urlInput) }}
 
-    {{ forms.textareaField({
-        label: 'Extra User Attributes'|t('webhooks'),
-        instructions: 'List of additional attributes for the logged-in user that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
-        id: 'user-attributes',
-        name: 'userAttributes',
-        placeholder: 'photo.url',
-        class: 'code nicetext',
-        value: webhook.userAttributes,
-        errors: webhook.getErrors('userAttributes')
-    }) }}
+    <div id="type-settings--post" {% if webhook.type == 'GET' %}class="hidden"{% endif %}>
+        {{ forms.textareaField({
+            label: 'Extra User Attributes'|t('webhooks'),
+            instructions: 'List of additional attributes for the logged-in user that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+            id: 'user-attributes',
+            name: 'userAttributes',
+            placeholder: 'photo.url',
+            class: 'code nicetext',
+            value: webhook.userAttributes,
+            errors: webhook.getErrors('userAttributes')
+        }) }}
 
-    {{ forms.textareaField({
-        label: 'Extra Sender Attributes'|t('webhooks'),
-        instructions: 'List of additional attributes for the event sender that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
-        id: 'sender-attributes',
-        name: 'senderAttributes',
-        placeholder: 'author.email',
-        class: 'code nicetext',
-        value: webhook.senderAttributes,
-        errors: webhook.getErrors('senderAttributes')
-    }) }}
+        {{ forms.textareaField({
+            label: 'Extra Sender Attributes'|t('webhooks'),
+            instructions: 'List of additional attributes for the event sender that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+            id: 'sender-attributes',
+            name: 'senderAttributes',
+            placeholder: 'author.email',
+            class: 'code nicetext',
+            value: webhook.senderAttributes,
+            errors: webhook.getErrors('senderAttributes')
+        }) }}
 
-    {{ forms.textareaField({
-        label: 'Extra Event Attributes'|t('webhooks'),
-        instructions: 'List of additional attributes for the event properties that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
-        id: 'event-attributes',
-        name: 'eventAttributes',
-        class: 'code nicetext',
-        value: webhook.eventAttributes,
-        errors: webhook.getErrors('eventAttributes')
-    }) }}
-
+        {{ forms.textareaField({
+            label: 'Extra Event Attributes'|t('webhooks'),
+            instructions: 'List of additional attributes for the event properties that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+            id: 'event-attributes',
+            name: 'eventAttributes',
+            class: 'code nicetext',
+            value: webhook.eventAttributes,
+            errors: webhook.getErrors('eventAttributes')
+        }) }}
+    </div>
 {% endblock %}
 
 {% block details %}

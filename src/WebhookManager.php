@@ -4,6 +4,7 @@ namespace craft\webhooks;
 
 use Craft;
 use craft\db\Query;
+use craft\helpers\StringHelper;
 use yii\base\InvalidArgumentException;
 
 /**
@@ -31,8 +32,13 @@ class WebhookManager
             ->all();
 
         $groups = [];
+        $isMysql = Craft::$app->getDb()->getIsMysql();
 
         foreach ($results as $result) {
+            if ($isMysql) {
+                $result['name'] = html_entity_decode($result['name'], ENT_QUOTES | ENT_HTML5);
+            }
+
             $groups[] = new Group($result);
         }
 
@@ -55,10 +61,16 @@ class WebhookManager
 
         $db = Craft::$app->getDb();
 
+        if ($db->getIsMysql()) {
+            $name = StringHelper::encodeMb4($group->name);
+        } else {
+            $name = $group->name;
+        }
+
         if ($group->id) {
             $db->createCommand()
                 ->update('{{%webhookgroups}}', [
-                    'name' => $group->name,
+                    'name' => $name,
                 ], [
                     'id' => $group->id,
                 ])
@@ -66,7 +78,7 @@ class WebhookManager
         } else {
             $db->createCommand()
                 ->insert('{{%webhookgroups}}', [
-                    'name' => $group->name,
+                    'name' => $name,
                 ])
                 ->execute();
 
@@ -153,7 +165,7 @@ class WebhookManager
             throw new InvalidArgumentException('Invalid webhook ID: ' . $id);
         }
 
-        return new Webhook($result);
+        return $this->_createWebhook($result);
     }
 
     /**
@@ -170,19 +182,26 @@ class WebhookManager
             return false;
         }
 
+        $db = Craft::$app->getDb();
+
+        if ($db->getIsMysql()) {
+            $name = StringHelper::encodeMb4($webhook->name);
+        } else {
+            $name = $webhook->name;
+        }
+
         $data = [
             'groupId' => $webhook->groupId,
             'enabled' => (bool)$webhook->enabled,
-            'name' => $webhook->name,
+            'name' => $name,
             'class' => $webhook->class,
             'event' => $webhook->event,
+            'type' => $webhook->type,
             'url' => $webhook->url,
             'userAttributes' => $webhook->userAttributes,
             'senderAttributes' => $webhook->senderAttributes,
             'eventAttributes' => $webhook->eventAttributes,
         ];
-
-        $db = Craft::$app->getDb();
 
         if ($webhook->id) {
             $db->createCommand()
@@ -216,8 +235,22 @@ class WebhookManager
     private function _createWebhookQuery(): Query
     {
         return (new Query())
-            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes'])
+            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'type', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes'])
             ->from(['{{%webhooks}}']);
+    }
+
+    /**
+     * @param array $result
+     * @param bool|null $isMysql
+     * @return Webhook
+     */
+    private function _createWebhook(array $result, bool $isMysql = null): Webhook
+    {
+        if ($isMysql ?? Craft::$app->getDb()->getIsMysql()) {
+            $result['name'] = html_entity_decode($result['name'], ENT_QUOTES | ENT_HTML5);
+        }
+
+        return new Webhook($result);
     }
 
     /**
@@ -227,9 +260,10 @@ class WebhookManager
     private function _createWebhooks(array $results): array
     {
         $webhooks = [];
+        $isMysql = Craft::$app->getDb()->getIsMysql();
 
         foreach ($results as $result) {
-            $webhooks[] = new Webhook($result);
+            $webhooks[] = $this->_createWebhook($result, $isMysql);
         }
 
         return $webhooks;
