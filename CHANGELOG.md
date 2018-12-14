@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### Added
-- Added support for webhooks that send GET requests. 
+- Added support for webhooks that send GET requests.
 
 ## 1.0.1 - 2018-12-13
 
