@@ -4,6 +4,7 @@
 
 ### Added
 - Added support for webhooks that send GET requests.
+- Webhook names and group names can now contain emojis, even if using MySQL.
 
 ## 1.0.1 - 2018-12-13
 
