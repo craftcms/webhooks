@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 1.1.0 - 2018-12-13
 
 ### Added
 - Added support for webhooks that send GET requests.
