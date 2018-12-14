@@ -5,6 +5,7 @@ namespace craft\webhooks\controllers;
 use Craft;
 use craft\helpers\UrlHelper;
 use craft\web\Controller as BaseController;
+use craft\webhooks\assets\edit\EditAsset;
 use craft\webhooks\Plugin;
 use craft\webhooks\Webhook;
 use yii\base\InvalidArgumentException;
@@ -90,6 +91,8 @@ class WebhooksController extends BaseController
                 ];
             }
         }
+
+        Craft::$app->getView()->registerAssetBundle(EditAsset::class);
 
         return $this->renderTemplate('webhooks/_edit', compact(
             'groupOptions',

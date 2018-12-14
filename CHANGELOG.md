@@ -5,6 +5,7 @@
 ### Added
 - Added support for webhooks that send GET requests.
 - Webhook names and group names can now contain emojis, even if using MySQL.
+- Typing `->` or `=>` into a webhook’s Name field now creates a ➡️.  
 
 ## 1.0.1 - 2018-12-13
 
