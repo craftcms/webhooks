@@ -118,7 +118,7 @@ class Webhook extends Model
                             }
                         }
                         if (!$foundEvent) {
-                            $validator->addError($this, $attribute, Craft::t('webhooks', "Class {$this->class} doesn’t appear to have a {value} event."));
+                            $validator->addError($this, $attribute, Craft::t('webhooks', 'Class {class} doesn’t appear to have a {value} event.', ['class' => $this->class]));
                         }
                     }
                 }
