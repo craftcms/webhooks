@@ -99,7 +99,7 @@
         errors: webhook.getErrors('url')
     }, urlInput) }}
 
-    <div id="type-settings--post" {% if webhook.type == 'GET' %}class="hidden"{% endif %}>
+    <div id="type-settings--post" {% if webhook.type == 'get' %}class="hidden"{% endif %}>
         {{ forms.textareaField({
             label: 'Extra User Attributes'|t('webhooks'),
             instructions: 'List of additional attributes for the logged-in user that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
