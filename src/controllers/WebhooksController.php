@@ -78,7 +78,7 @@ class WebhooksController extends BaseController
 
         // Groups
         $groupOptions = [
-            ['value' => null, 'label' => '(Ungrouped)']
+            ['value' => null, 'label' => Craft::t('webhooks', '(Ungrouped)')]
         ];
 
         foreach ($manager->getAllGroups() as $group) {
