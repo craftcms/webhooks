@@ -1,5 +1,13 @@
 # Release Notes for Webhooks for Craft CMS
 
+## 1.1.1 - 2018-12-17
+
+### Added
+- Webhooks is now translated into Chinese. ([#1](https://github.com/craftcms/webhooks/pull/1))
+
+### Fixed
+- Fixed a bug where the “Extra User Attributes”, “Extra Sender Attributes”, and “Extra Event Attributes” fields were visible when editing an existing webhook with a GET request method.
+
 ## 1.1.0 - 2018-12-13
 
 ### Added
