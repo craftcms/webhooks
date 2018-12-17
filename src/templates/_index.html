@@ -6,13 +6,13 @@
 
 {% block actionButton %}
     {% set newWebhookUrl = url('webhooks/new', (groupId is defined ? { groupId: groupId } : null)) %}
-    <a href="{{ newWebhookUrl }}" class="submit btn add icon">{{ "New webhook"|t('app') }}</a>
+    <a href="{{ newWebhookUrl }}" class="submit btn add icon">{{ "New webhook"|t('webhooks') }}</a>
 {% endblock %}
 
 {% block sidebar %}
     <nav>
         <ul id="groups">
-            <li><a href="{{ url('webhooks') }}"{% if not groupId %} class="sel"{% endif %}>{{ 'Ungrouped'|t('app') }}</a></li>
+            <li><a href="{{ url('webhooks') }}"{% if not groupId %} class="sel"{% endif %}>{{ 'Ungrouped'|t('webhooks') }}</a></li>
             {% for group in groups %}
                 <li><a href="{{ url('webhooks/group/'~group.id) }}"{% if groupId is defined and group.id == groupId %} class="sel"{% endif %} data-id="{{ group.id }}">{{ group.name|t('site') }}</a></li>
             {% endfor %}
