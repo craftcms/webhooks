@@ -76,10 +76,10 @@ class Plugin extends \craft\base\Plugin
                     ];
 
                     $eventAttributes = $webhook->getEventAttributes();
-                    foreach ((new \ReflectionObject($e))->getProperties() as $property) {
-                        if ($property->isPublic() && $property->getDeclaringClass()->getName() !== Event::class) {
-                            $name = $property->getName();
-                            $data['event'][$name] = $this->toArray($e->$name, $eventAttributes[$name] ?? []);
+                    $ref = new \ReflectionClass($e);
+                    foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
+                        if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
+                            $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
                         }
                     }
                 }
