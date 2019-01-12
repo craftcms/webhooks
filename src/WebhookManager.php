@@ -201,6 +201,7 @@ class WebhookManager
             'userAttributes' => $webhook->userAttributes,
             'senderAttributes' => $webhook->senderAttributes,
             'eventAttributes' => $webhook->eventAttributes,
+            'jsonPayloadTemplate' => $webhook->jsonPayloadTemplate
         ];
 
         if ($webhook->id) {
@@ -235,7 +236,7 @@ class WebhookManager
     private function _createWebhookQuery(): Query
     {
         return (new Query())
-            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'type', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes'])
+            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'type', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes','jsonPayloadTemplate'])
             ->from(['{{%webhooks}}']);
     }
 

@@ -1,6 +1,7 @@
 {% extends '_layouts/cp' %}
 
 {% set fullPageForm = true %}
+{% set customPayload = webhook.jsonPayloadTemplate ? true : false %}
 
 {% import '_includes/forms' as forms %}
 
@@ -100,37 +101,59 @@
     }, urlInput) }}
 
     <div id="type-settings--post" {% if webhook.type == 'get' %}class="hidden"{% endif %}>
-        {{ forms.textareaField({
-            label: 'Extra User Attributes'|t('webhooks'),
-            instructions: 'List of additional attributes for the logged-in user that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
-            id: 'user-attributes',
-            name: 'userAttributes',
-            placeholder: 'photo.url',
-            class: 'code nicetext',
-            value: webhook.userAttributes,
-            errors: webhook.getErrors('userAttributes')
+
+        <div id="standard-payload" class="{{ customPayload ? 'hidden' : '' }}">
+            {{ forms.textareaField({
+                label: 'Extra User Attributes'|t('webhooks'),
+                instructions: 'List of additional attributes for the logged-in user that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+                id: 'user-attributes',
+                name: 'userAttributes',
+                placeholder: 'photo.url',
+                class: 'code nicetext',
+                value: webhook.userAttributes,
+                errors: webhook.getErrors('userAttributes')
+            }) }}
+
+            {{ forms.textareaField({
+                label: 'Extra Sender Attributes'|t('webhooks'),
+                instructions: 'List of additional attributes for the event sender that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+                id: 'sender-attributes',
+                name: 'senderAttributes',
+                placeholder: 'author.email',
+                class: 'code nicetext',
+                value: webhook.senderAttributes,
+                errors: webhook.getErrors('senderAttributes')
+            }) }}
+            {{ forms.textareaField({
+                label: 'Extra Event Attributes'|t('webhooks'),
+                instructions: 'List of additional attributes for the event properties that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+                id: 'event-attributes',
+                name: 'eventAttributes',
+                class: 'code nicetext',
+                value: webhook.eventAttributes,
+                errors: webhook.getErrors('eventAttributes')
+            }) }}
+        </div>
+
+        {{ forms.lightswitchField({
+            label: 'Custom payload'|t('cp-style-guide'),
+            name: '',
+            on: customPayload,
+            toggle: 'custom-payload',
+            reverseToggle: 'standard-payload'
         }) }}
 
-        {{ forms.textareaField({
-            label: 'Extra Sender Attributes'|t('webhooks'),
-            instructions: 'List of additional attributes for the event sender that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
-            id: 'sender-attributes',
-            name: 'senderAttributes',
-            placeholder: 'author.email',
-            class: 'code nicetext',
-            value: webhook.senderAttributes,
-            errors: webhook.getErrors('senderAttributes')
-        }) }}
-
-        {{ forms.textareaField({
-            label: 'Extra Event Attributes'|t('webhooks'),
-            instructions: 'List of additional attributes for the event properties that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
-            id: 'event-attributes',
-            name: 'eventAttributes',
-            class: 'code nicetext',
-            value: webhook.eventAttributes,
-            errors: webhook.getErrors('eventAttributes')
-        }) }}
+        <div id="custom-payload" class="{{ customPayload ? '' : 'hidden' }}">
+            {{ forms.textareaField({
+                label: 'JSON Payload Template'|t('webhooks'),
+                instructions: 'Paste the json the webhook expects and use twig variables for dynamic values.'|t('webhooks'),
+                id: 'json-payload-template',
+                name: 'jsonPayloadTemplate',
+                class: 'code nicetext',
+                value: webhook.jsonPayloadTemplate,
+                errors: webhook.getErrors('jsonPayloadTemplate')
+            }) }}
+        </div>
     </div>
 {% endblock %}
 

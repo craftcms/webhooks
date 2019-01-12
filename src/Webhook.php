@@ -72,6 +72,11 @@ class Webhook extends Model
     public $eventAttributes;
 
     /**
+     * @var string|null
+     */
+    public $jsonPayloadTemplate;
+
+    /**
      * @inheritdoc
      */
     public function rules()
@@ -125,6 +130,8 @@ class Webhook extends Model
             ],
             [['userAttributes', 'senderAttributes'], 'validateAttributeList'],
             [['eventAttributes'], 'validateAttributeList', 'params' => ['regex' => '/^[a-z]\w*\.[a-z]\w*(?:\.[a-z]\w*)*$/i']],
+            [['jsonPayloadTemplate'], 'validateJson'],
+
         ];
     }
 
@@ -146,6 +153,30 @@ class Webhook extends Model
             }
         }
     }
+
+    /**
+     * @param string                    $attribute
+     * @param array|null                $params
+     * @param \yii\validators\Validator $validator
+     */
+    public function validateJson(string $attribute, array $params = null, Validator $validator)
+    {
+        if (!$value = $this->$attribute) {
+            return;
+        }
+        try {
+            $twig = new \Twig_Environment(new \Twig_Loader_Array(['tpl' => $value]));
+            $value = $twig->render('tpl', []);
+        } catch (\Exception $exception) {
+            $validator->addError($this, $attribute, 'TWIG - ' . $exception->getMessage(), ['value' => '']);
+        }
+
+        if (json_decode($value) === null) {
+            $validator->addError($this, $attribute, 'JSON - ' . json_last_error_msg(), ['value' => '']);
+        }
+
+    }
+
 
     /**
      * @return string[]

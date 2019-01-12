@@ -38,6 +38,7 @@ class Install extends Migration
             'userAttributes' => $this->text(),
             'senderAttributes' => $this->text(),
             'eventAttributes' => $this->text(),
+            'jsonPayloadTemplate' => $this->text(),
             'enabled' => $this->boolean()->notNull()->defaultValue(true),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
