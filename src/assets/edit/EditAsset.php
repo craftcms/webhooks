@@ -9,7 +9,6 @@ namespace craft\webhooks\assets\edit;
 
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
-use craft\web\View;
 
 /**
  * Webhooks index asset bundle
