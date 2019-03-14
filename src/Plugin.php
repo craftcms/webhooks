@@ -15,8 +15,8 @@ use yii\base\Event;
  * @method static Plugin getInstance()
  * @propery-read WebhookManager $webhookManager
  *
- * @author       Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since        1.0
+ * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
+ * @since 1.0
  */
 class Plugin extends \craft\base\Plugin
 {
@@ -115,7 +115,6 @@ class Plugin extends \craft\base\Plugin
      *
      * @param mixed $object
      * @param string[] $extra
-     *
      * @return array
      */
     public function toArray($object, array $extra): array
@@ -141,18 +140,6 @@ class Plugin extends \craft\base\Plugin
         return $this->get('webhookManager');
     }
 
-    protected function preparePayload($template, $attributes = [])
-    {
-        // Available variables
-        Craft::info(print_r(self::dot($attributes), true), $this->name);
-
-        $twig = new \Twig_Environment(new \Twig_Loader_Array([
-            'tpl' => $template,
-        ]));
-        return $twig->render('tpl', $attributes);
-    }
-
-
     /**
      * Flatten a multi-dimensional associative array with dots.
      *
@@ -172,5 +159,19 @@ class Plugin extends \craft\base\Plugin
             }
         }
         return $results;
+    }
+
+    // Protected Methods
+    // =========================================================================
+
+    protected function preparePayload($template, $attributes = [])
+    {
+        // Available variables
+        Craft::info(print_r(self::dot($attributes), true), $this->name);
+
+        $twig = new \Twig_Environment(new \Twig_Loader_Array([
+            'tpl' => $template,
+        ]));
+        return $twig->render('tpl', $attributes);
     }
 }

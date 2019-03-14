@@ -131,7 +131,6 @@ class Webhook extends Model
             [['userAttributes', 'senderAttributes'], 'validateAttributeList'],
             [['eventAttributes'], 'validateAttributeList', 'params' => ['regex' => '/^[a-z]\w*\.[a-z]\w*(?:\.[a-z]\w*)*$/i']],
             [['jsonPayloadTemplate'], 'validateJson'],
-
         ];
     }
 
@@ -175,7 +174,6 @@ class Webhook extends Model
             $validator->addError($this, $attribute, 'JSON - ' . json_last_error_msg(), ['value' => '']);
         }
     }
-
 
     /**
      * @return string[]
