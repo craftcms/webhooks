@@ -73,6 +73,32 @@ The attributes listed here (separated by newlines) will be passed to the `$extra
 
 For “Extra Event Attributes”, each attribute should be prefixed with the name of the property and a dot (e.g. `element.author` will include the `author` attribute of an `$element` property).
 
+#### Sending Custom Payloads
+
+You can completely customize the webhook payload by ticking the “Send a custom payload” checkbox. That will reveal the “Payload Template” field, where you can enter the desired body contents.
+
+That field supports Twig, so you can make this dynamic. An `event` variable will be available to it that references the event that was triggered.
+
+```twig
+{% set entry = event.sender %}
+{{
+  {
+    time: now|atom,
+    user: currentUser.username ?? null,
+    name: event.name,
+    entry: {
+      class: className(entry),
+      id: entry.id,
+      title: entry.title,
+      slug: entry.slug,
+      isNew: event.isNew
+    }
+  }|json_encode(options=0)
+}}
+```
+
+If the output is valid JSON, then webhook requests will be sent with an `application/json` content type.
+
 ### Toggling Webhooks
 
 Webhooks can be enabled or disabled from both the Webhooks index page and within their Edit Webhook pages.

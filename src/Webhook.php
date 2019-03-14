@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Model;
 use craft\validators\UniqueValidator;
 use craft\webhooks\records\Webhook as WebhookRecord;
+use Twig\Error\Error as TwigError;
 use yii\validators\Validator;
 
 /**
@@ -72,6 +73,11 @@ class Webhook extends Model
     public $eventAttributes;
 
     /**
+     * @var string|null
+     */
+    public $payloadTemplate;
+
+    /**
      * @inheritdoc
      */
     public function rules()
@@ -125,6 +131,7 @@ class Webhook extends Model
             ],
             [['userAttributes', 'senderAttributes'], 'validateAttributeList'],
             [['eventAttributes'], 'validateAttributeList', 'params' => ['regex' => '/^[a-z]\w*\.[a-z]\w*(?:\.[a-z]\w*)*$/i']],
+            [['payloadTemplate'], 'validatePayloadTemplate'],
         ];
     }
 
@@ -144,6 +151,22 @@ class Webhook extends Model
             if (!preg_match($regex, $attr)) {
                 $validator->addError($this, $attribute, Craft::t('webhooks', '{value} isn’t a valid attribute.'), ['value' => $attr]);
             }
+        }
+    }
+
+    /**
+     * Validates the JSON payload template.
+     *
+     * @param string $attribute
+     * @param array|null $params
+     * @param Validator $validator
+     */
+    public function validatePayloadTemplate(string $attribute, array $params = null, Validator $validator)
+    {
+        try {
+            Craft::$app->getView()->getTwig()->createTemplate($this->payloadTemplate);
+        } catch (TwigError $e) {
+            $validator->addError($this, $attribute, $e->getMessage());
         }
     }
 

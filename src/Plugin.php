@@ -5,6 +5,7 @@ namespace craft\webhooks;
 use Craft;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\ArrayHelper;
+use craft\helpers\Json;
 use craft\web\UrlManager;
 use yii\base\Arrayable;
 use yii\base\Event;
@@ -31,7 +32,7 @@ class Plugin extends \craft\base\Plugin
     /**
      * @inheritdoc
      */
-    public $schemaVersion = '1.1.0';
+    public $schemaVersion = '1.2.0';
 
     // Public Methods
     // =========================================================================
@@ -64,22 +65,29 @@ class Plugin extends \craft\base\Plugin
             Event::on($webhook->class, $webhook->event, function(Event $e) use ($webhook) {
                 if ($webhook->type === 'post') {
                     // Build out the body data
-                    $user = Craft::$app->getUser()->getIdentity();
-                    $data = [
-                        'time' => (new \DateTime())->format(\DateTime::ATOM),
-                        'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
-                        'name' => $e->name,
-                        'senderClass' => get_class($e->sender),
-                        'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
-                        'eventClass' => get_class($e),
-                        'event' => [],
-                    ];
+                    if ($webhook->payloadTemplate) {
+                        $json = Craft::$app->getView()->renderString($webhook->payloadTemplate, [
+                            'event' => $e,
+                        ]);
+                        $data = Json::decodeIfJson($json);
+                    } else {
+                        $user = Craft::$app->getUser()->getIdentity();
+                        $data = [
+                            'time' => (new \DateTime())->format(\DateTime::ATOM),
+                            'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
+                            'name' => $e->name,
+                            'senderClass' => get_class($e->sender),
+                            'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
+                            'eventClass' => get_class($e),
+                            'event' => [],
+                        ];
 
-                    $eventAttributes = $webhook->getEventAttributes();
-                    $ref = new \ReflectionClass($e);
-                    foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
-                        if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
-                            $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
+                        $eventAttributes = $webhook->getEventAttributes();
+                        $ref = new \ReflectionClass($e);
+                        foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
+                            if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
+                                $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
+                            }
                         }
                     }
                 }

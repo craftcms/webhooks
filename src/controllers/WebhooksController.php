@@ -3,6 +3,7 @@
 namespace craft\webhooks\controllers;
 
 use Craft;
+use craft\helpers\ArrayHelper;
 use craft\helpers\UrlHelper;
 use craft\web\Controller as BaseController;
 use craft\webhooks\assets\edit\EditAsset;
@@ -125,7 +126,19 @@ class WebhooksController extends BaseController
             $webhook = new Webhook();
         }
 
-        $webhook->setAttributes($request->getBodyParams());
+        $attributes = $request->getBodyParams();
+        if (ArrayHelper::remove($attributes, 'customPayload')) {
+            $attributes['userAttributes'] = null;
+            $attributes['senderAttributes'] = null;
+            $attributes['eventAttributes'] = null;
+
+            if (empty($attributes['payloadTemplate'])) {
+                $attributes['payloadTemplate'] = '{}';
+            }
+        } else {
+            $attributes['payloadTemplate'] = null;
+        }
+        $webhook->setAttributes($attributes);
 
         if (!Plugin::getInstance()->getWebhookManager()->saveWebhook($webhook)) {
             if ($request->getAcceptsJson()) {

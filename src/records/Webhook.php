@@ -16,6 +16,7 @@ use craft\db\ActiveRecord;
  * @property string|null $userAttributes
  * @property string|null $senderAttributes
  * @property string|null $eventAttributes
+ * @property string|null $payloadTemplate
  * @property bool $enabled
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
