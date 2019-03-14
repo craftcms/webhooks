@@ -2,7 +2,6 @@
 
 namespace craft\webhooks\migrations;
 
-use Craft;
 use craft\db\Migration;
 
 /**

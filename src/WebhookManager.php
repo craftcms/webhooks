@@ -236,7 +236,7 @@ class WebhookManager
     private function _createWebhookQuery(): Query
     {
         return (new Query())
-            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'type', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes','jsonPayloadTemplate'])
+            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'type', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes', 'jsonPayloadTemplate'])
             ->from(['{{%webhooks}}']);
     }
 

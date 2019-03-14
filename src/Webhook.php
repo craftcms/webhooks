@@ -155,8 +155,8 @@ class Webhook extends Model
     }
 
     /**
-     * @param string                    $attribute
-     * @param array|null                $params
+     * @param string $attribute
+     * @param array|null $params
      * @param \yii\validators\Validator $validator
      */
     public function validateJson(string $attribute, array $params = null, Validator $validator)
@@ -174,7 +174,6 @@ class Webhook extends Model
         if (json_decode($value) === null) {
             $validator->addError($this, $attribute, 'JSON - ' . json_last_error_msg(), ['value' => '']);
         }
-
     }
 
 
