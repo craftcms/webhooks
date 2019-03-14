@@ -1,5 +1,10 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+### Added
+- Webhooks can now have custom payloads. ([#3](https://github.com/craftcms/webhooks/pull/3))
+
 ## 1.1.2 - 2018-12-21
 
 ### Changed

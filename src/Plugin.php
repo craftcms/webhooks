@@ -5,6 +5,7 @@ namespace craft\webhooks;
 use Craft;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\ArrayHelper;
+use craft\helpers\Json;
 use craft\web\UrlManager;
 use yii\base\Arrayable;
 use yii\base\Event;
@@ -64,28 +65,30 @@ class Plugin extends \craft\base\Plugin
             Event::on($webhook->class, $webhook->event, function(Event $e) use ($webhook) {
                 if ($webhook->type === 'post') {
                     // Build out the body data
-                    $user = Craft::$app->getUser()->getIdentity();
-                    $data = [
-                        'time' => (new \DateTime())->format(\DateTime::ATOM),
-                        'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
-                        'name' => $e->name,
-                        'senderClass' => get_class($e->sender),
-                        'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
-                        'eventClass' => get_class($e),
-                        'event' => [],
-                    ];
+                    if ($webhook->payloadTemplate) {
+                        $json = Craft::$app->getView()->renderString($webhook->payloadTemplate, [
+                            'event' => $e,
+                        ]);
+                        $data = Json::decodeIfJson($json);
+                    } else {
+                        $user = Craft::$app->getUser()->getIdentity();
+                        $data = [
+                            'time' => (new \DateTime())->format(\DateTime::ATOM),
+                            'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
+                            'name' => $e->name,
+                            'senderClass' => get_class($e->sender),
+                            'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
+                            'eventClass' => get_class($e),
+                            'event' => [],
+                        ];
 
-                    $eventAttributes = $webhook->getEventAttributes();
-                    $ref = new \ReflectionClass($e);
-                    foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
-                        if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
-                            $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
+                        $eventAttributes = $webhook->getEventAttributes();
+                        $ref = new \ReflectionClass($e);
+                        foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
+                            if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
+                                $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
+                            }
                         }
-                    }
-
-                    if ($webhook->jsonPayloadTemplate) {
-                        $parsed = $this->preparePayload($webhook->jsonPayloadTemplate, $data);
-                        $data = json_decode($parsed, true);
                     }
                 }
 
@@ -138,40 +141,5 @@ class Plugin extends \craft\base\Plugin
     public function getWebhookManager(): WebhookManager
     {
         return $this->get('webhookManager');
-    }
-
-    /**
-     * Flatten a multi-dimensional associative array with dots.
-     *
-     * @param        $array
-     * @param string $prepend
-     *
-     * @return array
-     */
-    public static function dot($array, $prepend = '')
-    {
-        $results = [];
-        foreach ($array as $key => $value) {
-            if (is_array($value) && !empty($value)) {
-                $results = array_merge($results, static::dot($value, $prepend . $key . '.'));
-            } else {
-                $results[$prepend . $key] = $value;
-            }
-        }
-        return $results;
-    }
-
-    // Protected Methods
-    // =========================================================================
-
-    protected function preparePayload($template, $attributes = [])
-    {
-        // Available variables
-        Craft::info(print_r(self::dot($attributes), true), $this->name);
-
-        $twig = new \Twig_Environment(new \Twig_Loader_Array([
-            'tpl' => $template,
-        ]));
-        return $twig->render('tpl', $attributes);
     }
 }

@@ -14,7 +14,7 @@ class m190112_00000_json_payload extends Migration
      */
     public function safeUp()
     {
-        $this->addColumn('{{%webhooks}}', 'jsonPayloadTemplate', $this->mediumText()->after('eventAttributes'));
+        $this->addColumn('{{%webhooks}}', 'payloadTemplate', $this->mediumText()->after('eventAttributes'));
     }
 
     /**
@@ -22,6 +22,6 @@ class m190112_00000_json_payload extends Migration
      */
     public function safeDown()
     {
-        $this->dropColumn('{{%webhooks}}', 'jsonPayloadTemplate');
+        $this->dropColumn('{{%webhooks}}', 'payloadTemplate');
     }
 }

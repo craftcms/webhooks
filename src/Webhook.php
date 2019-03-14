@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Model;
 use craft\validators\UniqueValidator;
 use craft\webhooks\records\Webhook as WebhookRecord;
+use Twig\Error\Error as TwigError;
 use yii\validators\Validator;
 
 /**
@@ -74,7 +75,7 @@ class Webhook extends Model
     /**
      * @var string|null
      */
-    public $jsonPayloadTemplate;
+    public $payloadTemplate;
 
     /**
      * @inheritdoc
@@ -130,7 +131,7 @@ class Webhook extends Model
             ],
             [['userAttributes', 'senderAttributes'], 'validateAttributeList'],
             [['eventAttributes'], 'validateAttributeList', 'params' => ['regex' => '/^[a-z]\w*\.[a-z]\w*(?:\.[a-z]\w*)*$/i']],
-            [['jsonPayloadTemplate'], 'validateJson'],
+            [['payloadTemplate'], 'validatePayloadTemplate'],
         ];
     }
 
@@ -154,24 +155,18 @@ class Webhook extends Model
     }
 
     /**
+     * Validates the JSON payload template.
+     *
      * @param string $attribute
      * @param array|null $params
-     * @param \yii\validators\Validator $validator
+     * @param Validator $validator
      */
-    public function validateJson(string $attribute, array $params = null, Validator $validator)
+    public function validatePayloadTemplate(string $attribute, array $params = null, Validator $validator)
     {
-        if (!$value = $this->$attribute) {
-            return;
-        }
         try {
-            $twig = new \Twig_Environment(new \Twig_Loader_Array(['tpl' => $value]));
-            $value = $twig->render('tpl', []);
-        } catch (\Exception $exception) {
-            $validator->addError($this, $attribute, 'TWIG - ' . $exception->getMessage(), ['value' => '']);
-        }
-
-        if (json_decode($value) === null) {
-            $validator->addError($this, $attribute, 'JSON - ' . json_last_error_msg(), ['value' => '']);
+            Craft::$app->getView()->getTwig()->createTemplate($this->payloadTemplate);
+        } catch (TwigError $e) {
+            $validator->addError($this, $attribute, $e->getMessage());
         }
     }
 

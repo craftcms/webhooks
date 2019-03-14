@@ -1,7 +1,6 @@
 {% extends '_layouts/cp' %}
 
 {% set fullPageForm = true %}
-{% set customPayload = webhook.jsonPayloadTemplate ? true : false %}
 
 {% import '_includes/forms' as forms %}
 
@@ -102,7 +101,17 @@
 
     <div id="type-settings--post" {% if webhook.type == 'get' %}class="hidden"{% endif %}>
 
-        <div id="standard-payload" class="{{ customPayload ? 'hidden' : '' }}">
+        <hr>
+
+        {{ forms.checkboxField({
+            label: 'Send a custom payload'|t('webhooks'),
+            name: 'customPayload',
+            checked: webhook.payloadTemplate,
+            toggle: 'custom-payload',
+            reverseToggle: 'standard-payload'
+        }) }}
+
+        <div id="standard-payload" class="{{ webhook.payloadTemplate ? 'hidden' }}">
             {{ forms.textareaField({
                 label: 'Extra User Attributes'|t('webhooks'),
                 instructions: 'List of additional attributes for the logged-in user that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
@@ -135,23 +144,16 @@
             }) }}
         </div>
 
-        {{ forms.lightswitchField({
-            label: 'Custom payload'|t('cp-style-guide'),
-            name: '',
-            on: customPayload,
-            toggle: 'custom-payload',
-            reverseToggle: 'standard-payload'
-        }) }}
-
-        <div id="custom-payload" class="{{ customPayload ? '' : 'hidden' }}">
+        <div id="custom-payload" class="{{ not webhook.payloadTemplate ? 'hidden' }}">
             {{ forms.textareaField({
-                label: 'JSON Payload Template'|t('webhooks'),
-                instructions: 'Paste the json the webhook expects and use twig variables for dynamic values.'|t('webhooks'),
+                label: 'Payload Template'|t('webhooks'),
+                instructions: 'Enter a custom Twig template that outputs the payload body. An `event` variable will be present, set to the event that was triggered.'|t('webhooks'),
                 id: 'json-payload-template',
-                name: 'jsonPayloadTemplate',
+                name: 'payloadTemplate',
                 class: 'code nicetext',
-                value: webhook.jsonPayloadTemplate,
-                errors: webhook.getErrors('jsonPayloadTemplate')
+                rows: 10,
+                value: webhook.payloadTemplate,
+                errors: webhook.getErrors('payloadTemplate')
             }) }}
         </div>
     </div>

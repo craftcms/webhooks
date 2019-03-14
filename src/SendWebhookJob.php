@@ -25,7 +25,7 @@ class SendWebhookJob extends BaseJob
     public $url;
 
     /**
-     * @var array|null The data to send in the request
+     * @var array|string|null The data to send in the request
      */
     public $data;
 
@@ -44,7 +44,11 @@ class SendWebhookJob extends BaseJob
     {
         $options = [];
         if ($this->type === 'post' && $this->data !== null) {
-            $options[RequestOptions::JSON] = $this->data;
+            if (is_array($this->data)) {
+                $options[RequestOptions::JSON] = $this->data;
+            } else {
+                $options[RequestOptions::BODY] = $this->data;
+            }
         }
 
         $client = Craft::createGuzzleClient();
