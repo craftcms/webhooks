@@ -168,8 +168,10 @@ class WebhooksController extends BaseController
 
     /**
      * Deletes a webhook.
+     *
+     * @return Response
      */
-    public function actionDelete()
+    public function actionDelete(): Response
     {
         $this->requirePostRequest();
         $id = Craft::$app->getRequest()->getRequiredBodyParam('id');
