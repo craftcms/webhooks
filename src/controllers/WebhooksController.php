@@ -9,6 +9,7 @@ use craft\web\Controller as BaseController;
 use craft\webhooks\assets\edit\EditAsset;
 use craft\webhooks\Plugin;
 use craft\webhooks\Webhook;
+use craft\webhooks\WebhookHelper;
 use yii\base\InvalidArgumentException;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
@@ -93,13 +94,17 @@ class WebhooksController extends BaseController
             }
         }
 
+        // Autosuggest classes
+        $classSuggestions = WebhookHelper::classSuggestions();
+
         Craft::$app->getView()->registerAssetBundle(EditAsset::class);
 
         return $this->renderTemplate('webhooks/_edit', compact(
             'groupOptions',
             'webhook',
             'title',
-            'crumbs'
+            'crumbs',
+            'classSuggestions'
         ));
     }
 
@@ -177,5 +182,17 @@ class WebhooksController extends BaseController
         $id = Craft::$app->getRequest()->getRequiredBodyParam('id');
         Plugin::getInstance()->getWebhookManager()->deleteWebhookById($id);
         return $this->redirectToPostedUrl();
+    }
+
+    /**
+     * Returns the available events for a component class.
+     */
+    public function actionEventSuggestions(): Response
+    {
+        $senderClass = Craft::$app->getRequest()->getRequiredBodyParam('senderClass');
+
+        return $this->asJson([
+            'events' => WebhookHelper::eventSuggestions($senderClass),
+        ]);
     }
 }

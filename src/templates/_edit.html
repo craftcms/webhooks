@@ -41,29 +41,33 @@
         errors: webhook.getErrors('name')
     }) }}
 
-    {{ forms.textField({
+    {{ forms.autosuggestField({
         label: 'Sender Class'|t('webhooks'),
         required: true,
         instructions: 'The class name the sender must be an instance of.'|t('webhooks'),
         id: 'class',
         name: 'class',
-        class: 'code',
+        class: 'code ltr',
+        suggestions: classSuggestions,
         placeholder: 'craft\\elements\\Entry',
         value: webhook.class,
         errors: webhook.getErrors('class')
     }) }}
 
-    {{ forms.textField({
-        label: 'Event Name'|t('webhooks'),
-        required: true,
-        instructions: 'The name of the event that must be triggered.'|t('webhooks'),
+    {% set eventInput = include('webhooks/_event-autosuggest', {
         id: 'event',
         name: 'event',
-        class: 'code',
+        class: 'code ltr',
         placeholder: 'afterSave',
         value: webhook.event,
         errors: webhook.getErrors('event')
-    }) }}
+    }, with_context = false) %}
+    {{ forms.field({
+        label: 'Event Name'|t('webhooks'),
+        required: true,
+        instructions: 'The name of the event that must be triggered.'|t('webhooks'),
+        errors: webhook.getErrors('event')
+    }, eventInput) }}
 
     {% set urlInput %}
         <div class="flex">
