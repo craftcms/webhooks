@@ -50,7 +50,7 @@ class Webhook extends Model
     /**
      * @var string
      */
-    public $type = 'post';
+    public $method = 'post';
 
     /**
      * @var string
@@ -104,11 +104,11 @@ class Webhook extends Model
                     return trim($value, ' \\');
                 }, 'skipOnArray' => true
             ],
-            [['name', 'class', 'event', 'type', 'url'], 'required'],
+            [['name', 'class', 'event', 'method', 'url'], 'required'],
             [['name'], UniqueValidator::class, 'targetClass' => WebhookRecord::class],
             [['groupId'], 'number'],
             [['enabled'], 'boolean'],
-            [['type'], 'in', 'range' => ['get', 'post']],
+            [['method'], 'in', 'range' => ['get', 'post']],
             [['url'], 'url'],
             [
                 ['class'],
@@ -179,7 +179,8 @@ class Webhook extends Model
         try {
             Craft::$app->getView()->getTwig()->createTemplate($this->payloadTemplate);
         } catch (TwigError $e) {
-            $validator->addError($this, $attribute, $e->getMessage());
+            $message = preg_replace('/ in "__string_template__\w+"/', '', $e->getMessage());
+            $validator->addError($this, $attribute, $message);
         }
     }
 
