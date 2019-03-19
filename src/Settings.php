@@ -7,6 +7,12 @@ use craft\base\Model;
 class Settings extends Model
 {
     /**
+     * @var int The maximum depth that the plugin should go into objects/arrays when converting them to arrays for
+     * event payloads.
+     */
+    public $maxDepth = 5;
+
+    /**
      * @var int The maximum number of request attempts that should be made.
      */
     public $maxAttempts = 1;

@@ -40,6 +40,7 @@ To configure Webhooks, create a `config/webhooks.php` file, which returns an arr
 ```php
 <?php
 return [
+    'maxDepth' => 10,
     'maxAttempts' => 3,
     'attemptDelay' => 120,
 ];
@@ -47,6 +48,7 @@ return [
 
 The array can define the following keys:
 
+- `maxDepth` – The maximum depth that the plugin should go into objects/arrays when converting them to arrays for event payloads. (Default is `5`.)
 - `maxAttempts` – The maximum number of attempts each webhook should have before giving up, if the requests are coming back with non 2xx responses. (Default is `1`.)
 - `attemptDelay` – The delay (in seconds) between webhook attempts. (Default is `60`.)
 

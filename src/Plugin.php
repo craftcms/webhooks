@@ -275,17 +275,39 @@ class Plugin extends \craft\base\Plugin
      *
      * @param mixed $object
      * @param string[] $extra
+     * @param int $depth The current object depth
      * @return array
      */
-    public function toArray($object, array $extra): array
+    public function toArray($object, array $extra, int $depth = 1): array
     {
         if ($object instanceof Arrayable) {
-            $arr = $object->toArray([], $extra);
+            $arr = $object->toArray([], $extra, false);
         } else {
-            $arr = ArrayHelper::toArray($object);
+            $arr = ArrayHelper::toArray($object, [], false);
         }
 
-        $arr = Craft::$app->getSecurity()->redactIfSensitive('', $arr);
+        $indexedExtra = [];
+        foreach ($extra as $field) {
+            $fieldParts = explode('.', $field, 2);
+            if (isset($fieldParts[1])) {
+                $indexedExtra[$fieldParts[0]][] = $fieldParts[1];
+            }
+        }
+
+        $settings = $this->getSettings();
+        foreach ($arr as $k => $v) {
+            if (is_array($v) || is_object($v)) {
+                if ($depth === $settings->maxDepth) {
+                    unset($arr[$k]);
+                } else {
+                    $arr[$k] = $this->toArray($v, $indexedExtra[$k] ?? [], $depth + 1);
+                }
+            }
+        }
+
+        if ($depth === 1) {
+            $arr = Craft::$app->getSecurity()->redactIfSensitive('', $arr);
+        }
 
         return $arr;
     }
