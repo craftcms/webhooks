@@ -1,5 +1,16 @@
 # Release Notes for Webhooks for Craft CMS
 
+## 2.0.0 - 2019-03-19
+
+### Added
+- Webhooks now logs requests, and it’s possible to view them from a new “Activity” page within the plugin.
+- Added new `maxDepth`, `maxAttempts` and `attemptDelay` settings, which can be set from `config/webhooks.php`.
+- The Sender Class and Event Name webhook settings now show suggestions based on the available classes and events.
+- Webhooks can now have custom payloads. ([#3](https://github.com/craftcms/webhooks/pull/3))
+
+### Changed
+- Webhooks now requires Craft 3.1 or later.
+
 ## 1.1.2 - 2018-12-21
 
 ### Changed

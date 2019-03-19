@@ -1,0 +1,47 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Activity'|t('webhooks') %}
+{% set selectedSubnavItem = 'activity' %}
+
+{% import 'webhooks/_activity/macros' as macros %}
+
+{% block content %}
+
+    <table id="activity" class="fullwidth data">
+        <thead>
+        <tr>
+            <th>{{ 'Request'|t('webhooks') }}</th>
+            <th>{{ 'Status'|t('webhooks') }}</th>
+            <th>{{ 'Attempts'|t('webhooks') }}</th>
+            <th>{{ 'Date'|t('webhooks') }}</th>
+            <th>{{ 'Time'|t('webhooks') }}</th>
+            <th>{{ 'Webhook'|t('webhooks') }}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for request in requests %}
+        <tr>
+            <th class="code"><a data-id="{{ request.id }}">{{ request.method|upper }} {{ request.host }}</a></th>
+            <td>{{ macros.status(request) }}</td>
+            <td>{{ request.attempts }}</td>
+            <td>{{ request.dateRequested ? date(request.dateRequested)|datetime('short') }}</td>
+            <td>{{ macros.responseTime(request) }}</td>
+            <td>
+                {% if request.webhookId %}
+                    {{ request.name }}
+                    <a href="{{ url('webhooks/' ~ request.webhookId) }}" class="go" title="{{ 'Edit webhook'|t('webhooks') }}"></a>
+                {% else %}
+                    <span class="light">{{ 'None'|t('webhooks') }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    {% include '_includes/pagination' with {
+        prevLabel: 'Newer requests'|t('webhooks'),
+        nextLabel: 'Older requests'|t('webhooks'),
+        noResultsLabel: 'No requests logged'|t('webhook')
+    } %}
+
+{% endblock %}

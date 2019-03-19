@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Model;
 use craft\validators\UniqueValidator;
 use craft\webhooks\records\Webhook as WebhookRecord;
+use Twig\Error\Error as TwigError;
 use yii\validators\Validator;
 
 /**
@@ -49,7 +50,7 @@ class Webhook extends Model
     /**
      * @var string
      */
-    public $type = 'post';
+    public $method = 'post';
 
     /**
      * @var string
@@ -72,6 +73,24 @@ class Webhook extends Model
     public $eventAttributes;
 
     /**
+     * @var string|null
+     */
+    public $payloadTemplate;
+
+    /**
+     * @inheritdoc
+     */
+    public function attributeLabels()
+    {
+        return [
+            'class' => Craft::t('webhooks', 'Sender Class'),
+            'event' => Craft::t('webhooks', 'Event Name'),
+            'name' => Craft::t('webhooks', 'Name'),
+            'url' => Craft::t('webhooks', 'URL'),
+        ];
+    }
+
+    /**
      * @inheritdoc
      */
     public function rules()
@@ -85,11 +104,11 @@ class Webhook extends Model
                     return trim($value, ' \\');
                 }, 'skipOnArray' => true
             ],
-            [['name', 'class', 'event', 'type', 'url'], 'required'],
+            [['name', 'class', 'event', 'method', 'url'], 'required'],
             [['name'], UniqueValidator::class, 'targetClass' => WebhookRecord::class],
             [['groupId'], 'number'],
             [['enabled'], 'boolean'],
-            [['type'], 'in', 'range' => ['get', 'post']],
+            [['method'], 'in', 'range' => ['get', 'post']],
             [['url'], 'url'],
             [
                 ['class'],
@@ -125,6 +144,7 @@ class Webhook extends Model
             ],
             [['userAttributes', 'senderAttributes'], 'validateAttributeList'],
             [['eventAttributes'], 'validateAttributeList', 'params' => ['regex' => '/^[a-z]\w*\.[a-z]\w*(?:\.[a-z]\w*)*$/i']],
+            [['payloadTemplate'], 'validatePayloadTemplate'],
         ];
     }
 
@@ -144,6 +164,23 @@ class Webhook extends Model
             if (!preg_match($regex, $attr)) {
                 $validator->addError($this, $attribute, Craft::t('webhooks', '{value} isn’t a valid attribute.'), ['value' => $attr]);
             }
+        }
+    }
+
+    /**
+     * Validates the JSON payload template.
+     *
+     * @param string $attribute
+     * @param array|null $params
+     * @param Validator $validator
+     */
+    public function validatePayloadTemplate(string $attribute, array $params = null, Validator $validator)
+    {
+        try {
+            Craft::$app->getView()->getTwig()->createTemplate($this->payloadTemplate);
+        } catch (TwigError $e) {
+            $message = preg_replace('/ in "__string_template__\w+"/', '', $e->getMessage());
+            $validator->addError($this, $attribute, $message);
         }
     }
 

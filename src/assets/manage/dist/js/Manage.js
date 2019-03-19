@@ -1,7 +1,7 @@
 (function($) {
     /** global: Craft */
     /** global: Garnish */
-    var WebhookIndex = Garnish.Base.extend(
+    var Manager = Garnish.Base.extend(
         {
             $groups: null,
             $selectedGroup: null,
@@ -56,7 +56,7 @@
                         name: name
                     };
 
-                    Craft.postActionRequest('webhooks/index/save-group', data, $.proxy(function(response, textStatus) {
+                    Craft.postActionRequest('webhooks/manage/save-group', data, $.proxy(function(response, textStatus) {
                         if (textStatus === 'success') {
                             if (response.success) {
                                 location.href = Craft.getUrl('webhooks/group/' + response.group.id);
@@ -84,7 +84,7 @@
                         name: newName
                     };
 
-                    Craft.postActionRequest('webhooks/index/save-group', data, $.proxy(function(response, textStatus) {
+                    Craft.postActionRequest('webhooks/manage/save-group', data, $.proxy(function(response, textStatus) {
                         if (textStatus === 'success') {
                             if (response.success) {
                                 this.$selectedGroup.text(response.group.name);
@@ -113,7 +113,7 @@
                         id: this.$selectedGroup.data('id')
                     };
 
-                    Craft.postActionRequest('webhooks/index/delete-group', data, $.proxy(function(response, textStatus) {
+                    Craft.postActionRequest('webhooks/manage/delete-group', data, $.proxy(function(response, textStatus) {
                         if (textStatus === 'success') {
                             if (response.success) {
                                 location.href = Craft.getUrl('webhooks');
@@ -143,6 +143,6 @@
 
 
     Garnish.$doc.ready(function() {
-        new WebhookIndex();
+        new Manager();
     });
 })(jQuery);

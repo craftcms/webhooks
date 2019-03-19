@@ -3,35 +3,20 @@
 namespace craft\webhooks\controllers;
 
 use Craft;
-use craft\web\Controller as BaseController;
-use craft\webhooks\assets\index\IndexAsset;
+use craft\webhooks\assets\manage\ManageAsset;
 use craft\webhooks\Group;
 use craft\webhooks\Plugin;
 use yii\web\BadRequestHttpException;
 use yii\web\Response;
 
 /**
- * Webhooks Index Controller
+ * Manage Webhooks Controller
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since 1.0
  */
-class IndexController extends BaseController
+class ManageController extends BaseController
 {
-    /**
-     * @inheritdoc
-     */
-    public function beforeAction($action)
-    {
-        if (!parent::beforeAction($action)) {
-            return false;
-        }
-
-        $this->requirePermission('accessPlugin-webhooks');
-
-        return true;
-    }
-
     /**
      * Shows the webhook index page
      *
@@ -40,11 +25,11 @@ class IndexController extends BaseController
      */
     public function actionIndex(int $groupId = null): Response
     {
-        Craft::$app->getView()->registerAssetBundle(IndexAsset::class);
+        Craft::$app->getView()->registerAssetBundle(ManageAsset::class);
 
         $manager = Plugin::getInstance()->getWebhookManager();
 
-        return $this->renderTemplate('webhooks/_index', [
+        return $this->renderTemplate('webhooks/_manage/index', [
             'groups' => $manager->getAllGroups(),
             'webhooks' => $manager->getWebhooksByGroupId($groupId),
             'groupId' => $groupId,

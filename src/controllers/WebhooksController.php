@@ -3,11 +3,12 @@
 namespace craft\webhooks\controllers;
 
 use Craft;
+use craft\helpers\ArrayHelper;
 use craft\helpers\UrlHelper;
-use craft\web\Controller as BaseController;
 use craft\webhooks\assets\edit\EditAsset;
 use craft\webhooks\Plugin;
 use craft\webhooks\Webhook;
+use craft\webhooks\WebhookHelper;
 use yii\base\InvalidArgumentException;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
@@ -21,20 +22,6 @@ use yii\web\Response;
  */
 class WebhooksController extends BaseController
 {
-    /**
-     * @inheritdoc
-     */
-    public function beforeAction($action)
-    {
-        if (!parent::beforeAction($action)) {
-            return false;
-        }
-
-        $this->requirePermission('accessPlugin-webhooks');
-
-        return true;
-    }
-
     /**
      * Shows the edit page for a webhook.
      *
@@ -92,13 +79,17 @@ class WebhooksController extends BaseController
             }
         }
 
+        // Autosuggest classes
+        $classSuggestions = WebhookHelper::classSuggestions();
+
         Craft::$app->getView()->registerAssetBundle(EditAsset::class);
 
-        return $this->renderTemplate('webhooks/_edit', compact(
+        return $this->renderTemplate('webhooks/_manage/edit', compact(
             'groupOptions',
             'webhook',
             'title',
-            'crumbs'
+            'crumbs',
+            'classSuggestions'
         ));
     }
 
@@ -125,7 +116,19 @@ class WebhooksController extends BaseController
             $webhook = new Webhook();
         }
 
-        $webhook->setAttributes($request->getBodyParams());
+        $attributes = $request->getBodyParams();
+        if (ArrayHelper::remove($attributes, 'customPayload')) {
+            $attributes['userAttributes'] = null;
+            $attributes['senderAttributes'] = null;
+            $attributes['eventAttributes'] = null;
+
+            if (empty($attributes['payloadTemplate'])) {
+                $attributes['payloadTemplate'] = '{}';
+            }
+        } else {
+            $attributes['payloadTemplate'] = null;
+        }
+        $webhook->setAttributes($attributes);
 
         if (!Plugin::getInstance()->getWebhookManager()->saveWebhook($webhook)) {
             if ($request->getAcceptsJson()) {
@@ -155,12 +158,26 @@ class WebhooksController extends BaseController
 
     /**
      * Deletes a webhook.
+     *
+     * @return Response
      */
-    public function actionDelete()
+    public function actionDelete(): Response
     {
         $this->requirePostRequest();
         $id = Craft::$app->getRequest()->getRequiredBodyParam('id');
         Plugin::getInstance()->getWebhookManager()->deleteWebhookById($id);
         return $this->redirectToPostedUrl();
+    }
+
+    /**
+     * Returns the available events for a component class.
+     */
+    public function actionEventSuggestions(): Response
+    {
+        $senderClass = Craft::$app->getRequest()->getRequiredBodyParam('senderClass');
+
+        return $this->asJson([
+            'events' => WebhookHelper::eventSuggestions($senderClass),
+        ]);
     }
 }

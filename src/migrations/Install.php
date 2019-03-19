@@ -33,14 +33,34 @@ class Install extends Migration
             'name' => $this->string()->notNull(),
             'class' => $this->string()->notNull(),
             'event' => $this->string()->notNull(),
-            'type' => $this->string(10)->notNull(),
+            'method' => $this->string(10)->notNull(),
             'url' => $this->string()->notNull(),
             'userAttributes' => $this->text(),
             'senderAttributes' => $this->text(),
             'eventAttributes' => $this->text(),
+            'payloadTemplate' => $this->mediumText(),
             'enabled' => $this->boolean()->notNull()->defaultValue(true),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
+            'uid' => $this->uid(),
+        ]);
+
+        // Create the webhookrequests table
+        $this->createTable('{{%webhookrequests}}', [
+            'id' => $this->primaryKey(),
+            'webhookId' => $this->integer(),
+            'status' => $this->string()->notNull(),
+            'attempts' => $this->tinyInteger(),
+            'method' => $this->string(),
+            'url' => $this->string(),
+            'requestHeaders' => $this->text(),
+            'requestBody' => $this->mediumText(),
+            'responseStatus' => $this->smallInteger(),
+            'responseHeaders' => $this->text(),
+            'responseBody' => $this->text(),
+            'responseTime' => $this->integer(),
+            'dateCreated' => $this->dateTime()->notNull(),
+            'dateRequested' => $this->dateTime(),
             'uid' => $this->uid(),
         ]);
 
@@ -48,6 +68,7 @@ class Install extends Migration
         $this->createIndex(null, '{{%webhooks}}', ['groupId', 'name']);
         $this->createIndex(null, '{{%webhooks}}', ['name'], true);
         $this->addForeignKey(null, '{{%webhooks}}', ['groupId'], '{{%webhookgroups}}', ['id'], 'SET NULL');
+        $this->addForeignKey(null, '{{%webhookrequests}}', ['webhookId'], '{{%webhooks}}', ['id'], 'SET NULL');
     }
 
     /**
@@ -58,5 +79,6 @@ class Install extends Migration
         // Drop the DB table
         $this->dropTableIfExists('{{%webhooks}}');
         $this->dropTableIfExists('{{%webhookgroups}}');
+        $this->dropTableIfExists('{{%webhookrequests}}');
     }
 }

@@ -5,7 +5,7 @@
  * @license MIT
  */
 
-namespace craft\webhooks\assets\index;
+namespace craft\webhooks\assets\manage;
 
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
@@ -17,7 +17,7 @@ use craft\web\View;
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since 1.0
  */
-class IndexAsset extends AssetBundle
+class ManageAsset extends AssetBundle
 {
     public $sourcePath = __DIR__ . '/dist';
 
@@ -26,7 +26,7 @@ class IndexAsset extends AssetBundle
     ];
 
     public $js = [
-        'js/WebhookIndex.js',
+        'js/Manage.js',
     ];
 
     /**
