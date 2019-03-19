@@ -104,6 +104,7 @@ class WebhookHelper
                     if (
                         !class_exists($class, false) &&
                         !interface_exists($class, false) &&
+                        !trait_exists($class, false) &&
                         file_exists($file) &&
                         strpos($class, 'Codeception') !== 0 &&
                         substr($class, -4) !== 'Test' &&
