@@ -98,6 +98,16 @@ class WebhookHelper
         }
         if ($autoloadClass !== null) {
             try {
+                // Get a list of namespaces we care about
+                $namespaces = ['craft'];
+                foreach (Craft::$app->getPlugins()->getAllPlugins() as $plugin) {
+                    $classParts = explode('\\', get_class($plugin));
+                    if (count($classParts) > 1) {
+                        $namespaces[] = implode('\\', array_slice($classParts, 0, -1));
+                    }
+                }
+                $namespaces = array_unique($namespaces);
+
                 /** @var ClassLoader $classLoader */
                 $classLoader = $autoloadClass::getLoader();
                 foreach ($classLoader->getClassMap() as $class => $file) {
@@ -106,11 +116,16 @@ class WebhookHelper
                         !interface_exists($class, false) &&
                         !trait_exists($class, false) &&
                         file_exists($file) &&
-                        strpos($class, 'Codeception') !== 0 &&
                         substr($class, -4) !== 'Test' &&
                         substr($class, -8) !== 'TestCase'
                     ) {
-                        require $file;
+                        // See if it's in a namespace we care about
+                        foreach ($namespaces as $namespace) {
+                            if (strpos($class, $namespace . '\\') === 0) {
+                                require $file;
+                                break;
+                            }
+                        }
                     }
                 }
             } catch (\Throwable $e) {
