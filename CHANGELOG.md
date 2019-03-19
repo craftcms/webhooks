@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 2.0.0 - 2019-03-19
 
 ### Added
 - Webhooks now logs requests, and it’s possible to view them from a new “Activity” page within the plugin.
