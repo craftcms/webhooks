@@ -5,7 +5,6 @@ namespace craft\webhooks\controllers;
 use Craft;
 use craft\helpers\ArrayHelper;
 use craft\helpers\UrlHelper;
-use craft\web\Controller as BaseController;
 use craft\webhooks\assets\edit\EditAsset;
 use craft\webhooks\Plugin;
 use craft\webhooks\Webhook;
@@ -23,20 +22,6 @@ use yii\web\Response;
  */
 class WebhooksController extends BaseController
 {
-    /**
-     * @inheritdoc
-     */
-    public function beforeAction($action)
-    {
-        if (!parent::beforeAction($action)) {
-            return false;
-        }
-
-        $this->requirePermission('accessPlugin-webhooks');
-
-        return true;
-    }
-
     /**
      * Shows the edit page for a webhook.
      *
@@ -99,7 +84,7 @@ class WebhooksController extends BaseController
 
         Craft::$app->getView()->registerAssetBundle(EditAsset::class);
 
-        return $this->renderTemplate('webhooks/_edit', compact(
+        return $this->renderTemplate('webhooks/_manage/edit', compact(
             'groupOptions',
             'webhook',
             'title',

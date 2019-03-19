@@ -3,17 +3,26 @@
 namespace craft\webhooks;
 
 use Craft;
+use craft\db\Query;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\ArrayHelper;
+use craft\helpers\Db;
 use craft\helpers\Json;
+use craft\helpers\StringHelper;
 use craft\web\UrlManager;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\RequestOptions;
 use yii\base\Arrayable;
 use yii\base\Event;
+use yii\base\Exception;
+use yii\base\InvalidArgumentException;
 
 /**
  * Webhooks plugin
  *
  * @method static Plugin getInstance()
+ * @method Settings getSettings()
+ * @property-read Settings $settings
  * @propery-read WebhookManager $webhookManager
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
@@ -21,6 +30,13 @@ use yii\base\Event;
  */
 class Plugin extends \craft\base\Plugin
 {
+    // Constants
+    // =========================================================================
+
+    const STATUS_PENDING = 'pending';
+    const STATUS_REQUESTED = 'requested';
+    const STATUS_DONE = 'done';
+
     // Properties
     // =========================================================================
 
@@ -32,7 +48,7 @@ class Plugin extends \craft\base\Plugin
     /**
      * @inheritdoc
      */
-    public $schemaVersion = '1.2.0';
+    public $schemaVersion = '2.0.0';
 
     // Public Methods
     // =========================================================================
@@ -63,7 +79,7 @@ class Plugin extends \craft\base\Plugin
 
         foreach ($webhooks as $webhook) {
             Event::on($webhook->class, $webhook->event, function(Event $e) use ($webhook) {
-                if ($webhook->type === 'post') {
+                if ($webhook->method === 'post') {
                     // Build out the body data
                     if ($webhook->payloadTemplate) {
                         $json = Craft::$app->getView()->renderString($webhook->payloadTemplate, [
@@ -93,24 +109,165 @@ class Plugin extends \craft\base\Plugin
                 }
 
                 // Queue the send request up
-                Craft::$app->getQueue()->push(new SendWebhookJob([
-                    'description' => Craft::t('webhooks', 'Sending webhook “{name}”', [
-                        'name' => $webhook->name,
-                    ]),
-                    'type' => $webhook->type,
-                    'url' => $webhook->url,
-                    'data' => $data ?? null,
-                ]));
+                $headers = [];
+                if (isset($data) && is_array($data)) {
+                    $body = Json::encode($data);
+                    $headers['Content-Type'] = 'application/json';
+                } else {
+                    $body = $data ?? null;
+                }
+
+                $this->request($webhook->method, $webhook->url, $headers, $body, $webhook->id);
             });
         }
 
         // Register CP routes
         Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $e) {
-            $e->rules['webhooks'] = 'webhooks/index/index';
-            $e->rules['webhooks/group/<groupId:\d+>'] = 'webhooks/index/index';
+            $e->rules['webhooks'] = 'webhooks/manage/index';
+            $e->rules['webhooks/group/<groupId:\d+>'] = 'webhooks/manage/index';
             $e->rules['webhooks/new'] = 'webhooks/webhooks/edit';
             $e->rules['webhooks/<id:\d+>'] = 'webhooks/webhooks/edit';
+            $e->rules['webhooks/activity'] = 'webhooks/activity/index';
         });
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getCpNavItem()
+    {
+        $item = parent::getCpNavItem();
+        $item['subnav'] = [
+            'manage' => ['label' => Craft::t('webhooks', 'Manage Webhooks'), 'url' => 'webhooks'],
+            'activity' => ['label' => Craft::t('webhooks', 'Activity'), 'url' => 'webhooks/activity'],
+        ];
+        return $item;
+    }
+
+    /**
+     * Queues up a webhook request to be sent.
+     *
+     * @param string $method
+     * @param string $url
+     * @param array|null $headers
+     * @param string|null $body
+     * @param int|null $webhookId
+     * @throws \yii\db\Exception
+     */
+    public function request(string $method, string $url, array $headers = null, string $body = null, int $webhookId = null)
+    {
+        $db = Craft::$app->getDb();
+        $db->createCommand()
+            ->insert('{{%webhookrequests}}', [
+                'webhookId' => $webhookId,
+                'status' => self::STATUS_PENDING,
+                'method' => $method,
+                'url' => $url,
+                'requestHeaders' => $headers ? Json::encode($headers) : null,
+                'requestBody' => $body,
+                'dateCreated' => Db::prepareDateForDb(new \DateTime()),
+                'uid' => StringHelper::UUID(),
+            ], false)
+            ->execute();
+
+        Craft::$app->getQueue()->push(new SendRequestJob([
+            'requestId' => $db->getLastInsertID('{{%webhookrequests}}'),
+            'webhookId' => $webhookId,
+        ]));
+    }
+
+    /**
+     * Returns data for a request by its ID.
+     *
+     * @param int $requestId
+     * @return array
+     */
+    public function getRequestData(int $requestId): array
+    {
+        $data = (new Query())
+            ->from(['{{%webhookrequests}}'])
+            ->where(['id' => $requestId])
+            ->one();
+
+        if (!$data) {
+            throw new InvalidArgumentException('Invalid webhook request ID: ' . $this->requestId);
+        }
+
+        if ($data['requestHeaders']) {
+            $data['requestHeaders'] = Json::decode($data['requestHeaders']);
+        }
+        if ($data['responseHeaders']) {
+            $data['responseHeaders'] = Json::decode($data['responseHeaders']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Sends a request by its ID.
+     *
+     * @param int $requestId
+     * @throws Exception
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return bool Whether the request came back with a 2xx response
+     */
+    public function sendRequest(int $requestId): bool
+    {
+        // Acquire a lock on the request
+        $lockName = 'webhook.' . $requestId;
+        $mutex = Craft::$app->getMutex();
+        if (!$mutex->acquire($lockName)) {
+            throw new Exception('Could not acquire a lock for the webhook request ' . $requestId);
+        }
+
+        // Prepare the request options
+        $options = [];
+        $data = $this->getRequestData($requestId);
+        if ($data['requestHeaders']) {
+            $options[RequestOptions::HEADERS] = $data['requestHeaders'];
+        }
+        if ($data['requestBody']) {
+            $options[RequestOptions::BODY] = $data['requestBody'];
+        }
+
+        // Update the request
+        $db = Craft::$app->getDb();
+        $db->createCommand()
+            ->update('{{%webhookrequests}}', [
+                'status' => self::STATUS_REQUESTED,
+                'dateRequested' => Db::prepareDateForDb(new \DateTime()),
+            ], ['id' => $requestId], [], false)
+            ->execute();
+
+        $startTime = microtime(true);
+        try {
+            $response = Craft::createGuzzleClient()->request($data['method'], $data['url'], $options);
+            $success = true;
+        } catch (RequestException $e) {
+            $response = $e->getResponse();
+            $success = false;
+        }
+
+        // Update the request
+        $time = round(1000 * (microtime(true) - $startTime));
+        $attempt = ($data['attempts'] ?? 0) + 1;
+
+        $db = Craft::$app->getDb();
+        $db->createCommand()
+            ->update('{{%webhookrequests}}', [
+                'status' => self::STATUS_DONE,
+                'attempts' => $attempt,
+                'responseStatus' => $response ? $response->getStatusCode() : null,
+                'responseHeaders' => $response ? Json::encode($response->getHeaders()) : null,
+                'responseBody' => $response ? (string)$response->getBody() : null,
+                'responseTime' => $time,
+            ], ['id' => $requestId], [], false)
+            ->execute();
+
+        // Release the lock
+        $mutex->release($lockName);
+
+        return $success;
     }
 
     /**
@@ -141,5 +298,13 @@ class Plugin extends \craft\base\Plugin
     public function getWebhookManager(): WebhookManager
     {
         return $this->get('webhookManager');
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function createSettingsModel()
+    {
+        return new Settings();
     }
 }

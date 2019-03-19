@@ -1,8 +1,8 @@
 {% extends '_layouts/cp' %}
+{% set title = 'Manage Webhooks'|t('webhooks') %}
+{% set selectedSubnavItem = 'manage' %}
 
 {% from '_includes/forms' import lightswitch %}
-
-{% set title = 'Webhooks' %}
 
 {% block actionButton %}
     {% set newWebhookUrl = url('webhooks/new', (groupId is defined ? { groupId: groupId } : null)) %}

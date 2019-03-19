@@ -1,5 +1,5 @@
 {% extends '_layouts/cp' %}
-
+{% set selectedSubnavItem = 'manage' %}
 {% set fullPageForm = true %}
 
 {% import '_includes/forms' as forms %}
@@ -54,7 +54,7 @@
         errors: webhook.getErrors('class')
     }) }}
 
-    {% set eventInput = include('webhooks/_event-autosuggest', {
+    {% set eventInput = include('webhooks/_manage/event-autosuggest', {
         id: 'event',
         name: 'event',
         class: 'code ltr',
@@ -73,15 +73,15 @@
         <div class="flex">
             <div>
                 {{ forms.select({
-                    id: 'type',
-                    name: 'type',
+                    id: 'method',
+                    name: 'method',
                     options: {
                         'get': 'GET',
                         'post': 'POST'
                     },
-                    value: webhook.type,
+                    value: webhook.method,
                     toggle: true,
-                    targetPrefix: 'type-settings--'
+                    targetPrefix: 'method-settings--'
                 }) }}
             </div>
             <div class="flex-grow">
@@ -96,14 +96,14 @@
     {% endset %}
 
     {{ forms.field({
-        label: 'Request Type & URL'|t('webhooks'),
+        label: 'Request Method & URL'|t('webhooks'),
         required: true,
-        instructions: 'The request type and URL that the webhook should send. (The URL will be provided by your [task automation tool][1].)'|t('webhooks') ~ '\n\n[1]: https://github.com/craftcms/webhooks#integration-with-task-automation-tools',
+        instructions: 'The request method and URL that the webhook should send. (The URL will be provided by your [task automation tool][1].)'|t('webhooks') ~ '\n\n[1]: https://github.com/craftcms/webhooks#integration-with-task-automation-tools',
         id: 'url',
         errors: webhook.getErrors('url')
     }, urlInput) }}
 
-    <div id="type-settings--post" {% if webhook.type == 'get' %}class="hidden"{% endif %}>
+    <div id="method-settings--post" {% if webhook.method == 'get' %}class="hidden"{% endif %}>
 
         <hr>
 

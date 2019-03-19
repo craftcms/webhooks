@@ -196,7 +196,7 @@ class WebhookManager
             'name' => $name,
             'class' => $webhook->class,
             'event' => $webhook->event,
-            'type' => $webhook->type,
+            'method' => $webhook->method,
             'url' => $webhook->url,
             'userAttributes' => $webhook->userAttributes,
             'senderAttributes' => $webhook->senderAttributes,
@@ -236,7 +236,7 @@ class WebhookManager
     private function _createWebhookQuery(): Query
     {
         return (new Query())
-            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'type', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes', 'payloadTemplate'])
+            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'method', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes', 'payloadTemplate'])
             ->from(['{{%webhooks}}']);
     }
 
