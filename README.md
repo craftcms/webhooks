@@ -112,7 +112,7 @@ That field supports Twig, so you can make this dynamic. An `event` variable will
       slug: entry.slug,
       isNew: event.isNew
     }
-  }|json_encode(options=0)
+  }|json_encode(options=0)|raw
 }}
 ```
 
