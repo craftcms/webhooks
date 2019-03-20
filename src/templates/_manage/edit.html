@@ -41,18 +41,20 @@
         errors: webhook.getErrors('name')
     }) }}
 
-    {{ forms.autosuggestField({
-        label: 'Sender Class'|t('webhooks'),
-        required: true,
-        instructions: 'The class name the sender must be an instance of.'|t('webhooks'),
+    {% set classInput = include('webhooks/_manage/class-autosuggest', {
         id: 'class',
         name: 'class',
         class: 'code ltr',
-        suggestions: classSuggestions,
         placeholder: 'craft\\elements\\Entry',
         value: webhook.class,
         errors: webhook.getErrors('class')
-    }) }}
+    }, with_context = false) %}
+    {{ forms.field({
+        label: 'Sender Class'|t('webhooks'),
+        required: true,
+        instructions: 'The class name the sender must be an instance of.'|t('webhooks'),
+        errors: webhook.getErrors('class')
+    }, classInput) }}
 
     {% set eventInput = include('webhooks/_manage/event-autosuggest', {
         id: 'event',
