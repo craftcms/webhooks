@@ -5,6 +5,7 @@
 ### Fixed
 - Fixed a bug where it wasn’t possible to create or edit webhooks if a plugin contained an invalid class. ([#8](https://github.com/craftcms/webhooks/issues/8))
 - Fixed a SQL error that would occur on installs that had been updated from Webhooks 1.x.
+- Fixed a SQL error that occurred when attempting to uninstall Webhooks.
 
 ## 2.0.0 - 2019-03-19
 

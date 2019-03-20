@@ -77,8 +77,8 @@ class Install extends Migration
     public function safeDown()
     {
         // Drop the DB table
+        $this->dropTableIfExists('{{%webhookrequests}}');
         $this->dropTableIfExists('{{%webhooks}}');
         $this->dropTableIfExists('{{%webhookgroups}}');
-        $this->dropTableIfExists('{{%webhookrequests}}');
     }
 }
