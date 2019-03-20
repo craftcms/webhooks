@@ -35,7 +35,7 @@ class WebhookHelper
      */
     public static function classSuggestions(): array
     {
-        $data = Craft::$app->getCache()->getOrSet('webhooks.classSuggestions', function() {
+        return Craft::$app->getCache()->getOrSet('webhooks.classSuggestions', function() {
             $classes = [];
             foreach (self::_findClasses() as $class) {
                 $classes[] = [
@@ -47,12 +47,6 @@ class WebhookHelper
         }, null, new FileDependency([
             'fileName' => Craft::$app->getPath()->getVendorPath() . '/composer/autoload_real.php',
         ]));
-
-        return [
-            [
-                'data' => $data,
-            ],
-        ];
     }
 
     /**

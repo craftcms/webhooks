@@ -1,0 +1,24 @@
+{% extends '_includes/forms/autosuggest' %}
+
+{% block data %}
+    {{ parent() }}
+    this.updateSuggestions()
+    {#data.inputProps.onInputChange = this.myOnInputChange;#}
+
+{% endblock %}
+
+
+{% block methods %}
+    {{ parent() }}
+    updateSuggestions() {
+        Craft.postActionRequest('webhooks/webhooks/class-suggestions', {}, $.proxy(function(response, textStatus) {
+            if (textStatus === 'success') {
+                this.suggestions = [
+                    {
+                        data: response.classes
+                    }
+                ];
+            }
+        }, this));
+    },
+{% endblock %}

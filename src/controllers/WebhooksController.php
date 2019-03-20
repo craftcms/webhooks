@@ -79,17 +79,13 @@ class WebhooksController extends BaseController
             }
         }
 
-        // Autosuggest classes
-        $classSuggestions = WebhookHelper::classSuggestions();
-
         Craft::$app->getView()->registerAssetBundle(EditAsset::class);
 
         return $this->renderTemplate('webhooks/_manage/edit', compact(
             'groupOptions',
             'webhook',
             'title',
-            'crumbs',
-            'classSuggestions'
+            'crumbs'
         ));
     }
 
@@ -167,6 +163,16 @@ class WebhooksController extends BaseController
         $id = Craft::$app->getRequest()->getRequiredBodyParam('id');
         Plugin::getInstance()->getWebhookManager()->deleteWebhookById($id);
         return $this->redirectToPostedUrl();
+    }
+
+    /**
+     * Returns the available sender classes.
+     */
+    public function actionClassSuggestions(): Response
+    {
+        return $this->asJson([
+            'classes' => WebhookHelper::classSuggestions(),
+        ]);
     }
 
     /**
