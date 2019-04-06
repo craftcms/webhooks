@@ -119,7 +119,7 @@ class Plugin extends \craft\base\Plugin
 
                 // Check if it exists and if we we should send if it doesnt.
                 if (!$this->doesBodyHaveValue($body) && $this->getSettings()->dontSendEmptyRequestBody === true) {
-                    Craft::warning('Ignored webhook '. $webhook->name .' because the body was empty.', __METHOD__);
+                    Craft::warning('Ignored webhook '. $webhook->name .' because the body was empty.', 'webhooks');
                 } else {
                     $this->request($webhook->method, $webhook->url, $headers, $body, $webhook->id);
                 }
