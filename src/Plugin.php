@@ -117,7 +117,12 @@ class Plugin extends \craft\base\Plugin
                     $body = $data ?? null;
                 }
 
-                $this->request($webhook->method, $webhook->url, $headers, $body, $webhook->id);
+                // Check if it exists and if we we should send if it doesnt.
+                if (!$this->doesBodyHaveValue($body) && $this->getSettings()->dontSendEmptyRequestBody === true) {
+                    Craft::warning('Ignored webhook '. $webhook->name .' because the body was empty.', __METHOD__);
+                } else {
+                    $this->request($webhook->method, $webhook->url, $headers, $body, $webhook->id);
+                }
             });
         }
 
@@ -129,6 +134,25 @@ class Plugin extends \craft\base\Plugin
             $e->rules['webhooks/<id:\d+>'] = 'webhooks/webhooks/edit';
             $e->rules['webhooks/activity'] = 'webhooks/activity/index';
         });
+    }
+
+    /**
+     * Validation of the body param
+     * @param $body
+     * @return bool
+     */
+    public function doesBodyHaveValue($body) : bool
+    {
+        if (!$body) {
+            return false;
+        }
+
+        // If its a string containing only spaces.
+        if (is_string($body) && trim($body) === '') {
+            return false;
+        }
+
+        return true;
     }
 
     /**

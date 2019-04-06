@@ -21,4 +21,9 @@ class Settings extends Model
      * @var int The time delay in seconds between request attempts.
      */
     public $attemptDelay = 60;
+
+    /**
+     * @var bool Whether if the request body is empty should the request be sent.
+     */
+    public $dontSendEmptyRequestBody = false;
 }
