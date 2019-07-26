@@ -72,7 +72,7 @@ The Sender Class can be a subclass of the class that triggers the event. For exa
 
 See [Integrating with Task Automation Tools](#integrating-with-task-automation-tools) for examples on how to get a Webhook URL from various task automation tools.
 
-![Screenshot of the Edit Webhook page](./screenshot.png)
+![Screenshot of the Edit Webhook page](./images/edit-webhook.png)
 
 Webhooks can either send a GET request, or a POST request with a JSON body containing the following keys:
 
@@ -83,6 +83,54 @@ Webhooks can either send a GET request, or a POST request with a JSON body conta
 - `sender` – an object representing the event sender.
 - `eventClass` – the class name of the event.
 - `event` – an object with keys representing any event class properties that aren’t declared by [yii\base\Event](https://www.yiiframework.com/doc/api/2.0/yii-base-event). (For example, if a [craft\events\ElementEvent](https://docs.craftcms.com/api/v3/craft-events-elementevent.html) is triggered, this will contain [element](https://docs.craftcms.com/api/v3/craft-events-elementevent.html#property-element) and [isNew](https://docs.craftcms.com/api/v3/craft-events-elementevent.html#property-isnew) keys.)
+
+#### Filtering Events
+
+Some events can have filters applied to them, which prevent webhooks from being executed under certain conditions.
+
+![Screenshot of the Event Filters setting](./images/event-filters.png)
+
+Only element class events and certain `craft\services\Elements` events have any filters out of the box, but modules and plugins can register additional filters using the `craft\webhooks\Plugin::EVENT_REGISTER_FILTER_TYPES` event.
+
+```php
+use yii\base\Event;
+use craft\webhooks\Plugin as Webhooks;
+use craft\events\RegisterComponentTypesEvent;
+
+Event::on(Webhooks::class, Webhooks::EVENT_REGISTER_FILTER_TYPES, function(RegisterComponentTypesEvent $e) {
+    $e->types[] = ArticleFilter::class;
+});
+```
+
+Filter type classes must implement `craft\webhooks\filters\FilterInterface`:
+
+```php
+use craft\webhooks\filters\FilterInterface;
+use craft\elements\Entry;
+use yii\base\Event;
+
+class ArticleFilter implements FilterInterface
+{
+    public static function displayName(): string
+    {
+        return 'Entry has an “Article” type';
+    }
+
+    public static function show(string $class, string $event): bool
+    {
+        // Only show this filter if the Sender Class is set to 'craft\elements\Entry' 
+        return $class === Entry::class;
+    }
+
+    public static function check(Event $event, bool $value): bool
+    {
+        // Filter basen on whether the entry's type is 'article':
+        /** @var Entry $entry */
+        $entry = $event->sender;
+        return ($entry->type->handle === 'article') === $value;
+    }
+}
+```
 
 #### Sending More Data
 
