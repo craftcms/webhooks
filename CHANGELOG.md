@@ -1,5 +1,10 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+### Fixed
+- Fixed an error that could occur when detecting available component classes in Craft 3.2.
+
 ## 2.0.1 - 2019-03-20
 
 ### Fixed
