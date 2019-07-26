@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 2.1.0 - 2019-07-26
 
 ### Added
 - Webhooks for element events can now be executed depending on whether the element is new, is a draft/revision, or is being duplicated/propagated/bulk-resaved. ([#14](https://github.com/craftcms/webhooks/issues/14))
