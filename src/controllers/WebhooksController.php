@@ -167,6 +167,8 @@ class WebhooksController extends BaseController
 
     /**
      * Returns the available sender classes.
+     *
+     * @return Response
      */
     public function actionClassSuggestions(): Response
     {
@@ -177,6 +179,8 @@ class WebhooksController extends BaseController
 
     /**
      * Returns the available events for a component class.
+     *
+     * @return Response
      */
     public function actionEventSuggestions(): Response
     {
