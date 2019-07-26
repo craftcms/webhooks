@@ -88,7 +88,7 @@ Webhooks can either send a GET request, or a POST request with a JSON body conta
 
 Some events can have filters applied to them, which prevent webhooks from being executed under certain conditions.
 
-![Screenshot of the Event Filters setting](./images/event-filters.png)
+<img src="./images/event-filters.png" width="414" height="381" alt="Screenshot of the Event Filters setting">
 
 Only element class events and certain `craft\services\Elements` events have any filters out of the box, but modules and plugins can register additional filters using the `craft\webhooks\Plugin::EVENT_REGISTER_FILTER_TYPES` event.
 
