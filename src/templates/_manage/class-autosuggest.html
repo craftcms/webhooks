@@ -3,8 +3,6 @@
 {% block data %}
     {{ parent() }}
     this.updateSuggestions()
-    {#data.inputProps.onInputChange = this.myOnInputChange;#}
-
 {% endblock %}
 
 
@@ -20,5 +18,12 @@
                 ];
             }
         }, this));
+    },
+    onSelected(option) {
+        this.selected = option.item;
+
+        // Trigger a 'change' event
+        var input = this.$el.childNodes[0].childNodes[0];
+        jQuery(input).trigger('change');
     },
 {% endblock %}

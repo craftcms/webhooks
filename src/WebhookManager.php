@@ -4,6 +4,7 @@ namespace craft\webhooks;
 
 use Craft;
 use craft\db\Query;
+use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use yii\base\InvalidArgumentException;
 
@@ -196,6 +197,7 @@ class WebhookManager
             'name' => $name,
             'class' => $webhook->class,
             'event' => $webhook->event,
+            'filters' => Json::encode($webhook->filters),
             'method' => $webhook->method,
             'url' => $webhook->url,
             'userAttributes' => $webhook->userAttributes,
@@ -236,7 +238,7 @@ class WebhookManager
     private function _createWebhookQuery(): Query
     {
         return (new Query())
-            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'method', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes', 'payloadTemplate'])
+            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'filters', 'method', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes', 'payloadTemplate'])
             ->from(['{{%webhooks}}']);
     }
 
@@ -249,6 +251,12 @@ class WebhookManager
     {
         if ($isMysql ?? Craft::$app->getDb()->getIsMysql()) {
             $result['name'] = html_entity_decode($result['name'], ENT_QUOTES | ENT_HTML5);
+        }
+
+        if ($result['filters']) {
+            $result['filters'] = Json::decode($result['filters']);
+        } else {
+            $result['filters'] = [];
         }
 
         return new Webhook($result);

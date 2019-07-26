@@ -71,6 +71,32 @@
         errors: webhook.getErrors('event')
     }, eventInput) }}
 
+    {% set filtersInput %}
+        <div class="pane" id="filter-pane">
+            <div class="spinner hidden" id="filter-spinner"></div>
+            <p id="no-filters"{% if webhook.filters is not empty %} class="hidden"{% endif %}>{{ 'No filters match this event.'|t('webhooks') }}</p>
+            <table id="filters" class="data{% if webhook.filters is empty %} hidden{% endif %}">
+                {% for filter in allFilters %}
+                    <tr data-class="{{ filter.class }}"{% if not filter.show %} class="hidden"{% endif %}>
+                        <th>{{ filter.displayName }}</th>
+                        <td>
+                            <div class="btngroup" tabindex="0">
+                                <div class="btn filter-no{% if filter.enabled and not filter.value %} active{% endif %}" data-icon="remove"></div>
+                                <div class="btn filter-ignore{% if not filter.enabled %} active{% endif %}"><div class="status"></div></div>
+                                <div class="btn filter-yes{% if filter.enabled and filter.value %} active{% endif %}" data-icon="checkmark"></div>
+                            </div>
+                            <input type="hidden" name="filters[{{ filter.class }}]"{% if filter.enabled %} value="{{ filter.value ? 'yes' : 'no' }}"{% endif %}>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% endset %}
+    {{ forms.field({
+        id: 'filters',
+        label: 'Event Filters'|t('webhooks'),
+    }, filtersInput) }}
+
     {% set urlInput %}
         <div class="flex">
             <div>

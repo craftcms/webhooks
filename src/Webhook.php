@@ -48,6 +48,11 @@ class Webhook extends Model
     public $event;
 
     /**
+     * @var array
+     */
+    public $filters = [];
+
+    /**
      * @var string
      */
     public $method = 'post';
@@ -138,6 +143,21 @@ class Webhook extends Model
                         }
                         if (!$foundEvent) {
                             $validator->addError($this, $attribute, Craft::t('webhooks', 'Class {class} doesn’t appear to have a {value} event.', ['class' => $this->class]));
+                        }
+                    }
+                }
+            ],
+            [
+                ['filters'],
+                function(string $attribute) {
+                    foreach ($this->filters as $class => &$value) {
+                        if ($value === 'yes') {
+                            $value = true;
+                        } else if ($value === 'no') {
+                            $value = false;
+                        }
+                        if (!is_bool($value)) {
+                            unset($this->filters[$class]);
                         }
                     }
                 }

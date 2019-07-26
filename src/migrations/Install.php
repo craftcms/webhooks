@@ -33,6 +33,7 @@ class Install extends Migration
             'name' => $this->string()->notNull(),
             'class' => $this->string()->notNull(),
             'event' => $this->string()->notNull(),
+            'filters' => $this->text(),
             'method' => $this->string(10)->notNull(),
             'url' => $this->string()->notNull(),
             'userAttributes' => $this->text(),

@@ -1,0 +1,43 @@
+#filter-pane,
+#filter-pane p {
+    display: inline-block;
+}
+
+#no-filters {
+    margin: 0;
+}
+
+#filters tr:first-child > * {
+    border-top: none;
+    padding-top: 0;
+}
+
+#filters tr:last-child > * {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+#filters th {
+    font-weight: normal;
+}
+
+#filters .btngroup:focus {
+    outline: none;
+}
+
+#filters .btn[data-icon]:before {
+    margin-top: -2px;
+    width: 1em;
+}
+
+#filters .filter-yes {
+    color: #27AE60;
+}
+
+#filters .filter-no {
+    color: #D0021B;
+}
+
+#filters .filter-ignore .status {
+    margin: 0;
+}
