@@ -109,6 +109,7 @@ class WebhookHelper
                         !class_exists($class, false) &&
                         !interface_exists($class, false) &&
                         !trait_exists($class, false) &&
+                        strpos($class, 'craft\\test\\') !== 0 &&
                         file_exists($file) &&
                         substr($class, -4) !== 'Test' &&
                         substr($class, -8) !== 'TestCase'

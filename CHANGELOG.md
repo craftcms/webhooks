@@ -1,5 +1,14 @@
 # Release Notes for Webhooks for Craft CMS
 
+## 2.1.0 - 2019-07-26
+
+### Added
+- Webhooks for element events can now be executed depending on whether the element is new, is a draft/revision, or is being duplicated/propagated/bulk-resaved. ([#14](https://github.com/craftcms/webhooks/issues/14))
+- Modules and plugins can register additional webhook filters using the new `craft\webhooks\Plugin::EVENT_REGISTER_FILTER_TYPES` event.  
+
+### Fixed
+- Fixed an error that could occur when detecting available component classes in Craft 3.2.
+
 ## 2.0.1 - 2019-03-20
 
 ### Fixed

@@ -4,12 +4,20 @@ namespace craft\webhooks;
 
 use Craft;
 use craft\db\Query;
+use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\ArrayHelper;
 use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use craft\web\UrlManager;
+use craft\webhooks\filters\DraftFilter;
+use craft\webhooks\filters\DuplicatingFilter;
+use craft\webhooks\filters\FilterInterface;
+use craft\webhooks\filters\NewElementFilter;
+use craft\webhooks\filters\PropagatingFilter;
+use craft\webhooks\filters\ResavingFilter;
+use craft\webhooks\filters\RevisionFilter;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use yii\base\Arrayable;
@@ -37,6 +45,29 @@ class Plugin extends \craft\base\Plugin
     const STATUS_REQUESTED = 'requested';
     const STATUS_DONE = 'done';
 
+    /**
+     * @event RegisterComponentTypesEvent The event that is triggered when registering filter types.
+     *
+     * Filter types must implement [[FilterInterface]].
+     * ---
+     * ```php
+     * use craft\events\RegisterComponentTypesEvent;
+     * use craft\webhooks\Plugin as Webhooks;
+     * use yii\base\Event;
+     *
+     * if (class_exists(Webhooks::class)) {
+     *     Event::on(Webhooks::class,
+     *         Webhooks::EVENT_REGISTER_FILTER_TYPES,
+     *         function(RegisterComponentTypesEvent $event) {
+     *             $event->types[] = MyFilterType::class;
+     *         }
+     *     );
+     * }
+     * ```
+     * @since 2.1
+     */
+    const EVENT_REGISTER_FILTER_TYPES = 'registerFilterTypes';
+
     // Properties
     // =========================================================================
 
@@ -48,7 +79,7 @@ class Plugin extends \craft\base\Plugin
     /**
      * @inheritdoc
      */
-    public $schemaVersion = '2.0.1';
+    public $schemaVersion = '2.1.0';
 
     // Public Methods
     // =========================================================================
@@ -79,6 +110,14 @@ class Plugin extends \craft\base\Plugin
 
         foreach ($webhooks as $webhook) {
             Event::on($webhook->class, $webhook->event, function(Event $e) use ($webhook) {
+                // Make sure it passes the filters
+                foreach ($webhook->filters as $filterClass => $filterValue) {
+                    /** @var string|FilterInterface $filterClass */
+                    if (class_exists($filterClass) && !$filterClass::check($e, $filterValue)) {
+                        return;
+                    }
+                }
+
                 if ($webhook->method === 'post') {
                     // Build out the body data
                     if ($webhook->payloadTemplate) {
@@ -328,5 +367,29 @@ class Plugin extends \craft\base\Plugin
     protected function createSettingsModel()
     {
         return new Settings();
+    }
+
+    /**
+     * Returns all available filter classes.
+     *
+     * @return string[] The available field type classes
+     */
+    public function getAllFilters(): array
+    {
+        $filterTypes = [
+            NewElementFilter::class,
+            DraftFilter::class,
+            RevisionFilter::class,
+            DuplicatingFilter::class,
+            PropagatingFilter::class,
+            ResavingFilter::class,
+        ];
+
+        $event = new RegisterComponentTypesEvent([
+            'types' => $filterTypes
+        ]);
+        $this->trigger(self::EVENT_REGISTER_FILTER_TYPES, $event);
+
+        return $event->types;
     }
 }

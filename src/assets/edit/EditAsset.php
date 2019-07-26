@@ -27,4 +27,8 @@ class EditAsset extends AssetBundle
     public $js = [
         'js/EditWebhook.js',
     ];
+
+    public $css = [
+        'css/edit-webhook.css',
+    ];
 }

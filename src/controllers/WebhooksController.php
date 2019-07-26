@@ -6,6 +6,7 @@ use Craft;
 use craft\helpers\ArrayHelper;
 use craft\helpers\UrlHelper;
 use craft\webhooks\assets\edit\EditAsset;
+use craft\webhooks\filters\FilterInterface;
 use craft\webhooks\Plugin;
 use craft\webhooks\Webhook;
 use craft\webhooks\WebhookHelper;
@@ -79,11 +80,25 @@ class WebhooksController extends BaseController
             }
         }
 
+        // Filters
+        $allFilters = [];
+        foreach (Plugin::getInstance()->getAllFilters() as $class) {
+            /** @var string|FilterInterface $class */
+            $allFilters[] = [
+                'class' => $class,
+                'displayName' => $class::displayName(),
+                'show' => $webhook->class && $webhook->event && $class::show($webhook->class, $webhook->event),
+                'enabled' => isset($webhook->filters[$class]),
+                'value' => isset($webhook->filters[$class]) && (bool)$webhook->filters[$class],
+            ];
+        }
+
         Craft::$app->getView()->registerAssetBundle(EditAsset::class);
 
         return $this->renderTemplate('webhooks/_manage/edit', compact(
             'groupOptions',
             'webhook',
+            'allFilters',
             'title',
             'crumbs'
         ));
@@ -167,6 +182,8 @@ class WebhooksController extends BaseController
 
     /**
      * Returns the available sender classes.
+     *
+     * @return Response
      */
     public function actionClassSuggestions(): Response
     {
@@ -177,6 +194,8 @@ class WebhooksController extends BaseController
 
     /**
      * Returns the available events for a component class.
+     *
+     * @return Response
      */
     public function actionEventSuggestions(): Response
     {
@@ -184,6 +203,31 @@ class WebhooksController extends BaseController
 
         return $this->asJson([
             'events' => WebhookHelper::eventSuggestions($senderClass),
+        ]);
+    }
+
+    /**
+     * Returns available filters for the given sender class and event.
+     *
+     * @return Response
+     */
+    public function actionFilters(): Response
+    {
+        $request = Craft::$app->getRequest();
+        $senderClass = $request->getRequiredBodyParam('senderClass');
+        $event = $request->getRequiredBodyParam('event');
+
+        $filters = [];
+
+        foreach (Plugin::getInstance()->getAllFilters() as $class) {
+            /** @var string|FilterInterface $class */
+            if ($class::show($senderClass, $event)) {
+                $filters[] = $class;
+            }
+        }
+
+        return $this->asJson([
+            'filters' => $filters,
         ]);
     }
 }
