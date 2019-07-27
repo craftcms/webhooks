@@ -64,8 +64,6 @@
                     return;
                 }
                 this.$filterSpinner.removeClass('hidden');
-                this.$noFiltersMessage.addClass('hidden');
-                this.$filtersTable.addClass('hidden');
                 Craft.postActionRequest('webhooks/webhooks/filters', {
                     senderClass: this.classVal,
                     event: this.eventVal,
@@ -74,12 +72,14 @@
                     if (textStatus === 'success') {
                         this.resetFilters();
                         if (response.filters.length) {
+                            this.$noFiltersMessage.addClass('hidden');
                             this.$filtersTable.removeClass('hidden');
                             for (var i = 0; i < response.filters.length; i++) {
                                 this.filters[response.filters[i]].$tr.removeClass('hidden');
                             }
                         } else {
                             this.$noFiltersMessage.removeClass('hidden');
+                            this.$filtersTable.addClass('hidden');
                         }
                     }
                 }.bind(this));

@@ -3,6 +3,10 @@
     display: inline-block;
 }
 
+#filter-pane {
+    position: relative;
+}
+
 #no-filters {
     margin: 0;
 }
@@ -40,4 +44,17 @@
 
 #filters .filter-ignore .status {
     margin: 0;
+}
+
+#filter-spinner {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.85);
+    z-index: 1;
 }
