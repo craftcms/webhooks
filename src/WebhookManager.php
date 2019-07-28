@@ -197,7 +197,7 @@ class WebhookManager
             'name' => $name,
             'class' => $webhook->class,
             'event' => $webhook->event,
-            'filters' => Json::encode($webhook->filters),
+            'filters' => $webhook->filters ? Json::encode($webhook->filters) : null,
             'method' => $webhook->method,
             'url' => $webhook->url,
             'userAttributes' => $webhook->userAttributes,
