@@ -149,7 +149,7 @@ class Webhook extends Model
             ],
             [
                 ['filters'],
-                function(string $attribute) {
+                function() {
                     foreach ($this->filters as $class => &$value) {
                         if ($value === 'yes') {
                             $value = true;
