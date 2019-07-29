@@ -197,9 +197,10 @@ class WebhookManager
             'name' => $name,
             'class' => $webhook->class,
             'event' => $webhook->event,
-            'filters' => Json::encode($webhook->filters),
+            'filters' => $webhook->filters ? Json::encode($webhook->filters) : null,
             'method' => $webhook->method,
             'url' => $webhook->url,
+            'headers' => $webhook->headers ? Json::encode($webhook->headers) : null,
             'userAttributes' => $webhook->userAttributes,
             'senderAttributes' => $webhook->senderAttributes,
             'eventAttributes' => $webhook->eventAttributes,
@@ -238,7 +239,22 @@ class WebhookManager
     private function _createWebhookQuery(): Query
     {
         return (new Query())
-            ->select(['id', 'groupId', 'enabled', 'name', 'class', 'event', 'filters', 'method', 'url', 'userAttributes', 'senderAttributes', 'eventAttributes', 'payloadTemplate'])
+            ->select([
+                'id',
+                'groupId',
+                'enabled',
+                'name',
+                'class',
+                'event',
+                'filters',
+                'method',
+                'url',
+                'headers',
+                'userAttributes',
+                'senderAttributes',
+                'eventAttributes',
+                'payloadTemplate',
+            ])
             ->from(['{{%webhooks}}']);
     }
 
@@ -257,6 +273,12 @@ class WebhookManager
             $result['filters'] = Json::decode($result['filters']);
         } else {
             $result['filters'] = [];
+        }
+
+        if ($result['headers']) {
+            $result['headers'] = Json::decode($result['headers']);
+        } else {
+            $result['headers'] = [];
         }
 
         return new Webhook($result);

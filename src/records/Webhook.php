@@ -11,9 +11,10 @@ use craft\db\ActiveRecord;
  * @property int|null $groupId
  * @property string $name
  * @property string $class
- * @property string $filters
+ * @property string|null $filters
  * @property string $event
  * @property string $url
+ * @property string|null $headers
  * @property string|null $userAttributes
  * @property string|null $senderAttributes
  * @property string|null $eventAttributes

@@ -79,7 +79,7 @@ class Plugin extends \craft\base\Plugin
     /**
      * @inheritdoc
      */
-    public $schemaVersion = '2.1.0';
+    public $schemaVersion = '2.2.0';
 
     // Public Methods
     // =========================================================================
@@ -118,10 +118,12 @@ class Plugin extends \craft\base\Plugin
                     }
                 }
 
+                $view = Craft::$app->getView();
+
                 if ($webhook->method === 'post') {
                     // Build out the body data
                     if ($webhook->payloadTemplate) {
-                        $json = Craft::$app->getView()->renderString($webhook->payloadTemplate, [
+                        $json = $view->renderString($webhook->payloadTemplate, [
                             'event' => $e,
                         ]);
                         $data = Json::decodeIfJson($json);
@@ -147,8 +149,31 @@ class Plugin extends \craft\base\Plugin
                     }
                 }
 
-                // Queue the send request up
+                // Set the headers and body
                 $headers = [];
+
+                foreach ($webhook->headers as $header) {
+                    $header['value'] = Craft::parseEnv($header['value']);
+                    if (strpos($header['value'], '{') !== false) {
+                        $header['value'] = $view->renderString($header['value'], [
+                            'event' => $e,
+                        ]);
+                    }
+                    // Get the trimmed lines
+                    $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', $header['value'])));
+                    // Add to the header array one-by-one, ensuring that we don't overwrite existing values
+                    foreach ($lines as $line) {
+                        if (!isset($headers[$header['name']])) {
+                            $headers[$header['name']] = $line;
+                        } else {
+                            if (!is_array($headers[$header['name']])) {
+                                $headers[$header['name']] = [$headers[$header['name']]];
+                            }
+                            $headers[$header['name']][] = $line;
+                        }
+                    }
+                }
+
                 if (isset($data) && is_array($data)) {
                     $body = Json::encode($data);
                     $headers['Content-Type'] = 'application/json';
@@ -156,6 +181,7 @@ class Plugin extends \craft\base\Plugin
                     $body = $data ?? null;
                 }
 
+                // Queue the send request up
                 $this->request($webhook->method, $webhook->url, $headers, $body, $webhook->id);
             });
         }
