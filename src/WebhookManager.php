@@ -200,6 +200,7 @@ class WebhookManager
             'filters' => $webhook->filters ? Json::encode($webhook->filters) : null,
             'method' => $webhook->method,
             'url' => $webhook->url,
+            'headers' => $webhook->headers ? Json::encode($webhook->headers) : null,
             'userAttributes' => $webhook->userAttributes,
             'senderAttributes' => $webhook->senderAttributes,
             'eventAttributes' => $webhook->eventAttributes,
@@ -248,6 +249,7 @@ class WebhookManager
                 'filters',
                 'method',
                 'url',
+                'headers',
                 'userAttributes',
                 'senderAttributes',
                 'eventAttributes',
@@ -271,6 +273,12 @@ class WebhookManager
             $result['filters'] = Json::decode($result['filters']);
         } else {
             $result['filters'] = [];
+        }
+
+        if ($result['headers']) {
+            $result['headers'] = Json::decode($result['headers']);
+        } else {
+            $result['headers'] = [];
         }
 
         return new Webhook($result);

@@ -131,6 +131,30 @@
         errors: webhook.getErrors('url')
     }, urlInput) }}
 
+    {{ forms.editableTableField({
+        id: 'headers',
+        name: 'headers',
+        label: 'Custom Headers'|t('webhooks'),
+        instructions: 'Any custom headers that should be sent.'|t('webhooks'),
+        cols: {
+            name: {
+                heading: 'Name'|t('webhooks'),
+                type: 'singleline',
+                code: true,
+                placeholder: 'X-Foo-Bar',
+            },
+            value: {
+                heading: 'Value'|t('webhooks'),
+                info: 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
+                type: 'multiline',
+                code: true,
+                placeholder: '{{ event.sender.fooBar }}',
+            }
+        },
+        rows: webhook.headers,
+        addRowLabel: 'Add a header'|t('webhooks'),
+    }) }}
+
     <div id="method-settings--post" {% if webhook.method == 'get' %}class="hidden"{% endif %}>
 
         <hr>

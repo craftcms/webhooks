@@ -132,6 +132,18 @@ class ArticleFilter implements FilterInterface
 }
 ```
 
+#### Sending Custom Headers
+
+You can send custom headers along with webhook requests using the Custom Headers setting.
+
+<img src="./images/custom-headers.png" width="696" height="292" alt="Screenshot of the Custom Headers setting">
+
+Header values can be set to an environment variable using the `$VARIABLE_NAME` syntax, or a Twig template.
+
+An `event` variable will be available to the Twig template, set to the event that triggered the webhook.
+
+You can have multiple headers that have the same name, and if a header value takes up multiple lines (after any empty lines have been discarded), each line will be sent as its own header, all using the same header name.
+
 #### Sending More Data
 
 If you need more data than what’s in the default POST request payload, you can fill in the “Extra User Attributes”, “Extra Sender Attributes”, and “Extra Event Attributes” fields.

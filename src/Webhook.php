@@ -63,6 +63,11 @@ class Webhook extends Model
     public $url;
 
     /**
+     * @var array
+     */
+    public $headers = [];
+
+    /**
      * @var string|null
      */
     public $userAttributes;
@@ -160,6 +165,12 @@ class Webhook extends Model
                             unset($this->filters[$class]);
                         }
                     }
+                }
+            ],
+            [
+                ['headers'],
+                function() {
+                    $this->headers = $this->headers ? array_values($this->headers) : [];
                 }
             ],
             [['userAttributes', 'senderAttributes'], 'validateAttributeList'],
