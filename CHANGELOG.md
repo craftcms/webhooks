@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 2.2.0 - 2019-07-29
 
 ### Added
 - Webhooks can now specify custom request headers. ([#12](https://github.com/craftcms/webhooks/issues/12))
