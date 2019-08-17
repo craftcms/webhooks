@@ -119,7 +119,6 @@ class Webhook extends Model
             [['groupId'], 'number'],
             [['enabled'], 'boolean'],
             [['method'], 'in', 'range' => ['get', 'post']],
-            [['url'], 'url'],
             [
                 ['class'],
                 function(string $attribute, array $params = null, Validator $validator) {
