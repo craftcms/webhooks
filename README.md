@@ -4,7 +4,7 @@
 
 This plugin adds the ability to manage “webhooks” in Craft CMS, which will send GET or POST requests when certain events occur.
 
-It can be used to integrate your Craft project with task automation tools like [Zapier](https://zapier.com) and [IFTTT](https://ifttt.com).
+It can be used to integrate your Craft project with task automation tools like [Zapier](https://zapier.com) or [Netlify](https://www.netlify.com) build hooks.
 
 ## Requirements
 
@@ -186,37 +186,48 @@ Only enabled webhooks will send webhook requests when their corresponding events
 
 ## Integrating with Task Automation Tools
 
+### Netlify
+
+To trigger a [Netlify](https://www.netlify.com) build using Webhooks, follow these steps:
+
+1. Within your Netlify dashboard, go to **Settings** → **Build & deploy** → **Continuous deployment** → **Build hooks**.
+2. Select **Add build hook**.
+3. Fill out the build hook settings and save it.
+4. Copy the build hook URL.
+5. Within your Craft control panel, go to **Webhooks** → **New webhook**.
+6. Paste the build hook URL into the **Webhook URL** field, fill out the remaining settings, and save the webhook.
+
 ### Zapier
 
 To integrate Webhooks with [Zapier](https://zapier.com), follow these steps:
 
-1. Create a new zap by clicking the “Make a Zap!” button on your [Zapier dashboard](https://zapier.com/app/dashboard).
-2. Select “Webhooks” under “Built-in Apps”.
-3. Select “Catch Hook” and click “Save + Continue”.
-4. Click “Continue” without entering anything in the “Pick off a Child Key” field.
+1. Within your [Zapier dashboard](https://zapier.com/app/dashboard), click **Make a Zap!**.
+2. Select **Webhooks** under **Built-in Apps**.
+3. Select **Catch Hook** and click **Save + Continue**.
+4. Click **Continue** without entering anything in the **Pick off a Child Key** field.
 5. Copy the webhook URL.
-6. Go to Webhooks in your Control Panel and click “New webhook”. 
-7. Paste the webhook URL into the “Webhook URL” field, fill out the remaining fields, and save the webhook.
+6. Within your Craft control panel, go to to **Webhooks** → **New webhook**. 
+7. Paste the webhook URL into the **Webhook URL** field, fill out the remaining settings, and save the webhook.
 8. Perform an action in Craft that will trigger your webhook.
-9. Back in Zapier, click the “Ok, I did this” button.
-10. Ensure that Zapier pulled in the webhook, and click “Continue”.
+9. Back in Zapier, click the **Ok, I did this** button.
+10. Ensure that Zapier pulled in the webhook, and click **Continue**.
 11. Finish setting up the zap and make sure it’s enabled.
 
 ### IFTTT
 
 To integrate Webhooks with [IFTTT](https://ifttt.com), follow these steps:
 
-1. Create a new applet by clicking the “New Applet” button on your [My Applets](https://ifttt.com/my_applets) page.
-2. Click on “+this”.
-3. Search for “webhooks” and select “Webhooks” below.
-4. Click “Connect”.
-5. Click on the “Receive a web request” box.
+1. Within your [My Applets](https://ifttt.com/my_applets) page in IFTTT, click **New Applet**.
+2. Click on **+this**.
+3. Search for “webhooks” and select **Webhooks** below.
+4. Click **Connect**.
+5. Click on the **Receive a web request** box.
 6. Give your trigger an event name based on your Craft webhook name, but in `snake_case`.
 7. Finish setting up the applet.
-8. Go to your [Webhooks page](https://ifttt.com/maker_webhooks) on IFTTT, and click the “Documentation” link.
+8. Go to your [Webhooks page](https://ifttt.com/maker_webhooks) on IFTTT, and click the **Documentation** link.
 9. Type the event name you entered in step 6 into the `{event}` text box.
 10. Copy the URL beginning with `https://maker.ifttt.com/trigger/`.
-11. Go to Webhooks in your Control Panel and click “New webhook”. 
-12. Paste the webhook URL into the “Webhook URL” field, fill out the remaining fields, and save the webhook.
+6. Within your Craft control panel, go to to **Webhooks** → **New webhook**. 
+12. Paste the webhook URL into the **Webhook URL** field, fill out the remaining settings, and save the webhook.
 
 **Note:** Unfortunately IFTTT’s webhooks API is pretty limited, so no webhook data will be available to your applet action.
