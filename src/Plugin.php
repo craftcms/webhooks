@@ -120,7 +120,7 @@ class Plugin extends \craft\base\Plugin
 
                 $view = Craft::$app->getView();
 
-                if ($webhook->method === 'post') {
+                if ($webhook->method === 'post' or $webhook->method === 'put') {
                     // Build out the body data
                     if ($webhook->payloadTemplate) {
                         $json = $view->renderString($webhook->payloadTemplate, [
@@ -154,9 +154,11 @@ class Plugin extends \craft\base\Plugin
 
                 foreach ($webhook->headers as $header) {
                     $header['value'] = Craft::parseEnv($header['value']);
-                    $header['value'] = $view->renderString($header['value'], [
-                        'event' => $e,
-                    ]);
+                    if (strpos($header['value'], '{') !== false) {
+                        $header['value'] = $view->renderString($header['value'], [
+                            'event' => $e,
+                        ]);
+                    }
                     // Get the trimmed lines
                     $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', $header['value'])));
                     // Add to the header array one-by-one, ensuring that we don't overwrite existing values
@@ -180,11 +182,12 @@ class Plugin extends \craft\base\Plugin
                 }
 
                 // Queue the send request up
-                $url = Craft::parseEnv($webhook->url);
-                $url = $view->renderString($url, [
-                    'event' => $e,
-                ]);
-                $this->request($webhook->method, $url, $headers, $body, $webhook->id);
+
+              $url = Craft::parseEnv($webhook->url);
+              $url = $view->renderString($url, [
+                'event' => $e,
+              ]);
+              $this->request($webhook->method, $url, $headers, $body, $webhook->id);
             });
         }
 

@@ -118,7 +118,8 @@ class Webhook extends Model
             [['name'], UniqueValidator::class, 'targetClass' => WebhookRecord::class],
             [['groupId'], 'number'],
             [['enabled'], 'boolean'],
-            [['method'], 'in', 'range' => ['get', 'post']],
+            [['method'], 'in', 'range' => ['get', 'post', 'put']],
+            [['url'], 'url'],
             [
                 ['class'],
                 function(string $attribute, array $params = null, Validator $validator) {

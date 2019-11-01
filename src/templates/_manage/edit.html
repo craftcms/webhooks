@@ -105,7 +105,8 @@
                     name: 'method',
                     options: {
                         'get': 'GET',
-                        'post': 'POST'
+                        'post': 'POST',
+                        'put': 'PUT'
                     },
                     value: webhook.method,
                     toggle: true,
@@ -126,7 +127,7 @@
     {{ forms.field({
         label: 'Request Method & URL'|t('webhooks'),
         required: true,
-        instructions: 'The request method and URL that the webhook should send.'|t('webhooks') ~ ' ' ~ 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
+        instructions: 'The request method and URL that the webhook should send. (The URL will be provided by your [task automation tool][1].)'|t('webhooks') ~ '\n\n[1]: https://github.com/craftcms/webhooks#integration-with-task-automation-tools',
         id: 'url',
         errors: webhook.getErrors('url')
     }, urlInput) }}
