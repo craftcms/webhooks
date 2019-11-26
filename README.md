@@ -92,6 +92,8 @@ Some events can have filters applied to them, which prevent webhooks from being 
 
 <img src="./images/event-filters.png" width="414" height="381" alt="Screenshot of the Event Filters setting">
 
+Ignored filters (`○`) will not have any impact. Positive filters (`✓`) will be required for a webhook to execute, and a negative filter (`×`) will prevent it.
+
 Only element class events and certain `craft\services\Elements` events have any filters out of the box, but modules and plugins can register additional filters using the `craft\webhooks\Plugin::EVENT_REGISTER_FILTER_TYPES` event.
 
 ```php
