@@ -120,7 +120,7 @@ class Plugin extends \craft\base\Plugin
 
                 $view = Craft::$app->getView();
 
-                if ($webhook->method === 'post') {
+                if (in_array($webhook->method, ['post', 'put'], true)) {
                     // Build out the body data
                     if ($webhook->payloadTemplate) {
                         $json = $view->renderString($webhook->payloadTemplate, [
