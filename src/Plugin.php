@@ -180,12 +180,11 @@ class Plugin extends \craft\base\Plugin
                 }
 
                 // Queue the send request up
-
-              $url = Craft::parseEnv($webhook->url);
-              $url = $view->renderString($url, [
-                'event' => $e,
-              ]);
-              $this->request($webhook->method, $url, $headers, $body, $webhook->id);
+                $url = Craft::parseEnv($webhook->url);
+                $url = $view->renderString($url, [
+                    'event' => $e,
+                ]);
+                $this->request($webhook->method, $url, $headers, $body, $webhook->id);
             });
         }
 
