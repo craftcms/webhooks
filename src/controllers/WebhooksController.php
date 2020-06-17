@@ -128,16 +128,19 @@ class WebhooksController extends BaseController
         }
 
         $attributes = $request->getBodyParams();
-        if (ArrayHelper::remove($attributes, 'customPayload')) {
-            $attributes['userAttributes'] = null;
-            $attributes['senderAttributes'] = null;
-            $attributes['eventAttributes'] = null;
+        $customPayload = ArrayHelper::remove($attributes, 'customPayload');
+        if ($customPayload !== null) {
+            if ($customPayload) {
+                $attributes['userAttributes'] = null;
+                $attributes['senderAttributes'] = null;
+                $attributes['eventAttributes'] = null;
 
-            if (empty($attributes['payloadTemplate'])) {
-                $attributes['payloadTemplate'] = '{}';
+                if (empty($attributes['payloadTemplate'])) {
+                    $attributes['payloadTemplate'] = '{}';
+                }
+            } else {
+                $attributes['payloadTemplate'] = null;
             }
-        } else {
-            $attributes['payloadTemplate'] = null;
         }
         $webhook->setAttributes($attributes);
 
