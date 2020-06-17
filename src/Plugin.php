@@ -38,9 +38,6 @@ use yii\base\InvalidArgumentException;
  */
 class Plugin extends \craft\base\Plugin
 {
-    // Constants
-    // =========================================================================
-
     const STATUS_PENDING = 'pending';
     const STATUS_REQUESTED = 'requested';
     const STATUS_DONE = 'done';
@@ -68,9 +65,6 @@ class Plugin extends \craft\base\Plugin
      */
     const EVENT_REGISTER_FILTER_TYPES = 'registerFilterTypes';
 
-    // Properties
-    // =========================================================================
-
     /**
      * @inheritdoc
      */
@@ -80,9 +74,6 @@ class Plugin extends \craft\base\Plugin
      * @inheritdoc
      */
     public $schemaVersion = '2.2.0';
-
-    // Public Methods
-    // =========================================================================
 
     /**
      * @inheritdoc
