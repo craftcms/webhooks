@@ -68,6 +68,11 @@ class Plugin extends \craft\base\Plugin
     /**
      * @inheritdoc
      */
+    public $hasCpSettings = true;
+
+    /**
+     * @inheritdoc
+     */
     public $hasCpSection = true;
 
     /**
@@ -187,6 +192,16 @@ class Plugin extends \craft\base\Plugin
             $e->rules['webhooks/<id:\d+>'] = 'webhooks/webhooks/edit';
             $e->rules['webhooks/activity'] = 'webhooks/activity/index';
         });
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function settingsHtml()
+    {
+        return Craft::$app->getView()->renderTemplate('webhooks/_settings', [
+            'settings' => $this->getSettings(),
+        ]);
     }
 
     /**

@@ -21,4 +21,15 @@ class Settings extends Model
      * @var int The time delay in seconds between request attempts.
      */
     public $attemptDelay = 60;
+
+    /**
+     * @inheritdoc
+     */
+    protected function defineRules(): array
+    {
+        return [
+            [['maxDepth', 'maxAttempts'], 'number', 'integerOnly' => true, 'min' => 1],
+            [['attemptDelay'], 'number', 'integerOnly' => true, 'min' => 0],
+        ];
+    }
 }
