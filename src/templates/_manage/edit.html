@@ -80,9 +80,9 @@
                         <th>{{ filter.displayName }}</th>
                         <td>
                             <div class="btngroup" tabindex="0">
-                                <div class="btn filter-no{% if filter.enabled and not filter.value %} active{% endif %}" data-icon="remove"></div>
-                                <div class="btn filter-ignore{% if not filter.enabled %} active{% endif %}"><div class="status"></div></div>
-                                <div class="btn filter-yes{% if filter.enabled and filter.value %} active{% endif %}" data-icon="checkmark"></div>
+                                <div class="btn filter-no{% if filter.enabled and not filter.value %} active{% endif %}" data-icon="remove" title="{{ 'Prevents webhook execution.'|t('webhooks') }}"></div>
+                                <div class="btn filter-ignore{% if not filter.enabled %} active{% endif %}" title="{{ 'No impact on webhook execution.'|t('webhooks') }}"><div class="status"></div></div>
+                                <div class="btn filter-yes{% if filter.enabled and filter.value %} active{% endif %}" data-icon="checkmark" title="{{ 'Required for webhook execution.'|t('webhooks') }}"></div>
                             </div>
                             <input type="hidden" name="filters[{{ filter.class }}]"{% if filter.enabled %} value="{{ filter.value ? 'yes' : 'no' }}"{% endif %}>
                         </td>
@@ -95,6 +95,7 @@
     {{ forms.field({
         id: 'filters',
         label: 'Event Filters'|t('webhooks'),
+        instructions: 'Checks that can determine whether a webhook should be executed.'|t('webhooks')
     }, filtersInput) }}
 
     {% set urlInput %}
