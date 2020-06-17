@@ -4,6 +4,7 @@
 
 ### Added
 - Webhook URLs can now be set to environment variables or Twig code. ([#18](https://github.com/craftcms/webhooks/issues/18))
+- Webhooks can now send PUT requests. ([#21](https://github.com/craftcms/webhooks/issues/21))
 
 ## 2.2.0 - 2019-07-29
 
