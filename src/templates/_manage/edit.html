@@ -1,6 +1,7 @@
 {% extends '_layouts/cp' %}
 {% set selectedSubnavItem = 'manage' %}
 {% set fullPageForm = true %}
+{% set showFilters = allFilters|filter(f => f.show)|length != 0 %}
 
 {% import '_includes/forms' as forms %}
 
@@ -73,8 +74,8 @@
 
     {% set filtersInput %}
         <div class="pane" id="filter-pane">
-            <p id="no-filters"{% if webhook.filters is not empty %} class="hidden"{% endif %}>{{ 'No filters match this event.'|t('webhooks') }}</p>
-            <table id="filters" class="data{% if webhook.filters is empty %} hidden{% endif %}">
+            <p id="no-filters"{% if showFilters %} class="hidden"{% endif %}>{{ 'No filters match this event.'|t('webhooks') }}</p>
+            <table id="filters" class="data{% if not showFilters%} hidden{% endif %}">
                 {% for filter in allFilters %}
                     <tr data-class="{{ filter.class }}"{% if not filter.show %} class="hidden"{% endif %}>
                         <th>{{ filter.displayName }}</th>

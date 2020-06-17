@@ -9,6 +9,7 @@
 
 ### Fixed
 - Fixed a bug where webhooks would lose their custom payload template when enabled or disabled from the Manage Webhooks page. ([#22](https://github.com/craftcms/webhooks/issues/22))
+- Fixed a bug where the Edit Webhook page wouldn’t immediately show available filters if the webhook didn’t have any preselected filters.
 
 ## 2.2.0 - 2019-07-29
 
