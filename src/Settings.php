@@ -3,6 +3,7 @@
 namespace craft\webhooks;
 
 use craft\base\Model;
+use craft\helpers\ArrayHelper;
 
 class Settings extends Model
 {
@@ -18,9 +19,23 @@ class Settings extends Model
     public $maxAttempts = 1;
 
     /**
-     * @var int The time delay in seconds between request attempts.
+     * @var int The time delay in seconds between request retrys.
+     * @since 2.3.0
      */
-    public $attemptDelay = 60;
+    public $retryDelay = 60;
+
+    /**
+     * @inheritdoc
+     */
+    public function setAttributes($values, $safeOnly = true)
+    {
+        // attemptDelay → retryDelay
+        if (($retryDelay = ArrayHelper::remove($values, 'attemptDelay')) !== null) {
+            $values['retryDelay'] = $retryDelay;
+        }
+
+        parent::setAttributes($values, $safeOnly);
+    }
 
     /**
      * @inheritdoc

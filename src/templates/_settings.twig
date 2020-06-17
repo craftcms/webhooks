@@ -22,10 +22,10 @@
 
 {{ forms.textField({
     first: true,
-    id: 'attempt-delay',
-    label: 'Attempt Delay'|t('webhooks'),
+    id: 'retry-delay',
+    label: 'Retry Delay'|t('webhooks'),
     instructions: 'The time delay in seconds between request attempts.'|t('webhooks'),
     size: 5,
-    name: 'attemptDelay',
-    value: settings.attemptDelay,
+    name: 'retryDelay',
+    value: settings.retryDelay,
 }) }}

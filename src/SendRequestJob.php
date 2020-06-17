@@ -62,7 +62,7 @@ class SendRequestJob extends BaseJob
             $settings = Plugin::getInstance()->getSettings();
             if ($attempts < $settings->maxAttempts) {
                 Craft::$app->getQueue()
-                    ->delay($settings->attemptDelay)
+                    ->delay($settings->retryDelay)
                     ->push(new self([
                         'requestId' => $this->requestId,
                     ]));
