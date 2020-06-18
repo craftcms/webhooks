@@ -17,11 +17,6 @@ use yii\base\NotSupportedException;
  */
 abstract class BaseElementFilter implements FilterInterface
 {
-    public static function displayName(): string
-    {
-        return Craft::t('webhooks', 'Element is a draft');
-    }
-
     public static function show(string $class, string $event): bool
     {
         return (is_subclass_of($class, ElementInterface::class) || (
