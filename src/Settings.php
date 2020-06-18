@@ -25,6 +25,12 @@ class Settings extends Model
     public $retryDelay = 60;
 
     /**
+     * @var array Custom config options that should be applied when creating Guzzle clients.
+     * @since 2.3.0
+     */
+    public $guzzleConfig = [];
+
+    /**
      * @inheritdoc
      */
     public function setAttributes($values, $safeOnly = true)
@@ -45,6 +51,27 @@ class Settings extends Model
         return [
             [['maxDepth', 'maxAttempts'], 'number', 'integerOnly' => true, 'min' => 1],
             [['retryDelay'], 'number', 'integerOnly' => true, 'min' => 0],
+        ];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function fields()
+    {
+        $fields = parent::fields();
+        // guzzleConfig can't be set from the UI so no point in storing it in the project config
+        unset($fields['guzzleConfig']);
+        return $fields;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function extraFields()
+    {
+        return [
+            'guzzleConfig',
         ];
     }
 }

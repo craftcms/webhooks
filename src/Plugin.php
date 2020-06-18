@@ -376,7 +376,8 @@ class Plugin extends \craft\base\Plugin
 
         $startTime = microtime(true);
         try {
-            $response = Craft::createGuzzleClient()->request($data['method'], $data['url'], $options);
+            $response = Craft::createGuzzleClient($this->getSettings()->guzzleConfig)
+                ->request($data['method'], $data['url'], $options);
             $success = true;
         } catch (RequestException $e) {
             $response = $e->getResponse();

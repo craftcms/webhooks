@@ -7,6 +7,7 @@
 - Webhooks have a new “Debounce Key Format” setting, which can be used to debouncing similar webhook requests. ([#27](https://github.com/craftcms/webhooks/issues/27))
 - Webhook URLs can now be set to environment variables or Twig code. ([#18](https://github.com/craftcms/webhooks/issues/18))
 - Webhooks can now send PUT requests. ([#21](https://github.com/craftcms/webhooks/issues/21))
+- Added a new `guzzleConfig` plugin setting, which can be set from `config/webhooks.php` to customize the Guzzle config for webhook requests. ([#31](https://github.com/craftcms/webhooks/issues/31))
 
 ### Fixed
 - Fixed a bug where webhooks would lose their custom payload template when enabled or disabled from the Manage Webhooks page. ([#22](https://github.com/craftcms/webhooks/issues/22))
