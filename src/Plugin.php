@@ -13,6 +13,7 @@ use craft\helpers\StringHelper;
 use craft\web\UrlManager;
 use craft\webhooks\filters\DraftFilter;
 use craft\webhooks\filters\DuplicatingFilter;
+use craft\webhooks\filters\ElementEnabledFilter;
 use craft\webhooks\filters\FilterInterface;
 use craft\webhooks\filters\NewElementFilter;
 use craft\webhooks\filters\PropagatingFilter;
@@ -475,6 +476,7 @@ class Plugin extends \craft\base\Plugin
     {
         $filterTypes = [
             NewElementFilter::class,
+            ElementEnabledFilter::class,
             DraftFilter::class,
             RevisionFilter::class,
             DuplicatingFilter::class,
