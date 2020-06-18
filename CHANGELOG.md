@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 2.3.1 - 2020-07-19
 
 ### Added
 - Added a new “Element is enabled” filter. ([#29](https://github.com/craftcms/webhooks/issues/29))
