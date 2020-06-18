@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 2.3.0 - 2020-07-18
 
 ### Added
 - Added a settings page in the control panel.
