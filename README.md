@@ -136,6 +136,14 @@ class ArticleFilter implements FilterInterface
 }
 ```
 
+#### Debouncing Webhooks
+
+You can prevent multiple similar webhooks from being sent by setting a “Debounce Key Format” on your webhook. This is a Twig template that defines a “debounce key” for the webhook. If two webhooks generate the same debounce key, only the second one will actually be sent.  
+
+An `event` variable will be available to it that references the event that was triggered.
+
+For example, if your webhook is for an entry (`craft\elements\Entry`), then you could set the Debounce Key Format to `{{ event.sender.id }}` to prevent multiple webhook requests from being queued up at the same time.
+
 #### Sending Custom Headers
 
 You can send custom headers along with webhook requests using the Custom Headers setting.

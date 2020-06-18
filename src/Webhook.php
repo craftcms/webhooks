@@ -53,6 +53,11 @@ class Webhook extends Model
     public $filters = [];
 
     /**
+     * @var string|null
+     */
+    public $debounceKeyFormat;
+
+    /**
      * @var string
      */
     public $method = 'post';
@@ -151,6 +156,7 @@ class Webhook extends Model
                     }
                 }
             ],
+            [['debounceKeyFormat'], 'string'],
             [
                 ['filters'],
                 function() {

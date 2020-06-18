@@ -126,6 +126,16 @@
         </div>
     {% endset %}
 
+    {{ forms.textField({
+        label: 'Debounce Key Format'|t('webhooks'),
+        instructions: 'Template that defines the webhook’s “debounce key” format. If two webhooks generate the same debounce key, only the latter will be sent.'|t('webhooks') ~ ' ' ~ 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
+        id: 'debounce-key-format',
+        class: 'code',
+        name: 'debounceKeyFormat',
+        value: webhook.debounceKeyFormat,
+        errors: webhook.getErrors('debounceKeyFormat')
+    }) }}
+
     {{ forms.field({
         label: 'Request Method & URL'|t('webhooks'),
         required: true,

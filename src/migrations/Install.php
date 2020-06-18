@@ -34,6 +34,7 @@ class Install extends Migration
             'class' => $this->string()->notNull(),
             'event' => $this->string()->notNull(),
             'filters' => $this->text(),
+            'debounceKeyFormat' => $this->string(),
             'method' => $this->string(10)->notNull(),
             'url' => $this->string()->notNull(),
             'headers' => $this->text(),
@@ -51,6 +52,7 @@ class Install extends Migration
         $this->createTable('{{%webhookrequests}}', [
             'id' => $this->primaryKey(),
             'webhookId' => $this->integer(),
+            'debounceKey' => $this->string(),
             'status' => $this->string()->notNull(),
             'attempts' => $this->tinyInteger(),
             'method' => $this->string(),
@@ -69,6 +71,7 @@ class Install extends Migration
         $this->createIndex(null, '{{%webhooks}}', ['enabled']);
         $this->createIndex(null, '{{%webhooks}}', ['groupId', 'name']);
         $this->createIndex(null, '{{%webhooks}}', ['name'], true);
+        $this->createIndex(null, '{{%webhookrequests}}', ['debounceKey', 'status']);
         $this->addForeignKey(null, '{{%webhooks}}', ['groupId'], '{{%webhookgroups}}', ['id'], 'SET NULL');
         $this->addForeignKey(null, '{{%webhookrequests}}', ['webhookId'], '{{%webhooks}}', ['id'], 'SET NULL');
     }
