@@ -42,7 +42,7 @@ To configure Webhooks, create a `config/webhooks.php` file, which returns an arr
 return [
     'maxDepth' => 10,
     'maxAttempts' => 3,
-    'attemptDelay' => 120,
+    'retryDelay' => 120,
 ];
 ```
 
@@ -50,7 +50,7 @@ The array can define the following keys:
 
 - `maxDepth` – The maximum depth that the plugin should go into objects/arrays when converting them to arrays for event payloads. (Default is `5`.)
 - `maxAttempts` – The maximum number of attempts each webhook should have before giving up, if the requests are coming back with non 2xx responses. (Default is `1`.)
-- `attemptDelay` – The delay (in seconds) between webhook attempts. (Default is `60`.)
+- `retryDelay` – The delay (in seconds) between webhook attempts. (Default is `60`.)
 
 ## Managing Webhooks
 
@@ -69,6 +69,8 @@ To create a new webhook, click the “New webhook” button.
 Webhooks listen to [events](https://www.yiiframework.com/doc/guide/2.0/en/concept-events) triggered by system classes. So you must determine the name of the class that will be triggering the event (the “Sender Class”), as well as the event name (either an `EVENT_*` constant name, or its value).
 
 The Sender Class can be a subclass of the class that triggers the event. For example, all elements fire an [afterSave](https://docs.craftcms.com/api/v3/craft-base-element.html#event-after-save) event after they’ve been saved, courtesy of their base class, [craft\base\Element](https://docs.craftcms.com/api/v3/craft-base-element.html). However if you’re only interested in sending a webhook when an _entry_ gets saved, you can set the Sender Class to [craft\elements\Entry](https://docs.craftcms.com/api/v3/craft-elements-entry.html).
+
+Webhook URLs can be set to an environment variable (`$VARIABLE_NAME`) or Twig code. If you set it to Twig code, you can reference the triggered event via an `event` variable. 
 
 See [Integrating with Task Automation Tools](#integrating-with-task-automation-tools) for examples on how to get a Webhook URL from various task automation tools.
 
@@ -89,6 +91,8 @@ Webhooks can either send a GET request, or a POST request with a JSON body conta
 Some events can have filters applied to them, which prevent webhooks from being executed under certain conditions.
 
 <img src="./images/event-filters.png" width="414" height="381" alt="Screenshot of the Event Filters setting">
+
+Ignored filters (`○`) will not have any impact. Positive filters (`✓`) will be required for a webhook to execute, and a negative filter (`×`) will prevent it.
 
 Only element class events and certain `craft\services\Elements` events have any filters out of the box, but modules and plugins can register additional filters using the `craft\webhooks\Plugin::EVENT_REGISTER_FILTER_TYPES` event.
 
@@ -131,6 +135,14 @@ class ArticleFilter implements FilterInterface
     }
 }
 ```
+
+#### Debouncing Webhooks
+
+You can prevent multiple similar webhooks from being sent by setting a “Debounce Key Format” on your webhook. This is a Twig template that defines a “debounce key” for the webhook. If two webhooks generate the same debounce key, only the second one will actually be sent.  
+
+An `event` variable will be available to it that references the event that was triggered.
+
+For example, if your webhook is for an entry (`craft\elements\Entry`), then you could set the Debounce Key Format to `{{ event.sender.id }}` to prevent multiple webhook requests from being queued up at the same time.
 
 #### Sending Custom Headers
 

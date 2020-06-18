@@ -53,6 +53,11 @@ class Webhook extends Model
     public $filters = [];
 
     /**
+     * @var string|null
+     */
+    public $debounceKeyFormat;
+
+    /**
      * @var string
      */
     public $method = 'post';
@@ -118,8 +123,7 @@ class Webhook extends Model
             [['name'], UniqueValidator::class, 'targetClass' => WebhookRecord::class],
             [['groupId'], 'number'],
             [['enabled'], 'boolean'],
-            [['method'], 'in', 'range' => ['get', 'post']],
-            [['url'], 'url'],
+            [['method'], 'in', 'range' => ['get', 'post', 'put']],
             [
                 ['class'],
                 function(string $attribute, array $params = null, Validator $validator) {
@@ -152,6 +156,7 @@ class Webhook extends Model
                     }
                 }
             ],
+            [['debounceKeyFormat'], 'string'],
             [
                 ['filters'],
                 function() {

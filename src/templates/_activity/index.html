@@ -45,3 +45,9 @@
     } %}
 
 {% endblock %}
+
+{% block actionButton %}
+    {% if requests|length %}
+        <a class="btn" href="{{ actionUrl('webhooks/activity/clear') }}">{{ 'Clear'|t('webhooks') }}</a>
+    {% endif %}
+{% endblock %}

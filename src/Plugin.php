@@ -20,6 +20,7 @@ use craft\webhooks\filters\ResavingFilter;
 use craft\webhooks\filters\RevisionFilter;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
+use yii\base\Application;
 use yii\base\Arrayable;
 use yii\base\Event;
 use yii\base\Exception;
@@ -38,9 +39,6 @@ use yii\base\InvalidArgumentException;
  */
 class Plugin extends \craft\base\Plugin
 {
-    // Constants
-    // =========================================================================
-
     const STATUS_PENDING = 'pending';
     const STATUS_REQUESTED = 'requested';
     const STATUS_DONE = 'done';
@@ -68,8 +66,10 @@ class Plugin extends \craft\base\Plugin
      */
     const EVENT_REGISTER_FILTER_TYPES = 'registerFilterTypes';
 
-    // Properties
-    // =========================================================================
+    /**
+     * @inheritdoc
+     */
+    public $hasCpSettings = true;
 
     /**
      * @inheritdoc
@@ -79,10 +79,14 @@ class Plugin extends \craft\base\Plugin
     /**
      * @inheritdoc
      */
-    public $schemaVersion = '2.2.0';
+    public $schemaVersion = '2.3.0';
 
-    // Public Methods
-    // =========================================================================
+    /**
+     * @var SendRequestJob[] The request jobs that should be queued up at the end of the web request.
+     * @see request()
+     * @since 2.3.0
+     */
+    private $_pendingJobs = [];
 
     /**
      * @inheritdoc
@@ -120,7 +124,7 @@ class Plugin extends \craft\base\Plugin
 
                 $view = Craft::$app->getView();
 
-                if ($webhook->method === 'post') {
+                if (in_array($webhook->method, ['post', 'put'], true)) {
                     // Build out the body data
                     if ($webhook->payloadTemplate) {
                         $json = $view->renderString($webhook->payloadTemplate, [
@@ -154,11 +158,9 @@ class Plugin extends \craft\base\Plugin
 
                 foreach ($webhook->headers as $header) {
                     $header['value'] = Craft::parseEnv($header['value']);
-                    if (strpos($header['value'], '{') !== false) {
-                        $header['value'] = $view->renderString($header['value'], [
-                            'event' => $e,
-                        ]);
-                    }
+                    $header['value'] = $view->renderString($header['value'], [
+                        'event' => $e,
+                    ]);
                     // Get the trimmed lines
                     $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', $header['value'])));
                     // Add to the header array one-by-one, ensuring that we don't overwrite existing values
@@ -182,7 +184,19 @@ class Plugin extends \craft\base\Plugin
                 }
 
                 // Queue the send request up
-                $this->request($webhook->method, $webhook->url, $headers, $body, $webhook->id);
+                $url = Craft::parseEnv($webhook->url);
+                $url = $view->renderString($url, [
+                    'event' => $e,
+                ]);
+
+                if ($webhook->debounceKeyFormat) {
+                    $debounceKey = Craft::parseEnv($webhook->debounceKeyFormat);
+                    $debounceKey = $webhook->id . ':' . $view->renderString($debounceKey, [
+                        'event' => $e,
+                    ]);
+                }
+
+                $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
             });
         }
 
@@ -194,6 +208,16 @@ class Plugin extends \craft\base\Plugin
             $e->rules['webhooks/<id:\d+>'] = 'webhooks/webhooks/edit';
             $e->rules['webhooks/activity'] = 'webhooks/activity/index';
         });
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function settingsHtml()
+    {
+        return Craft::$app->getView()->renderTemplate('webhooks/_settings', [
+            'settings' => $this->getSettings(),
+        ]);
     }
 
     /**
@@ -217,14 +241,45 @@ class Plugin extends \craft\base\Plugin
      * @param array|null $headers
      * @param string|null $body
      * @param int|null $webhookId
+     * @param string|null $debounceKey
      * @throws \yii\db\Exception
      */
-    public function request(string $method, string $url, array $headers = null, string $body = null, int $webhookId = null)
+    public function request(string $method, string $url, array $headers = null, string $body = null, int $webhookId = null, string $debounceKey = null)
     {
         $db = Craft::$app->getDb();
+
+        if ($debounceKey !== null) {
+            // See if there is an existing pending request with the same key
+            $requestId = (new Query())
+                ->select(['id'])
+                ->from(['{{%webhookrequests}}'])
+                ->where([
+                    'debounceKey' => $debounceKey,
+                    'status' => self::STATUS_PENDING,
+                ])
+                ->scalar();
+
+            // If so and we get a lock on it, update that request instead of creating a new one
+            if ($requestId && $this->_lockRequest($requestId)) {
+                $db->createCommand()
+                    ->update('{{%webhookrequests}}', [
+                        'method' => $method,
+                        'url' => $url,
+                        'requestHeaders' => $headers ? Json::encode($headers) : null,
+                        'requestBody' => $body,
+                        'dateCreated' => Db::prepareDateForDb(new \DateTime()),
+                    ], [
+                        'id' => $requestId,
+                    ], [], false);
+                $this->_unlockRequest($requestId);
+                return;
+            }
+        }
+
         $db->createCommand()
             ->insert('{{%webhookrequests}}', [
                 'webhookId' => $webhookId,
+                'debounceKey' => $debounceKey,
                 'status' => self::STATUS_PENDING,
                 'method' => $method,
                 'url' => $url,
@@ -235,10 +290,27 @@ class Plugin extends \craft\base\Plugin
             ], false)
             ->execute();
 
-        Craft::$app->getQueue()->push(new SendRequestJob([
+        $this->_pendingJobs[] = new SendRequestJob([
             'requestId' => $db->getLastInsertID('{{%webhookrequests}}'),
             'webhookId' => $webhookId,
-        ]));
+        ]);
+
+        if (count($this->_pendingJobs) === 1) {
+            Craft::$app->on(Application::EVENT_AFTER_REQUEST, [$this, 'pushPendingJobs'], null, false);
+        }
+    }
+
+    /**
+     * Pushes any pending jobs to the queue.
+     *
+     * @since 2.3.0
+     */
+    public function pushPendingJobs()
+    {
+        $queue = Craft::$app->getQueue();
+        while ($job = array_shift($this->_pendingJobs)) {
+            $queue->push($job);
+        }
     }
 
     /**
@@ -279,9 +351,7 @@ class Plugin extends \craft\base\Plugin
     public function sendRequest(int $requestId): bool
     {
         // Acquire a lock on the request
-        $lockName = 'webhook.' . $requestId;
-        $mutex = Craft::$app->getMutex();
-        if (!$mutex->acquire($lockName)) {
+        if (!$this->_lockRequest($requestId, 1)) {
             throw new Exception('Could not acquire a lock for the webhook request ' . $requestId);
         }
 
@@ -306,7 +376,8 @@ class Plugin extends \craft\base\Plugin
 
         $startTime = microtime(true);
         try {
-            $response = Craft::createGuzzleClient()->request($data['method'], $data['url'], $options);
+            $response = Craft::createGuzzleClient($this->getSettings()->guzzleConfig)
+                ->request($data['method'], $data['url'], $options);
             $success = true;
         } catch (RequestException $e) {
             $response = $e->getResponse();
@@ -330,7 +401,7 @@ class Plugin extends \craft\base\Plugin
             ->execute();
 
         // Release the lock
-        $mutex->release($lockName);
+        $this->_unlockRequest($requestId);
 
         return $success;
     }
@@ -417,5 +488,15 @@ class Plugin extends \craft\base\Plugin
         $this->trigger(self::EVENT_REGISTER_FILTER_TYPES, $event);
 
         return $event->types;
+    }
+
+    private function _lockRequest(int $requestId, int $timeout = 0): bool
+    {
+        return Craft::$app->getMutex()->acquire("webhook:$requestId", $timeout);
+    }
+
+    private function _unlockRequest(int $requestId): bool
+    {
+        return Craft::$app->getMutex()->release("webhook:$requestId");
     }
 }

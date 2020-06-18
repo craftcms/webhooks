@@ -1,5 +1,19 @@
 # Release Notes for Webhooks for Craft CMS
 
+## 2.3.0 - 2020-07-18
+
+### Added
+- Added a settings page in the control panel.
+- Webhooks have a new “Debounce Key Format” setting, which can be used to debouncing similar webhook requests. ([#27](https://github.com/craftcms/webhooks/issues/27))
+- Webhook URLs can now be set to environment variables or Twig code. ([#18](https://github.com/craftcms/webhooks/issues/18))
+- Webhooks can now send PUT requests. ([#21](https://github.com/craftcms/webhooks/issues/21))
+- The Activity page now has a “Clear” button, which will clear out all request activity for completed requests. ([#32](https://github.com/craftcms/webhooks/issues/32))
+- Added a new `guzzleConfig` plugin setting, which can be set from `config/webhooks.php` to customize the Guzzle config for webhook requests. ([#31](https://github.com/craftcms/webhooks/issues/31))
+
+### Fixed
+- Fixed a bug where webhooks would lose their custom payload template when enabled or disabled from the Manage Webhooks page. ([#22](https://github.com/craftcms/webhooks/issues/22))
+- Fixed a bug where the Edit Webhook page wouldn’t immediately show available filters if the webhook didn’t have any preselected filters.
+
 ## 2.2.0 - 2019-07-29
 
 ### Added

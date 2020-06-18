@@ -1,6 +1,7 @@
 {% extends '_layouts/cp' %}
 {% set selectedSubnavItem = 'manage' %}
 {% set fullPageForm = true %}
+{% set showFilters = allFilters|filter(f => f.show)|length != 0 %}
 
 {% import '_includes/forms' as forms %}
 
@@ -73,16 +74,16 @@
 
     {% set filtersInput %}
         <div class="pane" id="filter-pane">
-            <p id="no-filters"{% if webhook.filters is not empty %} class="hidden"{% endif %}>{{ 'No filters match this event.'|t('webhooks') }}</p>
-            <table id="filters" class="data{% if webhook.filters is empty %} hidden{% endif %}">
+            <p id="no-filters"{% if showFilters %} class="hidden"{% endif %}>{{ 'No filters match this event.'|t('webhooks') }}</p>
+            <table id="filters" class="data{% if not showFilters%} hidden{% endif %}">
                 {% for filter in allFilters %}
                     <tr data-class="{{ filter.class }}"{% if not filter.show %} class="hidden"{% endif %}>
                         <th>{{ filter.displayName }}</th>
                         <td>
                             <div class="btngroup" tabindex="0">
-                                <div class="btn filter-no{% if filter.enabled and not filter.value %} active{% endif %}" data-icon="remove"></div>
-                                <div class="btn filter-ignore{% if not filter.enabled %} active{% endif %}"><div class="status"></div></div>
-                                <div class="btn filter-yes{% if filter.enabled and filter.value %} active{% endif %}" data-icon="checkmark"></div>
+                                <div class="btn filter-no{% if filter.enabled and not filter.value %} active{% endif %}" data-icon="remove" title="{{ 'Prevents webhook execution.'|t('webhooks') }}"></div>
+                                <div class="btn filter-ignore{% if not filter.enabled %} active{% endif %}" title="{{ 'No impact on webhook execution.'|t('webhooks') }}"><div class="status"></div></div>
+                                <div class="btn filter-yes{% if filter.enabled and filter.value %} active{% endif %}" data-icon="checkmark" title="{{ 'Required for webhook execution.'|t('webhooks') }}"></div>
                             </div>
                             <input type="hidden" name="filters[{{ filter.class }}]"{% if filter.enabled %} value="{{ filter.value ? 'yes' : 'no' }}"{% endif %}>
                         </td>
@@ -95,6 +96,7 @@
     {{ forms.field({
         id: 'filters',
         label: 'Event Filters'|t('webhooks'),
+        instructions: 'Checks that can determine whether a webhook should be executed.'|t('webhooks')
     }, filtersInput) }}
 
     {% set urlInput %}
@@ -105,7 +107,8 @@
                     name: 'method',
                     options: {
                         'get': 'GET',
-                        'post': 'POST'
+                        'post': 'POST',
+                        'put': 'PUT',
                     },
                     value: webhook.method,
                     toggle: true,
@@ -123,10 +126,20 @@
         </div>
     {% endset %}
 
+    {{ forms.textField({
+        label: 'Debounce Key Format'|t('webhooks'),
+        instructions: 'Template that defines the webhook’s “debounce key” format. If two webhooks generate the same debounce key, only the latter will be sent.'|t('webhooks') ~ ' ' ~ 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
+        id: 'debounce-key-format',
+        class: 'code',
+        name: 'debounceKeyFormat',
+        value: webhook.debounceKeyFormat,
+        errors: webhook.getErrors('debounceKeyFormat')
+    }) }}
+
     {{ forms.field({
         label: 'Request Method & URL'|t('webhooks'),
         required: true,
-        instructions: 'The request method and URL that the webhook should send. (The URL will be provided by your [task automation tool][1].)'|t('webhooks') ~ '\n\n[1]: https://github.com/craftcms/webhooks#integration-with-task-automation-tools',
+        instructions: 'The request method and URL that the webhook should send.'|t('webhooks') ~ ' ' ~ 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
         id: 'url',
         errors: webhook.getErrors('url')
     }, urlInput) }}
