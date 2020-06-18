@@ -51,6 +51,21 @@ class ActivityController extends BaseController
     }
 
     /**
+     * Clears the requests table.
+     *
+     * @return Response
+     * @since 2.3.0
+     */
+    public function actionClear(): Response
+    {
+        Craft::$app->getDb()->createCommand()
+            ->delete('{{%webhookrequests}}', ['status' => Plugin::STATUS_DONE])
+            ->execute();
+
+        return $this->redirect('webhooks/activity');
+    }
+
+    /**
      * Returns request details modal HTML.
      *
      * @return Response
