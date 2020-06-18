@@ -42,7 +42,7 @@ To configure Webhooks, create a `config/webhooks.php` file, which returns an arr
 return [
     'maxDepth' => 10,
     'maxAttempts' => 3,
-    'attemptDelay' => 120,
+    'retryDelay' => 120,
 ];
 ```
 

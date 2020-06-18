@@ -44,7 +44,7 @@ class Settings extends Model
     {
         return [
             [['maxDepth', 'maxAttempts'], 'number', 'integerOnly' => true, 'min' => 1],
-            [['attemptDelay'], 'number', 'integerOnly' => true, 'min' => 0],
+            [['retryDelay'], 'number', 'integerOnly' => true, 'min' => 0],
         ];
     }
 }
