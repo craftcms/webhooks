@@ -3,6 +3,7 @@
 namespace craft\webhooks\filters;
 
 use Craft;
+use craft\base\Component;
 use craft\base\ElementInterface;
 use craft\events\ElementEvent;
 use craft\services\Elements;
@@ -15,7 +16,7 @@ use yii\base\NotSupportedException;
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since 2.1
  */
-abstract class BaseElementFilter implements FilterInterface
+abstract class BaseElementFilter extends Component implements FilterInterface
 {
     public static function show(string $class, string $event): bool
     {
