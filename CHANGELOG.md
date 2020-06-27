@@ -1,16 +1,16 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 2.3.2 - 2020-06-27
 
 ### Fixed
 - Fixed a PHP error that occurred when running Craft 3.5 or later. ([#34](https://github.com/craftcms/webhooks/issues/34))
 
-## 2.3.1 - 2020-07-19
+## 2.3.1 - 2020-06-19
 
 ### Added
 - Added a new “Element is enabled” filter. ([#29](https://github.com/craftcms/webhooks/issues/29))
 
-## 2.3.0 - 2020-07-18
+## 2.3.0 - 2020-06-18
 
 ### Added
 - Added a settings page in the control panel.
