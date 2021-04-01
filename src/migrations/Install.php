@@ -61,7 +61,7 @@ class Install extends Migration
             'requestBody' => $this->mediumText(),
             'responseStatus' => $this->smallInteger(),
             'responseHeaders' => $this->text(),
-            'responseBody' => $this->text(),
+            'responseBody' => $this->mediumText(),
             'responseTime' => $this->integer(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateRequested' => $this->dateTime(),
