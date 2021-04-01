@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 2.3.3 - 2021-04-01
 
 ### Fixed
 - Fixed a MySQL error that could occur with a large webhook response body. 
