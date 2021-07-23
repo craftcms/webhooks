@@ -114,101 +114,109 @@ class Plugin extends \craft\base\Plugin
         }
 
         foreach ($webhooks as $webhook) {
-            Event::on($webhook->class, $webhook->event, function(Event $e) use ($webhook) {
-                // Make sure it passes the filters
-                foreach ($webhook->filters as $filterClass => $filterValue) {
-                    /** @var string|FilterInterface $filterClass */
-                    if (class_exists($filterClass) && !$filterClass::check($e, $filterValue)) {
-                        return;
+            Event::on(
+                $webhook->class,
+                $webhook->event,
+                function(Event $e) use ($webhook) {
+                    // Make sure it passes the filters
+                    foreach ($webhook->filters as $filterClass => $filterValue) {
+                        /** @var string|FilterInterface $filterClass */
+                        if (class_exists($filterClass) && !$filterClass::check($e, $filterValue)) {
+                            return;
+                        }
                     }
-                }
 
-                $view = Craft::$app->getView();
+                    $view = Craft::$app->getView();
 
-                if (in_array($webhook->method, ['post', 'put'], true)) {
-                    // Build out the body data
-                    if ($webhook->payloadTemplate) {
-                        $json = $view->renderString($webhook->payloadTemplate, [
+                    if (in_array($webhook->method, ['post', 'put'], true)) {
+                        // Build out the body data
+                        if ($webhook->payloadTemplate) {
+                            $json = $view->renderString($webhook->payloadTemplate, [
+                                'event' => $e,
+                            ]);
+                            $data = Json::decodeIfJson($json);
+                        } else {
+                            $user = Craft::$app->getUser()->getIdentity();
+                            $data = [
+                                'time' => (new \DateTime())->format(\DateTime::ATOM),
+                                'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
+                                'name' => $e->name,
+                                'senderClass' => get_class($e->sender),
+                                'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
+                                'eventClass' => get_class($e),
+                                'event' => [],
+                            ];
+
+                            $eventAttributes = $webhook->getEventAttributes();
+                            $ref = new \ReflectionClass($e);
+                            foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
+                                if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
+                                    $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
+                                }
+                            }
+                        }
+                    }
+
+                    // Set the headers and body
+                    $headers = [];
+
+                    foreach ($webhook->headers as $header) {
+                        $header['value'] = Craft::parseEnv($header['value']);
+                        $header['value'] = $view->renderString($header['value'], [
                             'event' => $e,
                         ]);
-                        $data = Json::decodeIfJson($json);
+                        // Get the trimmed lines
+                        $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', $header['value'])));
+                        // Add to the header array one-by-one, ensuring that we don't overwrite existing values
+                        foreach ($lines as $line) {
+                            if (!isset($headers[$header['name']])) {
+                                $headers[$header['name']] = $line;
+                            } else {
+                                if (!is_array($headers[$header['name']])) {
+                                    $headers[$header['name']] = [$headers[$header['name']]];
+                                }
+                                $headers[$header['name']][] = $line;
+                            }
+                        }
+                    }
+
+                    if (isset($data) && is_array($data)) {
+                        $body = Json::encode($data);
+                        $headers['Content-Type'] = 'application/json';
                     } else {
-                        $user = Craft::$app->getUser()->getIdentity();
-                        $data = [
-                            'time' => (new \DateTime())->format(\DateTime::ATOM),
-                            'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
-                            'name' => $e->name,
-                            'senderClass' => get_class($e->sender),
-                            'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
-                            'eventClass' => get_class($e),
-                            'event' => [],
-                        ];
-
-                        $eventAttributes = $webhook->getEventAttributes();
-                        $ref = new \ReflectionClass($e);
-                        foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
-                            if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
-                                $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
-                            }
-                        }
+                        $body = $data ?? null;
                     }
-                }
 
-                // Set the headers and body
-                $headers = [];
-
-                foreach ($webhook->headers as $header) {
-                    $header['value'] = Craft::parseEnv($header['value']);
-                    $header['value'] = $view->renderString($header['value'], [
+                    // Queue the send request up
+                    $url = Craft::parseEnv($webhook->url);
+                    $url = $view->renderString($url, [
                         'event' => $e,
                     ]);
-                    // Get the trimmed lines
-                    $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', $header['value'])));
-                    // Add to the header array one-by-one, ensuring that we don't overwrite existing values
-                    foreach ($lines as $line) {
-                        if (!isset($headers[$header['name']])) {
-                            $headers[$header['name']] = $line;
-                        } else {
-                            if (!is_array($headers[$header['name']])) {
-                                $headers[$header['name']] = [$headers[$header['name']]];
-                            }
-                            $headers[$header['name']][] = $line;
-                        }
+
+                    if ($webhook->debounceKeyFormat) {
+                        $debounceKey = Craft::parseEnv($webhook->debounceKeyFormat);
+                        $debounceKey = $webhook->id . ':' . $view->renderString($debounceKey, [
+                            'event' => $e,
+                        ]);
                     }
+
+                    $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
                 }
-
-                if (isset($data) && is_array($data)) {
-                    $body = Json::encode($data);
-                    $headers['Content-Type'] = 'application/json';
-                } else {
-                    $body = $data ?? null;
-                }
-
-                // Queue the send request up
-                $url = Craft::parseEnv($webhook->url);
-                $url = $view->renderString($url, [
-                    'event' => $e,
-                ]);
-
-                if ($webhook->debounceKeyFormat) {
-                    $debounceKey = Craft::parseEnv($webhook->debounceKeyFormat);
-                    $debounceKey = $webhook->id . ':' . $view->renderString($debounceKey, [
-                        'event' => $e,
-                    ]);
-                }
-
-                $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
-            });
+            );
         }
 
         // Register CP routes
-        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $e) {
-            $e->rules['webhooks'] = 'webhooks/manage/index';
-            $e->rules['webhooks/group/<groupId:\d+>'] = 'webhooks/manage/index';
-            $e->rules['webhooks/new'] = 'webhooks/webhooks/edit';
-            $e->rules['webhooks/<id:\d+>'] = 'webhooks/webhooks/edit';
-            $e->rules['webhooks/activity'] = 'webhooks/activity/index';
-        });
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            function(RegisterUrlRulesEvent $e) {
+                $e->rules['webhooks'] = 'webhooks/manage/index';
+                $e->rules['webhooks/group/<groupId:\d+>'] = 'webhooks/manage/index';
+                $e->rules['webhooks/new'] = 'webhooks/webhooks/edit';
+                $e->rules['webhooks/<id:\d+>'] = 'webhooks/webhooks/edit';
+                $e->rules['webhooks/activity'] = 'webhooks/activity/index';
+            }
+        );
     }
 
     /**
