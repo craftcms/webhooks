@@ -128,7 +128,7 @@ class ArticleFilter implements FilterInterface
 
     public static function check(Event $event, bool $value): bool
     {
-        // Filter basen on whether the entry's type is 'article':
+        // Filter based on whether the entry's type is 'article':
         /** @var Entry $entry */
         $entry = $event->sender;
         return ($entry->type->handle === 'article') === $value;
