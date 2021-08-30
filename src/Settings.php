@@ -19,7 +19,7 @@ class Settings extends Model
     public $maxAttempts = 1;
 
     /**
-     * @var int The time delay in seconds between request retrys.
+     * @var int The time delay in seconds between request retries.
      * @since 2.3.0
      */
     public $retryDelay = 60;
