@@ -19,6 +19,13 @@ class RevisionFilter extends BaseElementFilter
         return Craft::t('webhooks', 'Element is a revision');
     }
 
+    public static function excludes(): array
+    {
+        return [
+            DraftFilter::class,
+        ];
+    }
+
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
         $root = ElementHelper::rootElement($element);

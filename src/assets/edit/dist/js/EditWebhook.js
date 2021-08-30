@@ -10,6 +10,7 @@
             $noFiltersMessage: null,
             $filtersTable: null,
             filters: null,
+            matchingFilters: null,
 
             classVal: null,
             eventVal: null,
@@ -24,11 +25,18 @@
                 this.$filtersTable = $('#filters');
 
                 this.filters = {};
+                this.matchingFilters = [];
+
                 const $filterRows = this.$filtersTable.find('tr');
                 for (let i = 0; i < $filterRows.length; i++) {
-                    const filter = new EditWebhook.Filter($filterRows.eq(i));
+                    const filter = new EditWebhook.Filter(this, $filterRows.eq(i));
                     this.filters[filter.class] = filter;
+                    if (!filter.$tr.hasClass('hidden')) {
+                        this.matchingFilters.push(filter);
+                    }
                 }
+
+                this.applyExclusions();
 
                 this.addListener(this.$nameInput, 'change, keyup', 'handleTextChange');
                 this.addListener(this.$classInput, 'change, keyup, blur', 'handleEventChange');
@@ -74,8 +82,12 @@
                         this.$noFiltersMessage.addClass('hidden');
                         this.$filtersTable.removeClass('hidden');
                         for (let i = 0; i < response.data.filters.length; i++) {
-                            this.filters[response.data.filters[i]].$tr.removeClass('hidden');
+                            const filter = this.filters[response.data.filters[i]];
+                            this.matchingFilters.push(filter);
+                            filter.enable();
+                            filter.$tr.removeClass('hidden');
                         }
+                        this.applyExclusions();
                     } else {
                         this.$noFiltersMessage.removeClass('hidden');
                         this.$filtersTable.addClass('hidden');
@@ -86,31 +98,50 @@
             },
 
             resetFilters: function() {
+                this.matchingFilters = [];
                 for (let filter in this.filters) {
                     if (!this.filters.hasOwnProperty(filter)) {
                         continue;
                     }
                     this.filters[filter].$tr.addClass('hidden');
-                    this.filters[filter].selectIgnore();
+                    this.filters[filter].selectIgnore(false);
                 }
-            }
+            },
+
+            applyExclusions: function() {
+                this.matchingFilters.forEach(f => {
+                    f.enable();
+                });
+                this.matchingFilters
+                    .filter(f => f.value === true)
+                    .forEach(f => {
+                        f.excludes.forEach(e => {
+                            this.filters[e].disable();
+                        })
+                    });
+            },
         })
 
     EditWebhook.Filter = Garnish.Base.extend({
+        manager: null,
         $tr: null,
         $input: null,
         'class': null,
+        $btnGroup: null,
         $noBtn: null,
         $ignoreBtn: null,
         $yesBtn: null,
         value: null,
+        enabled: false,
 
-        init: function($tr) {
+        init: function(manager, $tr) {
+            this.manager = manager;
             this.$tr = $tr;
             this.class = $tr.data('class');
-            this.$noBtn = $tr.find('.filter-no');
-            this.$ignoreBtn = $tr.find('.filter-ignore');
-            this.$yesBtn = $tr.find('.filter-yes');
+            this.$btnGroup = this.$tr.find('.btngroup');
+            this.$noBtn = this.$btnGroup.find('.filter-no');
+            this.$ignoreBtn = this.$btnGroup.find('.filter-ignore');
+            this.$yesBtn = this.$btnGroup.find('.filter-yes');
             this.$input = $tr.find('input');
 
             switch (this.$input.val()) {
@@ -122,30 +153,79 @@
                     break;
             }
 
-            this.addListener(this.$noBtn, 'click', 'selectNo');
-            this.addListener(this.$ignoreBtn, 'click', 'selectIgnore');
-            this.addListener(this.$yesBtn, 'click', 'selectYes');
-            this.addListener($tr.find('.btngroup'), 'keydown', 'handleKeydown');
+            this.enable();
         },
 
-        selectNo: function() {
+        /**
+         * @returns {string[]}
+         */
+        get excludes() {
+            return this.$tr.data('excludes');
+        },
+
+        enable: function() {
+            if (!this.enabled) {
+                this.addListener(this.$btnGroup, 'keydown', 'handleKeydown');
+                this.addListener(this.$noBtn, 'click', 'selectNo');
+                this.addListener(this.$ignoreBtn, 'click', 'selectIgnore');
+                this.addListener(this.$yesBtn, 'click', 'selectYes');
+                this.$tr.removeClass('disabled');
+                this.$btnGroup.attr('tabindex', '0');
+                this.enabled = true;
+            }
+        },
+
+        disable: function() {
+            if (this.enabled) {
+                this.selectIgnore(false);
+                this.removeAllListeners(this.$btnGroup);
+                this.removeAllListeners(this.$noBtn);
+                this.removeAllListeners(this.$ignoreBtn);
+                this.removeAllListeners(this.$yesBtn);
+                this.$tr.addClass('disabled');
+                this.$btnGroup.attr('tabindex', '-1');
+                this.enabled = false;
+            }
+        },
+
+        /**
+         * @param {boolean|null} value
+         * @param {boolean} [applyExclusions=true]
+         */
+        setValue: function(value, applyExclusions) {
+            this.value = value;
+            if (applyExclusions !== false) {
+                this.manager.applyExclusions();
+            }
+        },
+
+        /**
+         * @param {boolean} [applyExclusions=true]
+         */
+        selectNo: function(applyExclusions) {
             this.clear();
             this.$noBtn.addClass('active');
-            this.value = false;
+            this.setValue(false, applyExclusions);
             this.$input.val('no');
         },
 
-        selectIgnore: function() {
+        /**
+         * @param {boolean} [applyExclusions=true]
+         */
+        selectIgnore: function(applyExclusions) {
             this.clear();
             this.$ignoreBtn.addClass('active');
-            this.value = null;
+            this.setValue(null, applyExclusions);
             this.$input.val('');
         },
 
-        selectYes: function() {
+        /**
+         * @param {boolean} [applyExclusions=true]
+         */
+        selectYes: function(applyExclusions) {
             this.clear();
             this.$yesBtn.addClass('active');
-            this.value = true;
+            this.setValue(true, applyExclusions);
             this.$input.val('yes');
         },
 

@@ -83,6 +83,7 @@
             class: not filter.show ? 'hidden' : false,
             data: {
               class: filter.class,
+              excludes: filter.excludes ?? [],
             },
           } %}
             <th>{{ filter.displayName }}</th>

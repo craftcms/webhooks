@@ -19,6 +19,13 @@ class DraftFilter extends BaseElementFilter
         return Craft::t('webhooks', 'Element is a draft');
     }
 
+    public static function excludes(): array
+    {
+        return [
+            RevisionFilter::class,
+        ];
+    }
+
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
         $root = ElementHelper::rootElement($element);

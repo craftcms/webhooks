@@ -1,5 +1,11 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+### Added
+- Some webhook filters now disable other mutually-exclusive filters when active and enabled.
+- Added `craft\webhooks\filters\ExclusiveFilterInterface`.
+
 ## 2.3.3 - 2021-04-01
 
 ### Fixed
