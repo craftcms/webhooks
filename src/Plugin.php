@@ -9,6 +9,7 @@ use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\ArrayHelper;
 use craft\helpers\Db;
 use craft\helpers\Json;
+use craft\helpers\Queue;
 use craft\helpers\StringHelper;
 use craft\web\UrlManager;
 use craft\webhooks\filters\DraftFilter;
@@ -318,9 +319,8 @@ class Plugin extends \craft\base\Plugin
      */
     public function pushPendingJobs()
     {
-        $queue = Craft::$app->getQueue();
         while ($job = array_shift($this->_pendingJobs)) {
-            $queue->push($job);
+            Queue::push($job);
         }
     }
 

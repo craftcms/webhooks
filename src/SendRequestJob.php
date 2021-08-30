@@ -6,6 +6,7 @@ use Craft;
 use craft\db\Query;
 use craft\helpers\Db;
 use craft\helpers\Json;
+use craft\helpers\Queue;
 use craft\queue\BaseJob;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
@@ -61,11 +62,9 @@ class SendRequestJob extends BaseJob
             $attempts = $this->_data()['attempts'];
             $settings = Plugin::getInstance()->getSettings();
             if ($attempts < $settings->maxAttempts) {
-                Craft::$app->getQueue()
-                    ->delay($settings->retryDelay)
-                    ->push(new self([
-                        'requestId' => $this->requestId,
-                    ]));
+                Queue::push(new self([
+                    'requestId' => $this->requestId,
+                ]), null, $settings->retryDelay);
             }
         }
     }
