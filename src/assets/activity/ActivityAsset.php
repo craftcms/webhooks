@@ -25,6 +25,10 @@ class ActivityAsset extends AssetBundle
         CpAsset::class,
     ];
 
+    public $css = [
+        'css/activity.css',
+    ];
+
     public $js = [
         'js/Activity.js',
     ];

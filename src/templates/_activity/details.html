@@ -35,10 +35,6 @@
   {% endif %}
 </div>
 
-<div class="buttons">
-
-</div>
-
 <hr>
 
 <h4>{{ 'Request'|t('webhooks') }}</h4>
@@ -49,8 +45,14 @@
 </div>
 
 <h4>{{ 'Response'|t('webhooks') }}</h4>
-<div class="pane code">
-  {{ macros.headers(request.responseHeaders) }}
-  <br>
-  <pre>{{ request.responseBody }}</pre>
-</div>
+{% if request.responseHeaders or request.responseBody %}
+  <div class="pane code">
+    {{ macros.headers(request.responseHeaders) }}
+    <br>
+    <pre>{{ request.responseBody }}</pre>
+  </div>
+{% else %}
+  <div class="pane zilch">
+    <p>{{ 'No response yet.'|t('webhooks') }}</p>
+  </div>
+{% endif %}

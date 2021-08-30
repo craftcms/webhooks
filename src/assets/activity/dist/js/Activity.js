@@ -17,26 +17,30 @@
                 requestId: requestId
             }, function(response, textStatus) {
                 if (textStatus === 'success') {
-                    var hud = new Garnish.HUD($a, response.html);
-                    initHud(hud, requestId);
+                    const slideout = new Craft.Slideout(response.html, {
+                        containerAttributes: {
+                            class: 'webhook-activity-slideout',
+                        }
+                    });
+                    initSlideout(slideout, requestId);
                 }
             })
         });
     });
 
-    function initHud(hud, requestId) {
-        var $redeliverBtn = hud.$main.find('.redeliver-btn');
+    function initSlideout(slideout, requestId) {
+        const $redeliverBtn = slideout.$container.find('.redeliver-btn');
         $redeliverBtn.on('click', function() {
             if (!$redeliverBtn.hasClass('disabled') && confirm(Craft.t('webhooks', 'Are you sure you want to resend this request?'))) {
                 $redeliverBtn.addClass('disabled');
-                var $spinner = $(this).next('.spinner').removeClass('hidden');
+                const $spinner = $(this).next('.spinner').removeClass('hidden');
                 Craft.postActionRequest('webhooks/activity/redeliver', {
                     requestId: requestId
                 }, function(response, textStatus) {
                     $spinner.addClass('hidden');
                     if (textStatus === 'success') {
-                        hud.updateBody(response.html);
-                        initHud(hud, requestId);
+                        slideout.$container.html(response.html);
+                        initSlideout(slideout, requestId);
                     }
                 })
             }
