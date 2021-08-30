@@ -3,7 +3,7 @@
 ## 2.3.3 - 2021-04-01
 
 ### Fixed
-- Fixed a MySQL error that could occur with a large webhook response body. 
+- Fixed a MySQL error that could occur with a large webhook response body.
 
 ## 2.3.2 - 2020-06-27
 
@@ -38,7 +38,7 @@
 
 ### Added
 - Webhooks for element events can now be executed depending on whether the element is new, is a draft/revision, or is being duplicated/propagated/bulk-resaved. ([#14](https://github.com/craftcms/webhooks/issues/14))
-- Modules and plugins can register additional webhook filters using the new `craft\webhooks\Plugin::EVENT_REGISTER_FILTER_TYPES` event.  
+- Modules and plugins can register additional webhook filters using the new `craft\webhooks\Plugin::EVENT_REGISTER_FILTER_TYPES` event.
 
 ### Fixed
 - Fixed an error that could occur when detecting available component classes in Craft 3.2.
@@ -64,7 +64,7 @@
 ## 1.1.2 - 2018-12-21
 
 ### Changed
-- Webhook requests now include data for any magic event properties defined by `fields()`, if the event class implements `yii\base\Arrayable`. ([#2](https://github.com/craftcms/webhooks/issues/2))   
+- Webhook requests now include data for any magic event properties defined by `fields()`, if the event class implements `yii\base\Arrayable`. ([#2](https://github.com/craftcms/webhooks/issues/2))
 
 ## 1.1.1 - 2018-12-17
 
@@ -79,7 +79,7 @@
 ### Added
 - Added support for webhooks that send GET requests.
 - Webhook names and group names can now contain emojis, even if using MySQL.
-- Typing `->` or `=>` into a webhook’s Name field now creates a ➡️.  
+- Typing `->` or `=>` into a webhook’s Name field now creates a ➡️.
 
 ## 1.0.1 - 2018-12-13
 
