@@ -13,7 +13,14 @@
   {% endif %}
   <div class="data">
     <div class="heading">{{ 'Status'|t('webhooks') }}</div>
-    <div class="value">{{ macros.status(request) }}</div>
+    <div class="value">
+      {{ macros.status(request) }}
+      {% if request.status == 'pending' %}
+        &nbsp;&nbsp;
+        <div class="btn small send-btn">{{ 'Send now'|t('webhooks') }}</div>
+        <div class="spinner hidden"></div>
+      {% endif %}
+    </div>
   </div>
   {% if request.status == 'done' %}
     <div class="data">
@@ -27,7 +34,7 @@
       <div class="value">
         <div class="flex">
           <div>{{ request.attempts }}&nbsp;&nbsp;</div>
-          <div class="btn small redeliver-btn">{{ 'Redeliver'|t('webhooks') }}</div>
+          <div class="btn small send-btn">{{ 'Redeliver'|t('webhooks') }}</div>
           <div class="spinner hidden"></div>
         </div>
       </div>

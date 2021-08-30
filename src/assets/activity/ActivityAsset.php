@@ -9,7 +9,6 @@ namespace craft\webhooks\assets\activity;
 
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
-use craft\web\View;
 
 /**
  * Webhooks index asset bundle
@@ -32,18 +31,4 @@ class ActivityAsset extends AssetBundle
     public $js = [
         'js/Activity.js',
     ];
-
-    /**
-     * @inheritdoc
-     */
-    public function registerAssetFiles($view)
-    {
-        parent::registerAssetFiles($view);
-
-        if ($view instanceof View) {
-            $view->registerTranslations('webhooks', [
-                'Are you sure you want to resend this request?',
-            ]);
-        }
-    }
 }

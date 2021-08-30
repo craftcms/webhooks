@@ -29,10 +29,10 @@
     });
 
     function initSlideout(slideout, requestId) {
-        const $redeliverBtn = slideout.$container.find('.redeliver-btn');
-        $redeliverBtn.on('click', function() {
-            if (!$redeliverBtn.hasClass('disabled') && confirm(Craft.t('webhooks', 'Are you sure you want to resend this request?'))) {
-                $redeliverBtn.addClass('disabled');
+        const $sendBtn = slideout.$container.find('.send-btn');
+        $sendBtn.on('click', function() {
+            if (!$sendBtn.hasClass('disabled')) {
+                $sendBtn.addClass('disabled');
                 const $spinner = $(this).next('.spinner').removeClass('hidden');
                 Craft.postActionRequest('webhooks/activity/redeliver', {
                     requestId: requestId

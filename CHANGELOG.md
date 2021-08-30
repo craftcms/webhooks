@@ -5,6 +5,7 @@
 ### Added
 - Added new “Element is being saved for the first time” and “Element is a provisional draft” webhook filters.
 - Some webhook filters now disable other mutually-exclusive filters when active and enabled.
+- Pending webhook requests now have a “Send now” button, for manually triggering a webhook if the queue job was lost or failed. ([#35](https://github.com/craftcms/webhooks/issues/35))
 - Added the “Initial Delay” setting. ([#53](https://github.com/craftcms/webhooks/discussions/53))
 - Added `craft\webhooks\filters\ExclusiveFilterInterface`.
 
