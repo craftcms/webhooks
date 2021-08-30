@@ -7,23 +7,23 @@ use craft\base\ElementInterface;
 use craft\helpers\ElementHelper;
 
 /**
- * Filters events based on whether the element is a revision
+ * Filters events based on whether the element is a draft
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.1.0
+ * @since 2.4.0
  */
-class RevisionFilter extends BaseElementFilter
+class ProvisionalDraftFilter extends BaseElementFilter
 {
     public static function displayName(): string
     {
-        return Craft::t('webhooks', 'Element is a revision');
+        return Craft::t('webhooks', 'Element is a provisional draft');
     }
 
     public static function excludes(): array
     {
         return [
             DraftFilter::class,
-            ProvisionalDraftFilter::class,
+            RevisionFilter::class,
             FirstSaveFilter::class,
         ];
     }
@@ -31,6 +31,6 @@ class RevisionFilter extends BaseElementFilter
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
         $root = ElementHelper::rootElement($element);
-        return $root->getIsRevision() === $value;
+        return $root->isProvisionalDraft;
     }
 }

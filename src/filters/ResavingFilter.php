@@ -19,6 +19,13 @@ class ResavingFilter extends BaseElementFilter
         return Craft::t('webhooks', 'Element is being bulk-resaved');
     }
 
+    public static function excludes(): array
+    {
+        return [
+            FirstSaveFilter::class,
+        ];
+    }
+
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
         /** @var Element $element */

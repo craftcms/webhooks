@@ -12,9 +12,11 @@ use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use craft\web\UrlManager;
 use craft\webhooks\filters\DraftFilter;
+use craft\webhooks\filters\ProvisionalDraftFilter;
 use craft\webhooks\filters\DuplicatingFilter;
 use craft\webhooks\filters\ElementEnabledFilter;
 use craft\webhooks\filters\FilterInterface;
+use craft\webhooks\filters\FirstSaveFilter;
 use craft\webhooks\filters\NewElementFilter;
 use craft\webhooks\filters\PropagatingFilter;
 use craft\webhooks\filters\ResavingFilter;
@@ -486,7 +488,9 @@ class Plugin extends \craft\base\Plugin
             NewElementFilter::class,
             ElementEnabledFilter::class,
             DraftFilter::class,
+            ProvisionalDraftFilter::class,
             RevisionFilter::class,
+            FirstSaveFilter::class,
             DuplicatingFilter::class,
             PropagatingFilter::class,
             ResavingFilter::class,

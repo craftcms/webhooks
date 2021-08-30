@@ -3,8 +3,12 @@
 ## Unreleased
 
 ### Added
+- Added new “Element is being saved for the first time” and “Element is a provisional draft” webhook filters.
 - Some webhook filters now disable other mutually-exclusive filters when active and enabled.
 - Added `craft\webhooks\filters\ExclusiveFilterInterface`.
+
+### Changed
+- Webhooks now requires Craft 3.7 or later.
 
 ## 2.3.3 - 2021-04-01
 

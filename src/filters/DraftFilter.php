@@ -23,6 +23,7 @@ class DraftFilter extends BaseElementFilter
     {
         return [
             RevisionFilter::class,
+            FirstSaveFilter::class,
         ];
     }
 
