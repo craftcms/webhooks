@@ -402,6 +402,8 @@ class Plugin extends \craft\base\Plugin
             if ($e instanceof RequestException) {
                 $response = $e->getResponse();
             }
+            Craft::warning("Unable to send webhook: {$e->getMessage()}", __METHOD__);
+            Craft::$app->getErrorHandler()->logException($e);
         }
 
         // Update the request

@@ -11,6 +11,7 @@
 ### Changed
 - Webhooks now requires Craft 3.7 or later.
 - Improved the performance of clearing out completed webhook request logs. ([#32](https://github.com/craftcms/webhooks/issues/32))
+- Exceptions thrown for webhook requests are now logged.
 
 ### Fixed
 - Fixed an error that could occur when calling `craft\webhooks\Plugin::getRequestData()` if an invalid request ID was passed.
