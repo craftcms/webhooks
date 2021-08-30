@@ -3,20 +3,15 @@
 namespace craft\webhooks;
 
 use Craft;
-use craft\db\Query;
-use craft\helpers\Db;
-use craft\helpers\Json;
+use craft\helpers\Queue;
 use craft\queue\BaseJob;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\RequestOptions;
 use yii\base\InvalidArgumentException;
-use yii\base\InvalidConfigException;
 
 /**
  * Send Request job
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class SendRequestJob extends BaseJob
 {
@@ -61,11 +56,9 @@ class SendRequestJob extends BaseJob
             $attempts = $this->_data()['attempts'];
             $settings = Plugin::getInstance()->getSettings();
             if ($attempts < $settings->maxAttempts) {
-                Craft::$app->getQueue()
-                    ->delay($settings->retryDelay)
-                    ->push(new self([
-                        'requestId' => $this->requestId,
-                    ]));
+                Queue::push(new self([
+                    'requestId' => $this->requestId,
+                ]), null, $settings->retryDelay);
             }
         }
     }

@@ -1,37 +1,37 @@
 {% macro status(request) %}
-    {% if request.status == 'pending' %}
-        <span class="light">{{ 'Pending'|t('webhooks') }}</span>
-    {% elseif request.status == 'requested' %}
-        <span class="light">{{ 'Requested'|t('webhooks') }}</span>
-    {% else %}
-        {% spaceless %}
-            <span class="status {{ request.responseStatus >= 200 and request.responseStatus < 300 ? 'green' : 'red' }}"></span>
-            <span class="code">{{ request.responseStatus }}</span>
-        {% endspaceless %}
-    {% endif %}
+  {% if request.status == 'pending' %}
+    <span class="light">{{ 'Pending'|t('webhooks') }}</span>
+  {% elseif request.status == 'requested' %}
+    <span class="light">{{ 'Requested'|t('webhooks') }}</span>
+  {% else %}
+    {% spaceless %}
+      <span class="status {{ request.responseStatus >= 200 and request.responseStatus < 300 ? 'green' : 'red' }}"></span>
+      <span class="code">{{ request.responseStatus ?? 'Unknown'|t('webhooks') }}</span>
+    {% endspaceless %}
+  {% endif %}
 {% endmacro %}
 
 {% macro responseTime(request) %}
-    {% if request.status == 'done' %}
-        {% if request.responseTime < 1000 %}
-            {{ request.responseTime }}ms
-        {% else %}
-            {{ (request.responseTime/1000)|number(decimals=1) }}s
-        {% endif %}
+  {% if request.status == 'done' %}
+    {% if request.responseTime < 1000 %}
+      {{ request.responseTime }}ms
+    {% else %}
+      {{ (request.responseTime/1000)|number(decimals=1) }}s
     {% endif %}
+  {% endif %}
 {% endmacro %}
 
 {% macro headers(headers) %}
-    {% if headers %}
-        {% from _self import headers as showHeaders %}
-        {% for name, value in headers %}
-            {% if value is iterable %}
-                {% for v in value %}
-                    {{ showHeaders({(name): v}) }}
-                {% endfor %}
-            {% else %}
-                <div><strong>{{ name }}:</strong> {{ value }}</div>
-            {% endif %}
+  {% if headers %}
+    {% from _self import headers as showHeaders %}
+    {% for name, value in headers %}
+      {% if value is iterable %}
+        {% for v in value %}
+          {{ showHeaders({(name): v}) }}
         {% endfor %}
-    {% endif %}
+      {% else %}
+        <div><strong>{{ name }}:</strong> {{ value }}</div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 {% endmacro %}

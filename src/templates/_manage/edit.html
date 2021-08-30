@@ -6,247 +6,255 @@
 {% import '_includes/forms' as forms %}
 
 {% block actionButton %}
-    <div class="btngroup">
-        <input type="submit" class="btn submit" value="{{ 'Save'|t('app') }}">
-        {% if webhook.id %}
-            <div class="btn submit menubtn"></div>
-            <div class="menu">
-                <ul>
-                    <li>
-                        <a class="formsubmit error"
-                           data-action="webhooks/webhooks/delete"
-                           data-confirm="{{ 'Are you sure you want to delete the webhook “{name}”?'|t('webhooks', {name: webhook.name}) }}"
-                           data-redirect="{{ ('webhooks' ~ (webhook.groupId ? "/group/#{webhook.groupId}"))|hash }}">
-                            {{ 'Delete webhook'|t('webhooks') }}
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        {% endif %}
-    </div>
+  <div class="btngroup">
+    <input type="submit" class="btn submit" value="{{ 'Save'|t('app') }}">
+    {% if webhook.id %}
+      <div class="btn submit menubtn"></div>
+      <div class="menu">
+        <ul>
+          <li>
+            <a class="formsubmit error"
+              data-action="webhooks/webhooks/delete"
+              data-confirm="{{ 'Are you sure you want to delete the webhook “{name}”?'|t('webhooks', {name: webhook.name}) }}"
+              data-redirect="{{ ('webhooks' ~ (webhook.groupId ? "/group/#{webhook.groupId}"))|hash }}"
+            >
+                {{ 'Delete webhook'|t('webhooks') }}
+            </a>
+          </li>
+        </ul>
+      </div>
+    {% endif %}
+  </div>
 {% endblock %}
 
 {% block content %}
-    {% if webhook.id %}<input type="hidden" name="id" value="{{ webhook.id }}">{% endif %}
-    <input type="hidden" name="action" value="webhooks/webhooks/save">
-    <input type="hidden" name="redirect" value="{{ 'webhooks\{\{ groupId ? \'/group/\' ~ groupId \}\}'|hash }}">
+  {% if webhook.id %}<input type="hidden" name="id" value="{{ webhook.id }}">{% endif %}
+  <input type="hidden" name="action" value="webhooks/webhooks/save">
+  <input type="hidden" name="redirect" value="{{ 'webhooks\{\{ groupId ? \'/group/\' ~ groupId \}\}'|hash }}">
 
-    {{ forms.textField({
-        first: true,
-        label: 'Name'|t('webhooks'),
-        required: true,
-        instructions: 'What the webhook will be called within the Control Panel.'|t('webhooks'),
-        id: 'name',
-        name: 'name',
-        value: webhook.name,
-        errors: webhook.getErrors('name')
-    }) }}
+  {{ forms.textField({
+    first: true,
+    label: 'Name'|t('webhooks'),
+    required: true,
+    instructions: 'What the webhook will be called within the Control Panel.'|t('webhooks'),
+    id: 'name',
+    name: 'name',
+    value: webhook.name,
+    errors: webhook.getErrors('name')
+  }) }}
 
-    {% set classInput = include('webhooks/_manage/class-autosuggest', {
-        id: 'class',
-        name: 'class',
-        class: 'code ltr',
-        placeholder: 'craft\\elements\\Entry',
-        value: webhook.class,
-        errors: webhook.getErrors('class')
-    }, with_context = false) %}
-    {{ forms.field({
-        label: 'Sender Class'|t('webhooks'),
-        required: true,
-        instructions: 'The class name the sender must be an instance of.'|t('webhooks'),
-        errors: webhook.getErrors('class')
-    }, classInput) }}
+  {% set classInput = include('webhooks/_manage/class-autosuggest', {
+    id: 'class',
+    name: 'class',
+    class: 'code ltr',
+    placeholder: 'craft\\elements\\Entry',
+    value: webhook.class,
+    errors: webhook.getErrors('class')
+  }, with_context = false) %}
+  {{ forms.field({
+    label: 'Sender Class'|t('webhooks'),
+    required: true,
+    instructions: 'The class name the sender must be an instance of.'|t('webhooks'),
+    errors: webhook.getErrors('class')
+  }, classInput) }}
 
-    {% set eventInput = include('webhooks/_manage/event-autosuggest', {
-        id: 'event',
-        name: 'event',
-        class: 'code ltr',
-        placeholder: 'afterSave',
-        value: webhook.event,
-        errors: webhook.getErrors('event')
-    }, with_context = false) %}
-    {{ forms.field({
-        label: 'Event Name'|t('webhooks'),
-        required: true,
-        instructions: 'The name of the event that must be triggered.'|t('webhooks'),
-        errors: webhook.getErrors('event')
-    }, eventInput) }}
+  {% set eventInput = include('webhooks/_manage/event-autosuggest', {
+    id: 'event',
+    name: 'event',
+    class: 'code ltr',
+    placeholder: 'afterSave',
+    value: webhook.event,
+    errors: webhook.getErrors('event')
+  }, with_context = false) %}
+  {{ forms.field({
+    label: 'Event Name'|t('webhooks'),
+    required: true,
+    instructions: 'The name of the event that must be triggered.'|t('webhooks'),
+    errors: webhook.getErrors('event')
+  }, eventInput) }}
 
-    {% set filtersInput %}
-        <div class="pane" id="filter-pane">
-            <p id="no-filters"{% if showFilters %} class="hidden"{% endif %}>{{ 'No filters match this event.'|t('webhooks') }}</p>
-            <table id="filters" class="data{% if not showFilters%} hidden{% endif %}">
-                {% for filter in allFilters %}
-                    <tr data-class="{{ filter.class }}"{% if not filter.show %} class="hidden"{% endif %}>
-                        <th>{{ filter.displayName }}</th>
-                        <td>
-                            <div class="btngroup" tabindex="0">
-                                <div class="btn filter-no{% if filter.enabled and not filter.value %} active{% endif %}" data-icon="remove" title="{{ 'Prevents webhook execution.'|t('webhooks') }}"></div>
-                                <div class="btn filter-ignore{% if not filter.enabled %} active{% endif %}" title="{{ 'No impact on webhook execution.'|t('webhooks') }}"><div class="status"></div></div>
-                                <div class="btn filter-yes{% if filter.enabled and filter.value %} active{% endif %}" data-icon="checkmark" title="{{ 'Required for webhook execution.'|t('webhooks') }}"></div>
-                            </div>
-                            <input type="hidden" name="filters[{{ filter.class }}]"{% if filter.enabled %} value="{{ filter.value ? 'yes' : 'no' }}"{% endif %}>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </table>
-            <div id="filter-spinner" class="hidden"><div class="spinner"></div></div>
-        </div>
-    {% endset %}
-    {{ forms.field({
-        id: 'filters',
-        label: 'Event Filters'|t('webhooks'),
-        instructions: 'Checks that can determine whether a webhook should be executed.'|t('webhooks')
-    }, filtersInput) }}
-
-    {% set urlInput %}
-        <div class="flex">
-            <div>
-                {{ forms.select({
-                    id: 'method',
-                    name: 'method',
-                    options: {
-                        'get': 'GET',
-                        'post': 'POST',
-                        'put': 'PUT',
-                    },
-                    value: webhook.method,
-                    toggle: true,
-                    targetPrefix: 'method-settings--'
-                }) }}
-            </div>
-            <div class="flex-grow">
-                {{ forms.text({
-                    id: 'url',
-                    name: 'url',
-                    placeholder: 'https://',
-                    value: webhook.url
-                }) }}
-            </div>
-        </div>
-    {% endset %}
-
-    {{ forms.textField({
-        label: 'Debounce Key Format'|t('webhooks'),
-        instructions: 'Template that defines the webhook’s “debounce key” format. If two webhooks generate the same debounce key, only the latter will be sent.'|t('webhooks') ~ ' ' ~ 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
-        id: 'debounce-key-format',
-        class: 'code',
-        name: 'debounceKeyFormat',
-        value: webhook.debounceKeyFormat,
-        errors: webhook.getErrors('debounceKeyFormat')
-    }) }}
-
-    {{ forms.field({
-        label: 'Request Method & URL'|t('webhooks'),
-        required: true,
-        instructions: 'The request method and URL that the webhook should send.'|t('webhooks') ~ ' ' ~ 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
-        id: 'url',
-        errors: webhook.getErrors('url')
-    }, urlInput) }}
-
-    {{ forms.editableTableField({
-        id: 'headers',
-        name: 'headers',
-        label: 'Custom Headers'|t('webhooks'),
-        instructions: 'Any custom headers that should be sent.'|t('webhooks'),
-        cols: {
-            name: {
-                heading: 'Name'|t('webhooks'),
-                type: 'singleline',
-                code: true,
-                placeholder: 'X-Foo-Bar',
+  {% set filtersInput %}
+    <div class="pane" id="filter-pane">
+      <p id="no-filters"{% if showFilters %} class="hidden"{% endif %}>{{ 'No filters match this event.'|t('webhooks') }}</p>
+      <table id="filters" class="data{% if not showFilters%} hidden{% endif %}">
+        {% for filter in allFilters %}
+          <tr data-class="{{ filter.class }}"{% if not filter.show %} class="hidden"{% endif %}>
+          {% tag 'tr' with {
+            class: not filter.show ? 'hidden' : false,
+            data: {
+              class: filter.class,
+              excludes: filter.excludes ?? [],
             },
-            value: {
-                heading: 'Value'|t('webhooks'),
-                info: 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
-                type: 'multiline',
-                code: true,
-                placeholder: '{{ event.sender.fooBar }}',
-            }
-        },
-        rows: webhook.headers,
-        addRowLabel: 'Add a header'|t('webhooks'),
+          } %}
+            <th>{{ filter.displayName }}</th>
+            <td>
+              <div class="btngroup" tabindex="0">
+                <div class="btn filter-no{% if filter.enabled and not filter.value %} active{% endif %}" data-icon="remove" title="{{ 'Prevents webhook execution.'|t('webhooks') }}"></div>
+                <div class="btn filter-ignore{% if not filter.enabled %} active{% endif %}" title="{{ 'No impact on webhook execution.'|t('webhooks') }}"><div class="status"></div></div>
+                <div class="btn filter-yes{% if filter.enabled and filter.value %} active{% endif %}" data-icon="checkmark" title="{{ 'Required for webhook execution.'|t('webhooks') }}"></div>
+              </div>
+              <input type="hidden" name="filters[{{ filter.class }}]"{% if filter.enabled %} value="{{ filter.value ? 'yes' : 'no' }}"{% endif %}>
+            </td>
+          {% endtag %}
+        {% endfor %}
+      </table>
+      <div id="filter-spinner" class="hidden"><div class="spinner"></div></div>
+    </div>
+  {% endset %}
+  {{ forms.field({
+    id: 'filters',
+    label: 'Event Filters'|t('webhooks'),
+    instructions: 'Checks that can determine whether a webhook should be executed.'|t('webhooks')
+  }, filtersInput) }}
+
+  {% set urlInput %}
+    <div class="flex">
+      <div>
+        {{ forms.select({
+          id: 'method',
+          name: 'method',
+          options: {
+            'get': 'GET',
+            'post': 'POST',
+            'put': 'PUT',
+          },
+          value: webhook.method,
+          toggle: true,
+          targetPrefix: 'method-settings--'
+        }) }}
+      </div>
+      <div class="flex-grow">
+        {{ forms.text({
+          id: 'url',
+          name: 'url',
+          placeholder: 'https://',
+          value: webhook.url
+        }) }}
+      </div>
+    </div>
+  {% endset %}
+
+  {{ forms.textField({
+    label: 'Debounce Key Format'|t('webhooks'),
+    instructions: 'Template that defines the webhook’s “debounce key” format. If two webhooks generate the same debounce key, only the latter will be sent.'|t('webhooks') ~ ' ' ~ 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
+    id: 'debounce-key-format',
+    class: 'code',
+    name: 'debounceKeyFormat',
+    value: webhook.debounceKeyFormat,
+    errors: webhook.getErrors('debounceKeyFormat')
+  }) }}
+
+  {{ forms.field({
+    label: 'Request Method & URL'|t('webhooks'),
+    required: true,
+    instructions: 'The request method and URL that the webhook should send.'|t('webhooks') ~ ' ' ~ 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
+    id: 'url',
+    errors: webhook.getErrors('url')
+  }, urlInput) }}
+
+  {{ forms.editableTableField({
+    id: 'headers',
+    name: 'headers',
+    label: 'Custom Headers'|t('webhooks'),
+    instructions: 'Any custom headers that should be sent.'|t('webhooks'),
+    cols: {
+      name: {
+        heading: 'Name'|t('webhooks'),
+        type: 'singleline',
+        code: true,
+        placeholder: 'X-Foo-Bar',
+      },
+      value: {
+        heading: 'Value'|t('webhooks'),
+        info: 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
+        type: 'multiline',
+        code: true,
+        placeholder: '{{ event.sender.fooBar }}',
+      }
+    },
+    rows: webhook.headers,
+    addRowLabel: 'Add a header'|t('webhooks'),
+  }) }}
+
+  <div id="method-settings--post" {% if webhook.method == 'get' %}class="hidden"{% endif %}>
+
+    <hr>
+
+    {{ forms.checkboxField({
+      label: 'Send a custom payload'|t('webhooks'),
+      name: 'customPayload',
+      checked: webhook.payloadTemplate,
+      toggle: 'custom-payload',
+      reverseToggle: 'standard-payload'
     }) }}
 
-    <div id="method-settings--post" {% if webhook.method == 'get' %}class="hidden"{% endif %}>
+    <div id="standard-payload" class="{{ webhook.payloadTemplate ? 'hidden' }}">
+      {{ forms.textareaField({
+        label: 'Extra User Attributes'|t('webhooks'),
+        instructions: 'List of additional attributes for the logged-in user that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+        id: 'user-attributes',
+        name: 'userAttributes',
+        placeholder: 'photo.url',
+        class: 'code nicetext',
+        value: webhook.userAttributes,
+        errors: webhook.getErrors('userAttributes')
+      }) }}
 
-        <hr>
+      {{ forms.textareaField({
+        label: 'Extra Sender Attributes'|t('webhooks'),
+        instructions: 'List of additional attributes for the event sender that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+        id: 'sender-attributes',
+        name: 'senderAttributes',
+        placeholder: 'author.email',
+        class: 'code nicetext',
+        value: webhook.senderAttributes,
+        errors: webhook.getErrors('senderAttributes')
+      }) }}
 
-        {{ forms.checkboxField({
-            label: 'Send a custom payload'|t('webhooks'),
-            name: 'customPayload',
-            checked: webhook.payloadTemplate,
-            toggle: 'custom-payload',
-            reverseToggle: 'standard-payload'
-        }) }}
-
-        <div id="standard-payload" class="{{ webhook.payloadTemplate ? 'hidden' }}">
-            {{ forms.textareaField({
-                label: 'Extra User Attributes'|t('webhooks'),
-                instructions: 'List of additional attributes for the logged-in user that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
-                id: 'user-attributes',
-                name: 'userAttributes',
-                placeholder: 'photo.url',
-                class: 'code nicetext',
-                value: webhook.userAttributes,
-                errors: webhook.getErrors('userAttributes')
-            }) }}
-
-            {{ forms.textareaField({
-                label: 'Extra Sender Attributes'|t('webhooks'),
-                instructions: 'List of additional attributes for the event sender that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
-                id: 'sender-attributes',
-                name: 'senderAttributes',
-                placeholder: 'author.email',
-                class: 'code nicetext',
-                value: webhook.senderAttributes,
-                errors: webhook.getErrors('senderAttributes')
-            }) }}
-            {{ forms.textareaField({
-                label: 'Extra Event Attributes'|t('webhooks'),
-                instructions: 'List of additional attributes for the event properties that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
-                id: 'event-attributes',
-                name: 'eventAttributes',
-                class: 'code nicetext',
-                value: webhook.eventAttributes,
-                errors: webhook.getErrors('eventAttributes')
-            }) }}
-        </div>
-
-        <div id="custom-payload" class="{{ not webhook.payloadTemplate ? 'hidden' }}">
-            {{ forms.textareaField({
-                label: 'Payload Template'|t('webhooks'),
-                instructions: 'Enter a custom Twig template that outputs the payload body. An `event` variable will be present, set to the event that was triggered.'|t('webhooks'),
-                id: 'json-payload-template',
-                name: 'payloadTemplate',
-                class: 'code nicetext',
-                rows: 10,
-                value: webhook.payloadTemplate,
-                errors: webhook.getErrors('payloadTemplate')
-            }) }}
-        </div>
+      {{ forms.textareaField({
+        label: 'Extra Event Attributes'|t('webhooks'),
+        instructions: 'List of additional attributes for the event properties that should be included in the webhook body.'|t('webhooks') ~ ' ' ~ '(Place separate attributes on new lines.)'|t('webhooks'),
+        id: 'event-attributes',
+        name: 'eventAttributes',
+        class: 'code nicetext',
+        value: webhook.eventAttributes,
+        errors: webhook.getErrors('eventAttributes')
+      }) }}
     </div>
+
+    <div id="custom-payload" class="{{ not webhook.payloadTemplate ? 'hidden' }}">
+      {{ forms.textareaField({
+        label: 'Payload Template'|t('webhooks'),
+        instructions: 'Enter a custom Twig template that outputs the payload body. An `event` variable will be present, set to the event that was triggered.'|t('webhooks'),
+        id: 'json-payload-template',
+        name: 'payloadTemplate',
+        class: 'code nicetext',
+        rows: 10,
+        value: webhook.payloadTemplate,
+        errors: webhook.getErrors('payloadTemplate')
+      }) }}
+    </div>
+  </div>
 {% endblock %}
 
 {% block details %}
-    <div class="first meta">
+  <div class="first meta">
+    {% if groupOptions|length > 1 %}
+      {{ forms.selectField({
+        first: true,
+        label: 'Group'|t('webhooks'),
+        id: 'group',
+        name: 'groupId',
+        value: webhook.groupId,
+        options: groupOptions
+      }) }}
+    {% endif %}
 
-        {% if groupOptions|length > 1 %}
-            {{ forms.selectField({
-                first: true,
-                label: 'Group'|t('webhooks'),
-                id: 'group',
-                name: 'groupId',
-                value: webhook.groupId,
-                options: groupOptions
-            }) }}
-        {% endif %}
-
-        {{ forms.lightswitchField({
-            label: 'Enabled'|t('webhooks'),
-            id: 'enabled',
-            name: 'enabled',
-            on: webhook.enabled
-        }) }}
-    </div>
+    {{ forms.lightswitchField({
+      label: 'Enabled'|t('webhooks'),
+      id: 'enabled',
+      name: 'enabled',
+      on: webhook.enabled
+    }) }}
+  </div>
 {% endblock %}

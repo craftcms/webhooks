@@ -1,7 +1,7 @@
 {
   "name": "craftcms/webhooks",
   "description": "Post webhooks when events are triggered in Craft CMS.",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "type": "craft-plugin",
   "keywords": [
     "html",
@@ -25,12 +25,18 @@
     "rss": "https://github.com/craftcms/webhooks/commits/master.atom"
   },
   "require": {
-    "craftcms/cms": "^3.1.19"
+    "craftcms/cms": "^3.7.0"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^0.12.96"
   },
   "autoload": {
     "psr-4": {
       "craft\\webhooks\\": "src/"
     }
+  },
+  "scripts": {
+    "phpstan": "phpstan --memory-limit=1G"
   },
   "extra": {
     "name": "Webhooks",

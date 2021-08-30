@@ -2,7 +2,6 @@
 
 namespace craft\webhooks\migrations;
 
-use Craft;
 use craft\db\Migration;
 
 /**
@@ -13,17 +12,19 @@ class m190320_182458_payload_template_col extends Migration
     /**
      * @inheritdoc
      */
-    public function safeUp()
+    public function safeUp(): bool
     {
         if (!$this->db->columnExists('{{%webhooks}}', 'payloadTemplate')) {
             $this->addColumn('{{%webhooks}}', 'payloadTemplate', $this->mediumText()->after('eventAttributes'));
         }
+
+        return true;
     }
 
     /**
      * @inheritdoc
      */
-    public function safeDown()
+    public function safeDown(): bool
     {
         echo "m190320_182458_payload_template_col cannot be reverted.\n";
         return false;

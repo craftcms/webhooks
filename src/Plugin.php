@@ -7,25 +7,36 @@ use craft\db\Query;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\ArrayHelper;
+use craft\helpers\ConfigHelper;
 use craft\helpers\Db;
 use craft\helpers\Json;
+use craft\helpers\Queue;
 use craft\helpers\StringHelper;
+use craft\services\Gc;
 use craft\web\UrlManager;
 use craft\webhooks\filters\DraftFilter;
+use craft\webhooks\filters\ProvisionalDraftFilter;
 use craft\webhooks\filters\DuplicatingFilter;
 use craft\webhooks\filters\ElementEnabledFilter;
 use craft\webhooks\filters\FilterInterface;
+use craft\webhooks\filters\FirstSaveFilter;
 use craft\webhooks\filters\NewElementFilter;
 use craft\webhooks\filters\PropagatingFilter;
 use craft\webhooks\filters\ResavingFilter;
 use craft\webhooks\filters\RevisionFilter;
+use DateTime;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\RequestOptions;
+use ReflectionClass;
+use Throwable;
 use yii\base\Application;
 use yii\base\Arrayable;
 use yii\base\Event;
 use yii\base\Exception;
 use yii\base\InvalidArgumentException;
+use yii\base\InvalidConfigException;
 
 /**
  * Webhooks plugin
@@ -36,7 +47,7 @@ use yii\base\InvalidArgumentException;
  * @propery-read WebhookManager $webhookManager
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class Plugin extends \craft\base\Plugin
 {
@@ -63,7 +74,7 @@ class Plugin extends \craft\base\Plugin
      *     );
      * }
      * ```
-     * @since 2.1
+     * @since 2.1.0
      */
     const EVENT_REGISTER_FILTER_TYPES = 'registerFilterTypes';
 
@@ -80,7 +91,7 @@ class Plugin extends \craft\base\Plugin
     /**
      * @inheritdoc
      */
-    public $schemaVersion = '2.3.1';
+    public $schemaVersion = '2.4.0';
 
     /**
      * @var SendRequestJob[] The request jobs that should be queued up at the end of the web request.
@@ -107,107 +118,134 @@ class Plugin extends \craft\base\Plugin
         // Register webhook events
         try {
             $webhooks = $manager->getEnabledWebhooks();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Craft::error('Unable to fetch enabled webhooks: ' . $e->getMessage(), __METHOD__);
             Craft::$app->getErrorHandler()->logException($e);
             $webhooks = [];
         }
 
         foreach ($webhooks as $webhook) {
-            Event::on($webhook->class, $webhook->event, function(Event $e) use ($webhook) {
-                // Make sure it passes the filters
-                foreach ($webhook->filters as $filterClass => $filterValue) {
-                    /** @var string|FilterInterface $filterClass */
-                    if (class_exists($filterClass) && !$filterClass::check($e, $filterValue)) {
-                        return;
+            Event::on(
+                $webhook->class,
+                $webhook->event,
+                function(Event $e) use ($webhook) {
+                    // Make sure it passes the filters
+                    foreach ($webhook->filters as $filterClass => $filterValue) {
+                        /** @var string|FilterInterface $filterClass */
+                        if (class_exists($filterClass) && !$filterClass::check($e, $filterValue)) {
+                            return;
+                        }
                     }
-                }
 
-                $view = Craft::$app->getView();
+                    $view = Craft::$app->getView();
 
-                if (in_array($webhook->method, ['post', 'put'], true)) {
-                    // Build out the body data
-                    if ($webhook->payloadTemplate) {
-                        $json = $view->renderString($webhook->payloadTemplate, [
+                    if (in_array($webhook->method, ['post', 'put'], true)) {
+                        // Build out the body data
+                        if ($webhook->payloadTemplate) {
+                            $json = $view->renderString($webhook->payloadTemplate, [
+                                'event' => $e,
+                            ]);
+                            $data = Json::decodeIfJson($json);
+                        } else {
+                            $user = Craft::$app->getUser()->getIdentity();
+                            $data = [
+                                'time' => (new DateTime())->format(DateTime::ATOM),
+                                'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
+                                'name' => $e->name,
+                                'senderClass' => get_class($e->sender),
+                                'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
+                                'eventClass' => get_class($e),
+                                'event' => [],
+                            ];
+
+                            $eventAttributes = $webhook->getEventAttributes();
+                            $ref = new ReflectionClass($e);
+                            foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
+                                if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
+                                    $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
+                                }
+                            }
+                        }
+                    }
+
+                    // Set the headers and body
+                    $headers = [];
+
+                    foreach ($webhook->headers as $header) {
+                        $header['value'] = Craft::parseEnv($header['value']);
+                        $header['value'] = $view->renderString($header['value'], [
                             'event' => $e,
                         ]);
-                        $data = Json::decodeIfJson($json);
+                        // Get the trimmed lines
+                        $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', $header['value'])));
+                        // Add to the header array one-by-one, ensuring that we don't overwrite existing values
+                        foreach ($lines as $line) {
+                            if (!isset($headers[$header['name']])) {
+                                $headers[$header['name']] = $line;
+                            } else {
+                                if (!is_array($headers[$header['name']])) {
+                                    $headers[$header['name']] = [$headers[$header['name']]];
+                                }
+                                $headers[$header['name']][] = $line;
+                            }
+                        }
+                    }
+
+                    if (isset($data) && is_array($data)) {
+                        $body = Json::encode($data);
+                        $headers['Content-Type'] = 'application/json';
                     } else {
-                        $user = Craft::$app->getUser()->getIdentity();
-                        $data = [
-                            'time' => (new \DateTime())->format(\DateTime::ATOM),
-                            'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
-                            'name' => $e->name,
-                            'senderClass' => get_class($e->sender),
-                            'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
-                            'eventClass' => get_class($e),
-                            'event' => [],
-                        ];
-
-                        $eventAttributes = $webhook->getEventAttributes();
-                        $ref = new \ReflectionClass($e);
-                        foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
-                            if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
-                                $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
-                            }
-                        }
+                        $body = $data ?? null;
                     }
-                }
 
-                // Set the headers and body
-                $headers = [];
-
-                foreach ($webhook->headers as $header) {
-                    $header['value'] = Craft::parseEnv($header['value']);
-                    $header['value'] = $view->renderString($header['value'], [
+                    // Queue the send request up
+                    $url = Craft::parseEnv($webhook->url);
+                    $url = $view->renderString($url, [
                         'event' => $e,
                     ]);
-                    // Get the trimmed lines
-                    $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', $header['value'])));
-                    // Add to the header array one-by-one, ensuring that we don't overwrite existing values
-                    foreach ($lines as $line) {
-                        if (!isset($headers[$header['name']])) {
-                            $headers[$header['name']] = $line;
-                        } else {
-                            if (!is_array($headers[$header['name']])) {
-                                $headers[$header['name']] = [$headers[$header['name']]];
-                            }
-                            $headers[$header['name']][] = $line;
-                        }
+
+                    if ($webhook->debounceKeyFormat) {
+                        $debounceKey = Craft::parseEnv($webhook->debounceKeyFormat);
+                        $debounceKey = $webhook->id . ':' . $view->renderString($debounceKey, [
+                            'event' => $e,
+                        ]);
                     }
+
+                    $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
                 }
-
-                if (isset($data) && is_array($data)) {
-                    $body = Json::encode($data);
-                    $headers['Content-Type'] = 'application/json';
-                } else {
-                    $body = $data ?? null;
-                }
-
-                // Queue the send request up
-                $url = Craft::parseEnv($webhook->url);
-                $url = $view->renderString($url, [
-                    'event' => $e,
-                ]);
-
-                if ($webhook->debounceKeyFormat) {
-                    $debounceKey = Craft::parseEnv($webhook->debounceKeyFormat);
-                    $debounceKey = $webhook->id . ':' . $view->renderString($debounceKey, [
-                        'event' => $e,
-                    ]);
-                }
-
-                $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
-            });
+            );
         }
 
         // Register CP routes
-        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $e) {
-            $e->rules['webhooks'] = 'webhooks/manage/index';
-            $e->rules['webhooks/group/<groupId:\d+>'] = 'webhooks/manage/index';
-            $e->rules['webhooks/new'] = 'webhooks/webhooks/edit';
-            $e->rules['webhooks/<id:\d+>'] = 'webhooks/webhooks/edit';
-            $e->rules['webhooks/activity'] = 'webhooks/activity/index';
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            function(RegisterUrlRulesEvent $e) {
+                $e->rules['webhooks'] = 'webhooks/manage/index';
+                $e->rules['webhooks/group/<groupId:\d+>'] = 'webhooks/manage/index';
+                $e->rules['webhooks/new'] = 'webhooks/webhooks/edit';
+                $e->rules['webhooks/<id:\d+>'] = 'webhooks/webhooks/edit';
+                $e->rules['webhooks/activity'] = 'webhooks/activity/index';
+            }
+        );
+
+        // Garbage collection
+        Event::on(Gc::class, Gc::EVENT_RUN, function() {
+            $settings = $this->getSettings();
+            if ($settings->purgeDuration) {
+                try {
+                    $seconds = ConfigHelper::durationInSeconds($settings->purgeDuration);
+                    $date = new DateTime("$seconds seconds ago");
+                    Db::delete('{{%webhookrequests}}', [
+                        'and',
+                        ['status' => Plugin::STATUS_DONE],
+                        ['<', 'dateCreated', Db::prepareDateForDb($date)],
+                    ]);
+                } catch (InvalidConfigException $e) {
+                    Craft::warning("Couldn't purge webhook requests: {$e->getMessage()}");
+                }
+
+            }
         });
     }
 
@@ -268,7 +306,7 @@ class Plugin extends \craft\base\Plugin
                         'url' => $url,
                         'requestHeaders' => $headers ? Json::encode($headers) : null,
                         'requestBody' => $body,
-                        'dateCreated' => Db::prepareDateForDb(new \DateTime()),
+                        'dateCreated' => Db::prepareDateForDb(new DateTime()),
                     ], [
                         'id' => $requestId,
                     ], [], false);
@@ -286,7 +324,7 @@ class Plugin extends \craft\base\Plugin
                 'url' => $url,
                 'requestHeaders' => $headers ? Json::encode($headers) : null,
                 'requestBody' => $body,
-                'dateCreated' => Db::prepareDateForDb(new \DateTime()),
+                'dateCreated' => Db::prepareDateForDb(new DateTime()),
                 'uid' => StringHelper::UUID(),
             ], false)
             ->execute();
@@ -308,9 +346,9 @@ class Plugin extends \craft\base\Plugin
      */
     public function pushPendingJobs()
     {
-        $queue = Craft::$app->getQueue();
+        $settings = $this->getSettings();
         while ($job = array_shift($this->_pendingJobs)) {
-            $queue->push($job);
+            Queue::push($job, null, $settings->initialDelay);
         }
     }
 
@@ -328,7 +366,7 @@ class Plugin extends \craft\base\Plugin
             ->one();
 
         if (!$data) {
-            throw new InvalidArgumentException('Invalid webhook request ID: ' . $this->requestId);
+            throw new InvalidArgumentException('Invalid webhook request ID: ' . $requestId);
         }
 
         if ($data['requestHeaders']) {
@@ -346,7 +384,7 @@ class Plugin extends \craft\base\Plugin
      *
      * @param int $requestId
      * @throws Exception
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      * @return bool Whether the request came back with a 2xx response
      */
     public function sendRequest(int $requestId): bool
@@ -371,18 +409,23 @@ class Plugin extends \craft\base\Plugin
         $db->createCommand()
             ->update('{{%webhookrequests}}', [
                 'status' => self::STATUS_REQUESTED,
-                'dateRequested' => Db::prepareDateForDb(new \DateTime()),
+                'dateRequested' => Db::prepareDateForDb(new DateTime()),
             ], ['id' => $requestId], [], false)
             ->execute();
 
         $startTime = microtime(true);
+        $response = null;
         try {
             $response = Craft::createGuzzleClient($this->getSettings()->guzzleConfig)
                 ->request($data['method'], $data['url'], $options);
             $success = true;
-        } catch (RequestException $e) {
-            $response = $e->getResponse();
+        } catch (TransferException $e) {
             $success = false;
+            if ($e instanceof RequestException) {
+                $response = $e->getResponse();
+            }
+            Craft::warning("Unable to send webhook: {$e->getMessage()}", __METHOD__);
+            Craft::$app->getErrorHandler()->logException($e);
         }
 
         // Update the request
@@ -478,7 +521,9 @@ class Plugin extends \craft\base\Plugin
             NewElementFilter::class,
             ElementEnabledFilter::class,
             DraftFilter::class,
+            ProvisionalDraftFilter::class,
             RevisionFilter::class,
+            FirstSaveFilter::class,
             DuplicatingFilter::class,
             PropagatingFilter::class,
             ResavingFilter::class,
@@ -497,8 +542,8 @@ class Plugin extends \craft\base\Plugin
         return Craft::$app->getMutex()->acquire("webhook:$requestId", $timeout);
     }
 
-    private function _unlockRequest(int $requestId): bool
+    private function _unlockRequest(int $requestId): void
     {
-        return Craft::$app->getMutex()->release("webhook:$requestId");
+        Craft::$app->getMutex()->release("webhook:$requestId");
     }
 }

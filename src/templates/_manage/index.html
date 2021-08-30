@@ -5,60 +5,60 @@
 {% from '_includes/forms' import lightswitch %}
 
 {% block actionButton %}
-    {% set newWebhookUrl = url('webhooks/new', (groupId is defined ? { groupId: groupId } : null)) %}
-    <a href="{{ newWebhookUrl }}" class="submit btn add icon">{{ "New webhook"|t('webhooks') }}</a>
+  {% set newWebhookUrl = url('webhooks/new', (groupId is defined ? { groupId: groupId } : null)) %}
+  <a href="{{ newWebhookUrl }}" class="submit btn add icon">{{ "New webhook"|t('webhooks') }}</a>
 {% endblock %}
 
 {% block sidebar %}
-    <nav>
-        <ul id="groups">
-            <li><a href="{{ url('webhooks') }}"{% if not groupId %} class="sel"{% endif %}>{{ 'Ungrouped'|t('webhooks') }}</a></li>
-            {% for group in groups %}
-                <li><a href="{{ url('webhooks/group/'~group.id) }}"{% if groupId is defined and group.id == groupId %} class="sel"{% endif %} data-id="{{ group.id }}">{{ group.name|t('site') }}</a></li>
-            {% endfor %}
+  <nav>
+    <ul id="groups">
+      <li><a href="{{ url('webhooks') }}"{% if not groupId %} class="sel"{% endif %}>{{ 'Ungrouped'|t('webhooks') }}</a></li>
+      {% for group in groups %}
+        <li><a href="{{ url('webhooks/group/'~group.id) }}"{% if groupId is defined and group.id == groupId %} class="sel"{% endif %} data-id="{{ group.id }}">{{ group.name|t('site') }}</a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  <div class="buttons">
+    <div id="newgroupbtn" class="btn add icon">{{ "New group"|t('app') }}</div>
+
+    {% if groupId %}
+      <div id="groupsettingsbtn" class="btn settings icon menubtn" title="{{ 'Settings' }}"></div>
+      <div class="menu">
+        <ul>
+          <li><a data-action="rename" role="button">{{ "Rename selected group"|t('app') }}</a></li>
+          <li><a data-action="delete" role="button">{{ "Delete selected group"|t('app') }}</a></li>
         </ul>
-    </nav>
-
-    <div class="buttons">
-        <div id="newgroupbtn" class="btn add icon">{{ "New group"|t('app') }}</div>
-
-        {% if groupId %}
-            <div id="groupsettingsbtn" class="btn settings icon menubtn" title="{{ 'Settings' }}"></div>
-            <div class="menu">
-                <ul>
-                    <li><a data-action="rename" role="button">{{ "Rename selected group"|t('app') }}</a></li>
-                    <li><a data-action="delete" role="button">{{ "Delete selected group"|t('app') }}</a></li>
-                </ul>
-            </div>
-        {% endif %}
-    </div>
+      </div>
+    {% endif %}
+  </div>
 {% endblock %}
 
 {% block content %}
-    {% if webhooks|length %}
-        <table class="data fullwidth">
-            <thead>
-                <tr>
-                    <th>{{ 'Webhook'|t('webhooks') }}</th>
-                    <th class="thin centeralign">{{ 'Enabled'|t('webhooks') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for webhook in webhooks %}
-                    <tr data-id="{{ webhook.id }}">
-                        <th><a href="{{ cpUrl("webhooks/#{webhook.id}") }}">{{ webhook.name }}</a></th>
-                        <td class="centeralign">
-                            {{ lightswitch({
-                                id: 'enabled',
-                                name: 'enabled',
-                                on: webhook.enabled
-                            }) }}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>{{ 'No webhooks exist yet.'|t('webhooks') }}</p>
-    {% endif %}
+  {% if webhooks|length %}
+    <table class="data fullwidth">
+      <thead>
+        <tr>
+          <th>{{ 'Webhook'|t('webhooks') }}</th>
+          <th class="thin centeralign">{{ 'Enabled'|t('webhooks') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for webhook in webhooks %}
+          <tr data-id="{{ webhook.id }}">
+            <th><a href="{{ cpUrl("webhooks/#{webhook.id}") }}">{{ webhook.name }}</a></th>
+            <td class="centeralign">
+              {{ lightswitch({
+                id: 'enabled',
+                name: 'enabled',
+                on: webhook.enabled
+              }) }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ 'No webhooks exist yet.'|t('webhooks') }}</p>
+  {% endif %}
 {% endblock %}

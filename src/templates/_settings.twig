@@ -1,31 +1,47 @@
 {% import '_includes/forms' as forms %}
 
 {{ forms.textField({
-    first: true,
-    id: 'max-depth',
-    label: 'Max Payload Depth'|t('webhooks'),
-    instructions: 'The maximum depth that the plugin should go into objects/arrays when converting them to arrays for event payloads.'|t('webhooks'),
-    size: 5,
-    name: 'maxDepth',
-    value: settings.maxDepth,
+  first: true,
+  id: 'max-depth',
+  label: 'Max Payload Depth'|t('webhooks'),
+  instructions: 'The maximum depth that the plugin should go into objects/arrays when converting them to arrays for event payloads.'|t('webhooks'),
+  size: 5,
+  name: 'maxDepth',
+  value: settings.maxDepth,
 }) }}
 
 {{ forms.textField({
-    first: true,
-    id: 'max-attempts',
-    label: 'Max Attempts'|t('webhooks'),
-    instructions: 'The maximum number of request attempts that should be made.'|t('webhooks'),
-    size: 5,
-    name: 'maxAttempts',
-    value: settings.maxAttempts,
+  id: 'max-attempts',
+  label: 'Max Attempts'|t('webhooks'),
+  instructions: 'The maximum number of request attempts that should be made.'|t('webhooks'),
+  size: 5,
+  name: 'maxAttempts',
+  value: settings.maxAttempts,
 }) }}
 
 {{ forms.textField({
-    first: true,
-    id: 'retry-delay',
-    label: 'Retry Delay'|t('webhooks'),
-    instructions: 'The time delay in seconds between request attempts.'|t('webhooks'),
-    size: 5,
-    name: 'retryDelay',
-    value: settings.retryDelay,
+  id: 'initial-delay',
+  label: 'Initial Delay'|t('webhooks'),
+  instructions: 'The time delay in seconds that initial webhook requests should have.'|t('webhooks'),
+  size: 5,
+  name: 'initialDelay',
+  value: settings.initialDelay,
+}) }}
+
+{{ forms.textField({
+  id: 'retry-delay',
+  label: 'Retry Delay'|t('webhooks'),
+  instructions: 'The time delay in seconds between request attempts.'|t('webhooks'),
+  size: 5,
+  name: 'retryDelay',
+  value: settings.retryDelay,
+}) }}
+
+{{ forms.textField({
+  id: 'purge-duration',
+  label: 'Purge Duration'|t('webhooks'),
+  instructions: 'The time (in seconds) that request history should be saved in the database before being deletable via garbage collection.'|t('webhooks'),
+  size: 5,
+  name: 'purgeDuration',
+  value: settings.purgeDuration,
 }) }}

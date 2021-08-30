@@ -19,10 +19,23 @@ class Settings extends Model
     public $maxAttempts = 1;
 
     /**
-     * @var int The time delay in seconds between request retrys.
+     * @var int|null The time delay in seconds that initial webhook request attempts should have.
+     * @since 2.4.0
+     */
+    public $initialDelay;
+
+    /**
+     * @var int The time delay in seconds between request retries.
      * @since 2.3.0
      */
     public $retryDelay = 60;
+
+    /**
+     * @var int|null The time (in seconds) that request history should be saved in the database before being
+     * deletable via garbage collection.
+     * @since 3.4.0
+     */
+    public $purgeDuration = 604800;
 
     /**
      * @var array Custom config options that should be applied when creating Guzzle clients.
@@ -40,6 +53,16 @@ class Settings extends Model
             $values['retryDelay'] = $retryDelay;
         }
 
+        if (empty($values['initialDelay'])) {
+            $values['initialDelay'] = null;
+        }
+
+        if (empty($values['purgeDuration'])) {
+            $values['purgeDuration'] = null;
+        } else if (is_numeric($values['purgeDuration'])) {
+            $values['purgeDuration'] = (int)$values['purgeDuration'];
+        }
+
         parent::setAttributes($values, $safeOnly);
     }
 
@@ -50,7 +73,7 @@ class Settings extends Model
     {
         return [
             [['maxDepth', 'maxAttempts'], 'number', 'integerOnly' => true, 'min' => 1],
-            [['retryDelay'], 'number', 'integerOnly' => true, 'min' => 0],
+            [['initialDelay', 'retryDelay', 'purgeDuration'], 'number', 'integerOnly' => true, 'min' => 0],
         ];
     }
 

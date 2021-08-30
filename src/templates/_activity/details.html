@@ -1,56 +1,65 @@
 {% import 'webhooks/_activity/macros' as macros %}
 
 <div class="meta">
+  <div class="data">
+    <div class="heading">{{ 'URL'|t('webhooks') }}</div>
+    <div class="value code">{{ request.method|upper }} {{ request.url }}</div>
+  </div>
+  {% if request.dateRequested %}
     <div class="data">
-        <div class="heading">{{ 'URL'|t('webhooks') }}</div>
-        <div class="value code">{{ request.method|upper }} {{ request.url }}</div>
+      <div class="heading">{{ 'Date'|t('webhooks') }}</div>
+      <div class="value">{{ date(request.dateRequested)|datetime }}</div>
     </div>
-    {% if request.dateRequested %}
-        <div class="data">
-            <div class="heading">{{ 'Date'|t('webhooks') }}</div>
-            <div class="value">{{ date(request.dateRequested)|datetime }}</div>
-        </div>
-    {% endif %}
+  {% endif %}
+  <div class="data">
+    <div class="heading">{{ 'Status'|t('webhooks') }}</div>
+    <div class="value">
+      {{ macros.status(request) }}
+      {% if request.status == 'pending' %}
+        &nbsp;&nbsp;
+        <div class="btn small send-btn">{{ 'Send now'|t('webhooks') }}</div>
+        <div class="spinner hidden"></div>
+      {% endif %}
+    </div>
+  </div>
+  {% if request.status == 'done' %}
     <div class="data">
-        <div class="heading">{{ 'Status'|t('webhooks') }}</div>
-        <div class="value">{{ macros.status(request) }}</div>
+      <div class="heading">{{ 'Time'|t('webhooks') }}</div>
+      <div class="value">{{ macros.responseTime(request) }}</div>
     </div>
-    {% if request.status == 'done' %}
-        <div class="data">
-            <div class="heading">{{ 'Time'|t('webhooks') }}</div>
-            <div class="value">{{ macros.responseTime(request) }}</div>
+  {% endif %}
+  {% if request.attempts %}
+    <div class="data">
+      <div class="heading">{{ 'Attempts'|t('webhooks') }}</div>
+      <div class="value">
+        <div class="flex">
+          <div>{{ request.attempts }}&nbsp;&nbsp;</div>
+          <div class="btn small send-btn">{{ 'Redeliver'|t('webhooks') }}</div>
+          <div class="spinner hidden"></div>
         </div>
-    {% endif %}
-    {% if request.attempts %}
-        <div class="data">
-            <div class="heading">{{ 'Attempts'|t('webhooks') }}</div>
-            <div class="value">
-                <div class="flex">
-                    <div>{{ request.attempts }}&nbsp;&nbsp;</div>
-                    <div class="btn small redeliver-btn">{{ 'Redeliver'|t('webhooks') }}</div>
-                    <div class="spinner hidden"></div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-</div>
-
-<div class="buttons">
-
+      </div>
+    </div>
+  {% endif %}
 </div>
 
 <hr>
 
 <h4>{{ 'Request'|t('webhooks') }}</h4>
 <div class="pane code">
-    {{ macros.headers(request.requestHeaders) }}
-    <br>
-    <pre>{{ request.requestBody }}</pre>
+  {{ macros.headers(request.requestHeaders) }}
+  <br>
+  <pre>{{ request.requestBody }}</pre>
 </div>
 
 <h4>{{ 'Response'|t('webhooks') }}</h4>
-<div class="pane code">
+{% if request.responseHeaders or request.responseBody %}
+  <div class="pane code">
     {{ macros.headers(request.responseHeaders) }}
     <br>
     <pre>{{ request.responseBody }}</pre>
-</div>
+  </div>
+{% else %}
+  <div class="pane zilch">
+    <p>{{ 'No response yet.'|t('webhooks') }}</p>
+  </div>
+{% endif %}

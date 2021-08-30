@@ -18,6 +18,9 @@ use craft\services\Entries;
 use craft\services\Globals;
 use craft\services\Tags;
 use craft\services\Users;
+use ReflectionClass;
+use ReflectionClassConstant;
+use Throwable;
 use yii\base\Component;
 use yii\caching\FileDependency;
 
@@ -40,7 +43,7 @@ class WebhookHelper
             foreach (self::_findClasses() as $class) {
                 $classes[] = [
                     'name' => $class,
-                    'hint' => self::_shortDesc((new \ReflectionClass($class))->getDocComment()),
+                    'hint' => self::_shortDesc((new ReflectionClass($class))->getDocComment()),
                 ];
             }
             return $classes;
@@ -52,6 +55,7 @@ class WebhookHelper
     /**
      * Returns suggestions for the Event Name input.
      *
+     * @param string $senderClass
      * @return array
      */
     public static function eventSuggestions(string $senderClass): array
@@ -62,11 +66,11 @@ class WebhookHelper
 
         $events = [];
 
-        foreach ((new \ReflectionClass($senderClass))->getConstants() as $name => $value) {
+        foreach ((new ReflectionClass($senderClass))->getConstants() as $name => $value) {
             if (strpos($name, 'EVENT_') === 0) {
                 $events[] = [
                     'name' => $value,
-                    'hint' => self::_shortDesc((new \ReflectionClassConstant($senderClass, $name))->getDocComment()),
+                    'hint' => self::_shortDesc((new ReflectionClassConstant($senderClass, $name))->getDocComment()),
                 ];
             }
         }
@@ -123,7 +127,7 @@ class WebhookHelper
                         }
                     }
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
             }
         }
 

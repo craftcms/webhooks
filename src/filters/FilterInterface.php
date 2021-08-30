@@ -9,7 +9,7 @@ use yii\base\Event;
  * Filter Interface
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.1
+ * @since 2.1.0
  */
 interface FilterInterface extends ComponentInterface
 {

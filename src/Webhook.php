@@ -6,6 +6,7 @@ use Craft;
 use craft\base\Model;
 use craft\validators\UniqueValidator;
 use craft\webhooks\records\Webhook as WebhookRecord;
+use ReflectionClass;
 use Twig\Error\Error as TwigError;
 use yii\validators\Validator;
 
@@ -13,7 +14,7 @@ use yii\validators\Validator;
  * Webhook model
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class Webhook extends Model
 {
@@ -137,7 +138,7 @@ class Webhook extends Model
                 function(string $attribute, array $params = null, Validator $validator) {
                     if (class_exists($this->class)) {
                         $foundEvent = false;
-                        foreach ((new \ReflectionClass($this->class))->getConstants() as $name => $value) {
+                        foreach ((new ReflectionClass($this->class))->getConstants() as $name => $value) {
                             if (strpos($name, 'EVENT_') === 0) {
                                 if ($value === $this->event) {
                                     $foundEvent = true;
@@ -244,7 +245,7 @@ class Webhook extends Model
         $split = $this->_splitAttributes($this->eventAttributes);
         $attributes = [];
         foreach ($split as $attribute) {
-            list($property, $attribute) = explode('.', $attribute, 2);
+            [$property, $attribute] = explode('.', $attribute, 2);
             $attributes[$property][] = $$attribute;
         }
         return $attributes;
