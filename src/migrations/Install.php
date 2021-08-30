@@ -8,7 +8,7 @@ use craft\db\Migration;
  * Install migration.
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class Install extends Migration
 {

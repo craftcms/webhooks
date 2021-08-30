@@ -10,7 +10,7 @@ use craft\helpers\ElementHelper;
  * Filters events based on whether the element is a draft
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.1
+ * @since 2.1.0
  */
 class DraftFilter extends BaseElementFilter
 {

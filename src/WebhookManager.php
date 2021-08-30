@@ -12,7 +12,7 @@ use yii\base\InvalidArgumentException;
  * Webhook Manager
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class WebhookManager
 {

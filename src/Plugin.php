@@ -36,7 +36,7 @@ use yii\base\InvalidArgumentException;
  * @propery-read WebhookManager $webhookManager
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class Plugin extends \craft\base\Plugin
 {
@@ -63,7 +63,7 @@ class Plugin extends \craft\base\Plugin
      *     );
      * }
      * ```
-     * @since 2.1
+     * @since 2.1.0
      */
     const EVENT_REGISTER_FILTER_TYPES = 'registerFilterTypes';
 

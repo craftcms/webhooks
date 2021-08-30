@@ -13,7 +13,7 @@ use yii\web\Response;
  * Manage Webhooks Controller
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class ManageController extends BaseController
 {

@@ -16,7 +16,7 @@ use yii\base\InvalidConfigException;
  * Send Request job
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class SendRequestJob extends BaseJob
 {

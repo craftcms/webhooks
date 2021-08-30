@@ -13,7 +13,7 @@ use yii\validators\Validator;
  * Webhook model
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class Webhook extends Model
 {

@@ -14,7 +14,7 @@ use yii\base\NotSupportedException;
  * Base filter for elements
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.1
+ * @since 2.1.0
  */
 abstract class BaseElementFilter extends Component implements FilterInterface
 {

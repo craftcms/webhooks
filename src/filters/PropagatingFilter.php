@@ -10,7 +10,7 @@ use craft\base\ElementInterface;
  * Filters events based on whether the element is propagating
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.1
+ * @since 2.1.0
  */
 class PropagatingFilter extends BaseElementFilter
 {
