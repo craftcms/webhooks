@@ -10,6 +10,7 @@
 
 ### Changed
 - Webhooks now requires Craft 3.7 or later.
+- Webhook request details now use a slideout instead of an HUD.
 - Improved the performance of clearing out completed webhook request logs. ([#32](https://github.com/craftcms/webhooks/issues/32))
 - Exceptions thrown for webhook requests are now logged.
 
