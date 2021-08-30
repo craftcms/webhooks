@@ -14,7 +14,7 @@ class m210830_202902_status_index extends Migration
      */
     public function safeUp(): bool
     {
-        $this->createIndex(null, '{{%webhookrequests}}', ['status']);
+        $this->createIndex(null, '{{%webhookrequests}}', ['status', 'dateCreated']);
         return true;
     }
 

@@ -7,10 +7,12 @@ use craft\db\Query;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\ArrayHelper;
+use craft\helpers\ConfigHelper;
 use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\helpers\Queue;
 use craft\helpers\StringHelper;
+use craft\services\Gc;
 use craft\web\UrlManager;
 use craft\webhooks\filters\DraftFilter;
 use craft\webhooks\filters\ProvisionalDraftFilter;
@@ -34,6 +36,7 @@ use yii\base\Arrayable;
 use yii\base\Event;
 use yii\base\Exception;
 use yii\base\InvalidArgumentException;
+use yii\base\InvalidConfigException;
 
 /**
  * Webhooks plugin
@@ -225,6 +228,25 @@ class Plugin extends \craft\base\Plugin
                 $e->rules['webhooks/activity'] = 'webhooks/activity/index';
             }
         );
+
+        // Garbage collection
+        Event::on(Gc::class, Gc::EVENT_RUN, function() {
+            $settings = $this->getSettings();
+            if ($settings->purgeDuration) {
+                try {
+                    $seconds = ConfigHelper::durationInSeconds($settings->purgeDuration);
+                    $date = new DateTime("$seconds seconds ago");
+                    Db::delete('{{%webhookrequests}}', [
+                        'and',
+                        ['status' => Plugin::STATUS_DONE],
+                        ['<', 'dateCreated', Db::prepareDateForDb($date)],
+                    ]);
+                } catch (InvalidConfigException $e) {
+                    Craft::warning("Couldn't purge webhook requests: {$e->getMessage()}");
+                }
+
+            }
+        });
     }
 
     /**

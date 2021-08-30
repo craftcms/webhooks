@@ -31,6 +31,13 @@ class Settings extends Model
     public $retryDelay = 60;
 
     /**
+     * @var int|null The time (in seconds) that request history should be saved in the database before being
+     * deletable via garbage collection.
+     * @since 3.4.0
+     */
+    public $purgeDuration = 604800;
+
+    /**
      * @var array Custom config options that should be applied when creating Guzzle clients.
      * @since 2.3.0
      */
@@ -50,6 +57,12 @@ class Settings extends Model
             $values['initialDelay'] = null;
         }
 
+        if (empty($values['purgeDuration'])) {
+            $values['purgeDuration'] = null;
+        } else if (is_numeric($values['purgeDuration'])) {
+            $values['purgeDuration'] = (int)$values['purgeDuration'];
+        }
+
         parent::setAttributes($values, $safeOnly);
     }
 
@@ -60,7 +73,7 @@ class Settings extends Model
     {
         return [
             [['maxDepth', 'maxAttempts'], 'number', 'integerOnly' => true, 'min' => 1],
-            [['initialDelay', 'retryDelay'], 'number', 'integerOnly' => true, 'min' => 0],
+            [['initialDelay', 'retryDelay', 'purgeDuration'], 'number', 'integerOnly' => true, 'min' => 0],
         ];
     }
 

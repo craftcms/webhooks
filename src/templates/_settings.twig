@@ -36,3 +36,12 @@
   name: 'retryDelay',
   value: settings.retryDelay,
 }) }}
+
+{{ forms.textField({
+  id: 'purge-duration',
+  label: 'Purge Duration'|t('webhooks'),
+  instructions: 'The time (in seconds) that request history should be saved in the database before being deletable via garbage collection.'|t('webhooks'),
+  size: 5,
+  name: 'purgeDuration',
+  value: settings.purgeDuration,
+}) }}
