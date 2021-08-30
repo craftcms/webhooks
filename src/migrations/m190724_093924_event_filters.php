@@ -2,7 +2,6 @@
 
 namespace craft\webhooks\migrations;
 
-use Craft;
 use craft\db\Migration;
 
 /**
@@ -13,15 +12,16 @@ class m190724_093924_event_filters extends Migration
     /**
      * @inheritdoc
      */
-    public function safeUp()
+    public function safeUp(): bool
     {
         $this->addColumn('{{%webhooks}}', 'filters', $this->text()->after('event'));
+        return true;
     }
 
     /**
      * @inheritdoc
      */
-    public function safeDown()
+    public function safeDown(): bool
     {
         echo "m190724_093924_event_filters cannot be reverted.\n";
         return false;

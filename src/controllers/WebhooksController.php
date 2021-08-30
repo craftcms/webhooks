@@ -6,6 +6,7 @@ use Craft;
 use craft\helpers\ArrayHelper;
 use craft\helpers\UrlHelper;
 use craft\webhooks\assets\edit\EditAsset;
+use craft\webhooks\filters\ExclusiveFilterInterface;
 use craft\webhooks\filters\FilterInterface;
 use craft\webhooks\Plugin;
 use craft\webhooks\Webhook;
@@ -19,7 +20,7 @@ use yii\web\Response;
  * Webhooks Controller
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class WebhooksController extends BaseController
 {
@@ -81,17 +82,20 @@ class WebhooksController extends BaseController
         }
 
         // Filters
-        $allFilters = [];
-        foreach (Plugin::getInstance()->getAllFilters() as $class) {
+        $allFilters = array_map(function(string $class) use ($webhook): array {
             /** @var string|FilterInterface $class */
-            $allFilters[] = [
+            $config = [
                 'class' => $class,
                 'displayName' => $class::displayName(),
                 'show' => $webhook->class && $webhook->event && $class::show($webhook->class, $webhook->event),
                 'enabled' => isset($webhook->filters[$class]),
-                'value' => isset($webhook->filters[$class]) && (bool)$webhook->filters[$class],
+                'value' => isset($webhook->filters[$class]) && $webhook->filters[$class],
             ];
-        }
+            if (is_subclass_of($class, ExclusiveFilterInterface::class)) {
+                $config['excludes'] = $class::excludes();
+            }
+            return $config;
+        }, Plugin::getInstance()->getAllFilters());
 
         Craft::$app->getView()->registerAssetBundle(EditAsset::class);
 
@@ -153,6 +157,7 @@ class WebhooksController extends BaseController
             }
 
             Craft::$app->getSession()->setError(Craft::t('webhooks', 'Couldn’t save webhook.'));
+            /** @phpstan-ignore-next-line */
             Craft::$app->getUrlManager()->setRouteParams([
                 'webhook' => $webhook,
             ]);

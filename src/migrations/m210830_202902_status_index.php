@@ -5,16 +5,16 @@ namespace craft\webhooks\migrations;
 use craft\db\Migration;
 
 /**
- * m190724_202705_custom_headers migration.
+ * m210830_202902_status_index migration.
  */
-class m190724_202705_custom_headers extends Migration
+class m210830_202902_status_index extends Migration
 {
     /**
      * @inheritdoc
      */
     public function safeUp(): bool
     {
-        $this->addColumn('{{%webhooks}}', 'headers', $this->text()->after('url'));
+        $this->createIndex(null, '{{%webhookrequests}}', ['status', 'dateCreated']);
         return true;
     }
 
@@ -23,7 +23,7 @@ class m190724_202705_custom_headers extends Migration
      */
     public function safeDown(): bool
     {
-        echo "m190724_202705_custom_headers cannot be reverted.\n";
+        echo "m210830_202902_status_index cannot be reverted.\n";
         return false;
     }
 }

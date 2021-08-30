@@ -8,15 +8,18 @@ use craft\db\Migration;
  * Install migration.
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class Install extends Migration
 {
     /**
      * @inheritdoc
      */
-    public function safeUp()
+    public function safeUp(): bool
     {
+        // Cleanup
+        $this->_dropTables();
+
         // Create the webhookgroups table
         $this->createTable('{{%webhookgroups}}', [
             'id' => $this->primaryKey(),
@@ -72,16 +75,24 @@ class Install extends Migration
         $this->createIndex(null, '{{%webhooks}}', ['groupId', 'name']);
         $this->createIndex(null, '{{%webhooks}}', ['name'], true);
         $this->createIndex(null, '{{%webhookrequests}}', ['debounceKey', 'status']);
+        $this->createIndex(null, '{{%webhookrequests}}', ['status', 'dateCreated']);
         $this->addForeignKey(null, '{{%webhooks}}', ['groupId'], '{{%webhookgroups}}', ['id'], 'SET NULL');
         $this->addForeignKey(null, '{{%webhookrequests}}', ['webhookId'], '{{%webhooks}}', ['id'], 'SET NULL');
+
+        return true;
     }
 
     /**
      * @inheritdoc
      */
-    public function safeDown()
+    public function safeDown(): bool
     {
-        // Drop the DB table
+        $this->_dropTables();
+        return true;
+    }
+
+    private function _dropTables(): void
+    {
         $this->dropTableIfExists('{{%webhookrequests}}');
         $this->dropTableIfExists('{{%webhooks}}');
         $this->dropTableIfExists('{{%webhookgroups}}');

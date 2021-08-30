@@ -3,8 +3,6 @@
 namespace craft\webhooks\filters;
 
 use Craft;
-use craft\base\Element;
-use craft\base\ElementInterface;
 use craft\events\ElementEvent;
 use craft\events\ModelEvent;
 use yii\base\Event;
@@ -13,7 +11,7 @@ use yii\base\Event;
  * Filters events based on whether the element is propagating
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.1
+ * @since 2.1.0
  */
 class NewElementFilter extends BaseElementFilter
 {

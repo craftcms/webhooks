@@ -2,7 +2,6 @@
 
 namespace craft\webhooks\filters;
 
-use Craft;
 use craft\base\Component;
 use craft\base\ElementInterface;
 use craft\events\ElementEvent;
@@ -14,9 +13,9 @@ use yii\base\NotSupportedException;
  * Base filter for elements
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.1
+ * @since 2.1.0
  */
-abstract class BaseElementFilter extends Component implements FilterInterface
+abstract class BaseElementFilter extends Component implements ExclusiveFilterInterface
 {
     public static function show(string $class, string $event): bool
     {
@@ -33,6 +32,11 @@ abstract class BaseElementFilter extends Component implements FilterInterface
                 Elements::EVENT_AFTER_UPDATE_SLUG_AND_URI,
             ])
         ));
+    }
+
+    public static function excludes(): array
+    {
+        return [];
     }
 
     public static function check(Event $event, bool $value): bool

@@ -12,7 +12,7 @@ use yii\base\InvalidArgumentException;
  * Webhook Manager
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class WebhookManager
 {
@@ -83,7 +83,7 @@ class WebhookManager
                 ])
                 ->execute();
 
-            $group->id = $db->getLastInsertID('{{%webhookgroups}}');
+            $group->id = (int)$db->getLastInsertID('{{%webhookgroups}}');
         }
 
         return true;
@@ -92,7 +92,7 @@ class WebhookManager
     /**
      * Deletes a webhook group by its ID.
      *
-     * @param int
+     * @param int $id
      */
     public function deleteGroupById(int $id)
     {
@@ -216,7 +216,7 @@ class WebhookManager
             $db->createCommand()
                 ->insert('{{%webhooks}}', $data)
                 ->execute();
-            $webhook->id = $db->getLastInsertID('{{%webhooks}}');
+            $webhook->id = (int)$db->getLastInsertID('{{%webhooks}}');
         }
 
         return true;
@@ -287,7 +287,7 @@ class WebhookManager
     }
 
     /**
-     * @param array
+     * @param array $results
      * @return Webhook[]
      */
     private function _createWebhooks(array $results): array

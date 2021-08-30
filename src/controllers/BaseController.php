@@ -8,7 +8,7 @@ use craft\web\Controller;
  * Base Webhooks Controller
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.0
+ * @since 2.0.0
  */
 abstract class BaseController extends Controller
 {

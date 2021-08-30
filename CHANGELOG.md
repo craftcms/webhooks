@@ -1,5 +1,28 @@
 # Release Notes for Webhooks for Craft CMS
 
+## 2.4.0 - 2021-08-30
+
+### Added
+- Added new “Element is being saved for the first time” and “Element is a provisional draft” webhook filters.
+- Some webhook filters now disable other mutually-exclusive filters when active and enabled.
+- Pending webhook requests now have a “Send now” button, for manually triggering a webhook if the queue job was lost or failed. ([#35](https://github.com/craftcms/webhooks/issues/35))
+- Old webhook request activity is now purged during garbage collection. ([#57](https://github.com/craftcms/webhooks/discussions/57))
+- Added the “Initial Delay” setting. ([#53](https://github.com/craftcms/webhooks/discussions/53))
+- Added the “Purge Duration” setting.
+- Added `craft\webhooks\filters\ExclusiveFilterInterface`.
+
+### Changed
+- Webhooks now requires Craft 3.7 or later.
+- Webhook request details now use a slideout instead of an HUD.
+- Improved the performance of clearing out completed webhook request logs. ([#32](https://github.com/craftcms/webhooks/issues/32))
+- Exceptions thrown for webhook requests are now logged.
+
+### Fixed
+- Fixed an error that could occur when calling `craft\webhooks\Plugin::getRequestData()` if an invalid request ID was passed.
+- Fixed an exception that could occur when retrying webhook requests, if the queue driver didn’t support delayed jobs.
+- Fixed an exception that could occur when sending webhook requests, if Guzzle wasn’t able to connect to the server.
+- Fixed an error during install, if the database tables already existed. ([#46](https://github.com/craftcms/webhooks/issues/46))
+
 ## 2.3.3 - 2021-04-01
 
 ### Fixed

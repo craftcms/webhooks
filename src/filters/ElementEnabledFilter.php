@@ -5,9 +5,6 @@ namespace craft\webhooks\filters;
 use Craft;
 use craft\base\Element;
 use craft\base\ElementInterface;
-use craft\events\ElementEvent;
-use craft\events\ModelEvent;
-use yii\base\Event;
 
 /**
  * Filters events based on whether the element is enabled
@@ -25,6 +22,6 @@ class ElementEnabledFilter extends BaseElementFilter
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
         /** @var Element $element */
-        return $value === ($element->enabled && $element->enabledForSite);
+        return $value === ($element->enabled && $element->getEnabledForSite());
     }
 }

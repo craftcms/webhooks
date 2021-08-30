@@ -10,13 +10,20 @@ use craft\base\ElementInterface;
  * Filters events based on whether the element is being bulk-resaved
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.1
+ * @since 2.1.0
  */
 class ResavingFilter extends BaseElementFilter
 {
     public static function displayName(): string
     {
         return Craft::t('webhooks', 'Element is being bulk-resaved');
+    }
+
+    public static function excludes(): array
+    {
+        return [
+            FirstSaveFilter::class,
+        ];
     }
 
     protected static function checkElement(ElementInterface $element, bool $value): bool

@@ -2,7 +2,6 @@
 
 namespace craft\webhooks\migrations;
 
-use Craft;
 use craft\db\Migration;
 
 /**
@@ -13,7 +12,7 @@ class m190315_214904_requests_table extends Migration
     /**
      * @inheritdoch
      */
-    public function safeUp()
+    public function safeUp(): bool
     {
         // type => method
         $this->renameColumn('{{%webhooks}}', 'type', 'method');
@@ -38,12 +37,14 @@ class m190315_214904_requests_table extends Migration
         ]);
 
         $this->addForeignKey(null, '{{%webhookrequests}}', ['webhookId'], '{{%webhooks}}', ['id'], 'SET NULL');
+
+        return true;
     }
 
     /**
      * @inheritdoc
      */
-    public function safeDown()
+    public function safeDown(): bool
     {
         echo "m190315_214904_requests_table cannot be reverted.\n";
         return false;

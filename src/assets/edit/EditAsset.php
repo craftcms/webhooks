@@ -14,7 +14,7 @@ use craft\web\assets\cp\CpAsset;
  * Webhooks index asset bundle
  *
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0
+ * @since 1.0.0
  */
 class EditAsset extends AssetBundle
 {
