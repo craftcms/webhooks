@@ -10,6 +10,9 @@
 ### Changed
 - Webhooks now requires Craft 3.7 or later.
 
+### Fixed
+- Fixed an error that could occur when calling `craft\webhooks\Plugin::getRequestData()` if an invalid request ID was passed.
+
 ## 2.3.3 - 2021-04-01
 
 ### Fixed

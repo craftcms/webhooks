@@ -338,7 +338,7 @@ class Plugin extends \craft\base\Plugin
             ->one();
 
         if (!$data) {
-            throw new InvalidArgumentException('Invalid webhook request ID: ' . $this->requestId);
+            throw new InvalidArgumentException('Invalid webhook request ID: ' . $requestId);
         }
 
         if ($data['requestHeaders']) {
