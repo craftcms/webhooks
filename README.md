@@ -8,7 +8,7 @@ It can be used to integrate your Craft project with task automation tools like [
 
 ## Requirements
 
-This plugin requires Craft CMS 3.1.19 or later.
+This plugin requires Craft CMS 3.7 or later.
 
 ## Installation
 
@@ -35,14 +35,16 @@ composer require craftcms/webhooks
 
 ## Configuration
 
-To configure Webhooks, create a `config/webhooks.php` file, which returns an array.
+To configure Webhooks, go to **Settings** → **Webhooks**, or create a `config/webhooks.php` file, which returns an array.
 
 ```php
 <?php
 return [
     'maxDepth' => 10,
     'maxAttempts' => 3,
+    'initialDelay' => null,
     'retryDelay' => 120,
+    'purgeDuration' => 604800, // 7 days
 ];
 ```
 
@@ -50,7 +52,9 @@ The array can define the following keys:
 
 - `maxDepth` – The maximum depth that the plugin should go into objects/arrays when converting them to arrays for event payloads. (Default is `5`.)
 - `maxAttempts` – The maximum number of attempts each webhook should have before giving up, if the requests are coming back with non 2xx responses. (Default is `1`.)
+- `initialDelay` – The delay (in seconds) that initial webhook request attempts should have.
 - `retryDelay` – The delay (in seconds) between webhook attempts. (Default is `60`.)
+- `purgeDuration` – The time (in seconds) that request history should be saved in the database before being deletable via garbage collection.
 
 ## Managing Webhooks
 
