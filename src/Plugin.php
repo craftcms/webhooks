@@ -25,6 +25,7 @@ use craft\webhooks\filters\RevisionFilter;
 use DateTime;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\RequestOptions;
 use ReflectionClass;
 use Throwable;
@@ -391,13 +392,16 @@ class Plugin extends \craft\base\Plugin
             ->execute();
 
         $startTime = microtime(true);
+        $response = null;
         try {
             $response = Craft::createGuzzleClient($this->getSettings()->guzzleConfig)
                 ->request($data['method'], $data['url'], $options);
             $success = true;
-        } catch (RequestException $e) {
-            $response = $e->getResponse();
+        } catch (TransferException $e) {
             $success = false;
+            if ($e instanceof RequestException) {
+                $response = $e->getResponse();
+            }
         }
 
         // Update the request

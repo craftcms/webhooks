@@ -15,6 +15,7 @@
 ### Fixed
 - Fixed an error that could occur when calling `craft\webhooks\Plugin::getRequestData()` if an invalid request ID was passed.
 - Fixed an exception that could occur when retrying webhook requests, if the queue driver didn’t support delayed jobs.
+- Fixed an exception that could occur when sending webhook requests, if Guzzle wasn’t able to connect to the server.
 
 ## 2.3.3 - 2021-04-01
 
