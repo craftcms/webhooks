@@ -17,6 +17,9 @@ class Install extends Migration
      */
     public function safeUp(): bool
     {
+        // Cleanup
+        $this->_dropTables();
+
         // Create the webhookgroups table
         $this->createTable('{{%webhookgroups}}', [
             'id' => $this->primaryKey(),
@@ -84,11 +87,14 @@ class Install extends Migration
      */
     public function safeDown(): bool
     {
-        // Drop the DB table
+        $this->_dropTables();
+        return true;
+    }
+
+    private function _dropTables(): void
+    {
         $this->dropTableIfExists('{{%webhookrequests}}');
         $this->dropTableIfExists('{{%webhooks}}');
         $this->dropTableIfExists('{{%webhookgroups}}');
-
-        return true;
     }
 }
