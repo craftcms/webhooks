@@ -22,8 +22,12 @@ use craft\webhooks\filters\NewElementFilter;
 use craft\webhooks\filters\PropagatingFilter;
 use craft\webhooks\filters\ResavingFilter;
 use craft\webhooks\filters\RevisionFilter;
+use DateTime;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
+use ReflectionClass;
+use Throwable;
 use yii\base\Application;
 use yii\base\Arrayable;
 use yii\base\Event;
@@ -110,7 +114,7 @@ class Plugin extends \craft\base\Plugin
         // Register webhook events
         try {
             $webhooks = $manager->getEnabledWebhooks();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Craft::error('Unable to fetch enabled webhooks: ' . $e->getMessage(), __METHOD__);
             Craft::$app->getErrorHandler()->logException($e);
             $webhooks = [];
@@ -141,7 +145,7 @@ class Plugin extends \craft\base\Plugin
                         } else {
                             $user = Craft::$app->getUser()->getIdentity();
                             $data = [
-                                'time' => (new \DateTime())->format(\DateTime::ATOM),
+                                'time' => (new DateTime())->format(DateTime::ATOM),
                                 'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
                                 'name' => $e->name,
                                 'senderClass' => get_class($e->sender),
@@ -151,7 +155,7 @@ class Plugin extends \craft\base\Plugin
                             ];
 
                             $eventAttributes = $webhook->getEventAttributes();
-                            $ref = new \ReflectionClass($e);
+                            $ref = new ReflectionClass($e);
                             foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
                                 if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
                                     $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
@@ -279,7 +283,7 @@ class Plugin extends \craft\base\Plugin
                         'url' => $url,
                         'requestHeaders' => $headers ? Json::encode($headers) : null,
                         'requestBody' => $body,
-                        'dateCreated' => Db::prepareDateForDb(new \DateTime()),
+                        'dateCreated' => Db::prepareDateForDb(new DateTime()),
                     ], [
                         'id' => $requestId,
                     ], [], false);
@@ -297,7 +301,7 @@ class Plugin extends \craft\base\Plugin
                 'url' => $url,
                 'requestHeaders' => $headers ? Json::encode($headers) : null,
                 'requestBody' => $body,
-                'dateCreated' => Db::prepareDateForDb(new \DateTime()),
+                'dateCreated' => Db::prepareDateForDb(new DateTime()),
                 'uid' => StringHelper::UUID(),
             ], false)
             ->execute();
@@ -356,7 +360,7 @@ class Plugin extends \craft\base\Plugin
      *
      * @param int $requestId
      * @throws Exception
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      * @return bool Whether the request came back with a 2xx response
      */
     public function sendRequest(int $requestId): bool
@@ -381,7 +385,7 @@ class Plugin extends \craft\base\Plugin
         $db->createCommand()
             ->update('{{%webhookrequests}}', [
                 'status' => self::STATUS_REQUESTED,
-                'dateRequested' => Db::prepareDateForDb(new \DateTime()),
+                'dateRequested' => Db::prepareDateForDb(new DateTime()),
             ], ['id' => $requestId], [], false)
             ->execute();
 
@@ -509,8 +513,8 @@ class Plugin extends \craft\base\Plugin
         return Craft::$app->getMutex()->acquire("webhook:$requestId", $timeout);
     }
 
-    private function _unlockRequest(int $requestId): bool
+    private function _unlockRequest(int $requestId): void
     {
-        return Craft::$app->getMutex()->release("webhook:$requestId");
+        Craft::$app->getMutex()->release("webhook:$requestId");
     }
 }

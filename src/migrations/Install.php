@@ -15,7 +15,7 @@ class Install extends Migration
     /**
      * @inheritdoc
      */
-    public function safeUp()
+    public function safeUp(): bool
     {
         // Create the webhookgroups table
         $this->createTable('{{%webhookgroups}}', [
@@ -74,16 +74,20 @@ class Install extends Migration
         $this->createIndex(null, '{{%webhookrequests}}', ['debounceKey', 'status']);
         $this->addForeignKey(null, '{{%webhooks}}', ['groupId'], '{{%webhookgroups}}', ['id'], 'SET NULL');
         $this->addForeignKey(null, '{{%webhookrequests}}', ['webhookId'], '{{%webhooks}}', ['id'], 'SET NULL');
+
+        return true;
     }
 
     /**
      * @inheritdoc
      */
-    public function safeDown()
+    public function safeDown(): bool
     {
         // Drop the DB table
         $this->dropTableIfExists('{{%webhookrequests}}');
         $this->dropTableIfExists('{{%webhooks}}');
         $this->dropTableIfExists('{{%webhookgroups}}');
+
+        return true;
     }
 }

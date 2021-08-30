@@ -27,10 +27,16 @@
   "require": {
     "craftcms/cms": "^3.7.0"
   },
+  "require-dev": {
+    "phpstan/phpstan": "^0.12.96"
+  },
   "autoload": {
     "psr-4": {
       "craft\\webhooks\\": "src/"
     }
+  },
+  "scripts": {
+    "phpstan": "phpstan --memory-limit=1G"
   },
   "extra": {
     "name": "Webhooks",

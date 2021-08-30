@@ -157,6 +157,7 @@ class WebhooksController extends BaseController
             }
 
             Craft::$app->getSession()->setError(Craft::t('webhooks', 'Couldn’t save webhook.'));
+            /** @phpstan-ignore-next-line */
             Craft::$app->getUrlManager()->setRouteParams([
                 'webhook' => $webhook,
             ]);

@@ -2,7 +2,6 @@
 
 namespace craft\webhooks\filters;
 
-use Craft;
 use craft\base\Component;
 use craft\base\ElementInterface;
 use craft\events\ElementEvent;

@@ -3,8 +3,6 @@
 namespace craft\webhooks\filters;
 
 use Craft;
-use craft\base\Element;
-use craft\base\ElementInterface;
 use craft\events\ElementEvent;
 use craft\events\ModelEvent;
 use yii\base\Event;

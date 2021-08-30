@@ -3,15 +3,9 @@
 namespace craft\webhooks;
 
 use Craft;
-use craft\db\Query;
-use craft\helpers\Db;
-use craft\helpers\Json;
 use craft\helpers\Queue;
 use craft\queue\BaseJob;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\RequestOptions;
 use yii\base\InvalidArgumentException;
-use yii\base\InvalidConfigException;
 
 /**
  * Send Request job
