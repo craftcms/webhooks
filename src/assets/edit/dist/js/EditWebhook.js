@@ -1,7 +1,7 @@
 (function($) {
     /** global: Craft */
     /** global: Garnish */
-    var EditWebhook = Garnish.Base.extend(
+    const EditWebhook = Garnish.Base.extend(
         {
             $nameInput: null,
             $classInput: null,
@@ -24,10 +24,9 @@
                 this.$filtersTable = $('#filters');
 
                 this.filters = {};
-                var $filterRows = this.$filtersTable.find('tr');
-                var filter;
-                for (var i = 0; i < $filterRows.length; i++) {
-                    filter = new EditWebhook.Filter($filterRows.eq(i));
+                const $filterRows = this.$filtersTable.find('tr');
+                for (let i = 0; i < $filterRows.length; i++) {
+                    const filter = new EditWebhook.Filter($filterRows.eq(i));
                     this.filters[filter.class] = filter;
                 }
 
@@ -37,12 +36,12 @@
             },
 
             handleTextChange: function() {
-                var input = this.$nameInput.get(0);
+                const input = this.$nameInput.get(0);
 
                 // does it look like they just typed -> or => ?
                 if (typeof input.selectionStart !== 'undefined' && input.selectionStart === input.selectionEnd) {
-                    var pos = input.selectionStart;
-                    var last2 = input.value.substring(pos - 2, pos);
+                    const pos = input.selectionStart;
+                    const last2 = input.value.substring(pos - 2, pos);
                     if (last2 === '->' || last2 === '=>') {
                         input.value = input.value.substring(0, pos - 2) + '➡️' + input.value.substring(pos);
                         input.setSelectionRange(pos, pos);
@@ -51,8 +50,8 @@
             },
 
             handleEventChange: function() {
-                var classChanged = this.classVal !== (this.classVal = this.$classInput.val());
-                var eventChanged = this.eventVal !== (this.eventVal = this.$eventInput.val());
+                const classChanged = this.classVal !== (this.classVal = this.$classInput.val());
+                const eventChanged = this.eventVal !== (this.eventVal = this.$eventInput.val());
                 if (classChanged || eventChanged) {
                     clearTimeout(this.filterTimeout);
                     this.filterTimeout = setTimeout(this.updateFilters.bind(this), 500);
@@ -64,29 +63,30 @@
                     return;
                 }
                 this.$filterSpinner.removeClass('hidden');
-                Craft.postActionRequest('webhooks/webhooks/filters', {
-                    senderClass: this.classVal,
-                    event: this.eventVal,
-                }, function(response, textStatus) {
-                    this.$filterSpinner.addClass('hidden');
-                    if (textStatus === 'success') {
-                        this.resetFilters();
-                        if (response.filters.length) {
-                            this.$noFiltersMessage.addClass('hidden');
-                            this.$filtersTable.removeClass('hidden');
-                            for (var i = 0; i < response.filters.length; i++) {
-                                this.filters[response.filters[i]].$tr.removeClass('hidden');
-                            }
-                        } else {
-                            this.$noFiltersMessage.removeClass('hidden');
-                            this.$filtersTable.addClass('hidden');
-                        }
+                Craft.sendActionRequest('POST', 'webhooks/webhooks/filters', {
+                    data: {
+                        senderClass: this.classVal,
+                        event: this.eventVal,
                     }
-                }.bind(this));
+                }).then(response => {
+                    this.resetFilters();
+                    if (response.data.filters.length) {
+                        this.$noFiltersMessage.addClass('hidden');
+                        this.$filtersTable.removeClass('hidden');
+                        for (let i = 0; i < response.data.filters.length; i++) {
+                            this.filters[response.data.filters[i]].$tr.removeClass('hidden');
+                        }
+                    } else {
+                        this.$noFiltersMessage.removeClass('hidden');
+                        this.$filtersTable.addClass('hidden');
+                    }
+                }).finally(() => {
+                    this.$filterSpinner.addClass('hidden');
+                });
             },
 
             resetFilters: function() {
-                for (var filter in this.filters) {
+                for (let filter in this.filters) {
                     if (!this.filters.hasOwnProperty(filter)) {
                         continue;
                     }
