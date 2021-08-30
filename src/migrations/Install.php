@@ -72,6 +72,7 @@ class Install extends Migration
         $this->createIndex(null, '{{%webhooks}}', ['groupId', 'name']);
         $this->createIndex(null, '{{%webhooks}}', ['name'], true);
         $this->createIndex(null, '{{%webhookrequests}}', ['debounceKey', 'status']);
+        $this->createIndex(null, '{{%webhookrequests}}', ['status']);
         $this->addForeignKey(null, '{{%webhooks}}', ['groupId'], '{{%webhookgroups}}', ['id'], 'SET NULL');
         $this->addForeignKey(null, '{{%webhookrequests}}', ['webhookId'], '{{%webhooks}}', ['id'], 'SET NULL');
 
