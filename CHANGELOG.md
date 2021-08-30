@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 2.4.0 - 2021-08-30
 
 ### Added
 - Added new “Element is being saved for the first time” and “Element is a provisional draft” webhook filters.
