@@ -323,8 +323,9 @@ class Plugin extends \craft\base\Plugin
      */
     public function pushPendingJobs()
     {
+        $settings = $this->getSettings();
         while ($job = array_shift($this->_pendingJobs)) {
-            Queue::push($job);
+            Queue::push($job, null, $settings->initialDelay);
         }
     }
 

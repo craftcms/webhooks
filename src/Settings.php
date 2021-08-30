@@ -19,6 +19,12 @@ class Settings extends Model
     public $maxAttempts = 1;
 
     /**
+     * @var int|null The time delay in seconds that initial webhook request attempts should have.
+     * @since 2.4.0
+     */
+    public $initialDelay;
+
+    /**
      * @var int The time delay in seconds between request retries.
      * @since 2.3.0
      */
@@ -40,6 +46,10 @@ class Settings extends Model
             $values['retryDelay'] = $retryDelay;
         }
 
+        if (empty($values['initialDelay'])) {
+            $values['initialDelay'] = null;
+        }
+
         parent::setAttributes($values, $safeOnly);
     }
 
@@ -50,7 +60,7 @@ class Settings extends Model
     {
         return [
             [['maxDepth', 'maxAttempts'], 'number', 'integerOnly' => true, 'min' => 1],
-            [['retryDelay'], 'number', 'integerOnly' => true, 'min' => 0],
+            [['initialDelay', 'retryDelay'], 'number', 'integerOnly' => true, 'min' => 0],
         ];
     }
 

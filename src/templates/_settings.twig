@@ -20,6 +20,15 @@
 }) }}
 
 {{ forms.textField({
+  id: 'initial-delay',
+  label: 'Initial Delay'|t('webhooks'),
+  instructions: 'The time delay in seconds that initial webhook requests should have.'|t('webhooks'),
+  size: 5,
+  name: 'initialDelay',
+  value: settings.initialDelay,
+}) }}
+
+{{ forms.textField({
   id: 'retry-delay',
   label: 'Retry Delay'|t('webhooks'),
   instructions: 'The time delay in seconds between request attempts.'|t('webhooks'),
