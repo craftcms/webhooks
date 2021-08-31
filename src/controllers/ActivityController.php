@@ -36,7 +36,7 @@ class ActivityController extends BaseController
             ->orderBy(['id' => SORT_DESC]);
 
         $paginator = new Paginator($query, [
-            'currentPage' => Craft::$app->getRequest()->getPageNum()
+            'currentPage' => Craft::$app->getRequest()->getPageNum(),
         ]);
 
         $requests = $paginator->getPageResults();
@@ -85,7 +85,7 @@ class ActivityController extends BaseController
 
         return $this->asJson([
             'html' => Craft::$app->getView()->renderTemplate('webhooks/_activity/details', [
-                'request' => $request
+                'request' => $request,
             ]),
         ]);
     }

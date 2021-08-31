@@ -205,7 +205,7 @@ class WebhookManager
             'userAttributes' => $webhook->userAttributes,
             'senderAttributes' => $webhook->senderAttributes,
             'eventAttributes' => $webhook->eventAttributes,
-            'payloadTemplate' => $webhook->payloadTemplate
+            'payloadTemplate' => $webhook->payloadTemplate,
         ];
 
         if ($webhook->id) {

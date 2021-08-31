@@ -61,13 +61,13 @@ class WebhooksController extends BaseController
         $crumbs = [
             [
                 'label' => Craft::t('webhooks', 'Webhooks'),
-                'url' => UrlHelper::url('webhooks')
-            ]
+                'url' => UrlHelper::url('webhooks'),
+            ],
         ];
 
         // Groups
         $groupOptions = [
-            ['value' => null, 'label' => Craft::t('webhooks', '(Ungrouped)')]
+            ['value' => null, 'label' => Craft::t('webhooks', '(Ungrouped)')],
         ];
 
         foreach ($manager->getAllGroups() as $group) {
@@ -76,7 +76,7 @@ class WebhooksController extends BaseController
             if ($webhook->groupId && $webhook->groupId == $group->id) {
                 $crumbs[] = [
                     'label' => $group->name,
-                    'url' => UrlHelper::url("webhooks/group/{$group->id}")
+                    'url' => UrlHelper::url("webhooks/group/{$group->id}"),
                 ];
             }
         }

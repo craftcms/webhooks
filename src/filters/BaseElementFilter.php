@@ -20,18 +20,18 @@ abstract class BaseElementFilter extends Component implements ExclusiveFilterInt
     public static function show(string $class, string $event): bool
     {
         return (is_subclass_of($class, ElementInterface::class) || (
-            $class === Elements::class &&
-            in_array($event, [
-                Elements::EVENT_BEFORE_DELETE_ELEMENT,
-                Elements::EVENT_AFTER_DELETE_ELEMENT,
-                Elements::EVENT_BEFORE_RESTORE_ELEMENT,
-                Elements::EVENT_AFTER_RESTORE_ELEMENT,
-                Elements::EVENT_BEFORE_SAVE_ELEMENT,
-                Elements::EVENT_AFTER_SAVE_ELEMENT,
-                Elements::EVENT_BEFORE_UPDATE_SLUG_AND_URI,
-                Elements::EVENT_AFTER_UPDATE_SLUG_AND_URI,
-            ])
-        ));
+                $class === Elements::class &&
+                in_array($event, [
+                    Elements::EVENT_BEFORE_DELETE_ELEMENT,
+                    Elements::EVENT_AFTER_DELETE_ELEMENT,
+                    Elements::EVENT_BEFORE_RESTORE_ELEMENT,
+                    Elements::EVENT_AFTER_RESTORE_ELEMENT,
+                    Elements::EVENT_BEFORE_SAVE_ELEMENT,
+                    Elements::EVENT_AFTER_SAVE_ELEMENT,
+                    Elements::EVENT_BEFORE_UPDATE_SLUG_AND_URI,
+                    Elements::EVENT_AFTER_UPDATE_SLUG_AND_URI,
+                ])
+            ));
     }
 
     public static function excludes(): array

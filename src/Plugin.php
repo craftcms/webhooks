@@ -15,13 +15,13 @@ use craft\helpers\StringHelper;
 use craft\services\Gc;
 use craft\web\UrlManager;
 use craft\webhooks\filters\DraftFilter;
-use craft\webhooks\filters\ProvisionalDraftFilter;
 use craft\webhooks\filters\DuplicatingFilter;
 use craft\webhooks\filters\ElementEnabledFilter;
 use craft\webhooks\filters\FilterInterface;
 use craft\webhooks\filters\FirstSaveFilter;
 use craft\webhooks\filters\NewElementFilter;
 use craft\webhooks\filters\PropagatingFilter;
+use craft\webhooks\filters\ProvisionalDraftFilter;
 use craft\webhooks\filters\ResavingFilter;
 use craft\webhooks\filters\RevisionFilter;
 use DateTime;
@@ -207,8 +207,8 @@ class Plugin extends \craft\base\Plugin
                     if ($webhook->debounceKeyFormat) {
                         $debounceKey = Craft::parseEnv($webhook->debounceKeyFormat);
                         $debounceKey = $webhook->id . ':' . $view->renderString($debounceKey, [
-                            'event' => $e,
-                        ]);
+                                'event' => $e,
+                            ]);
                     }
 
                     $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
@@ -383,9 +383,9 @@ class Plugin extends \craft\base\Plugin
      * Sends a request by its ID.
      *
      * @param int $requestId
-     * @throws Exception
-     * @throws GuzzleException
      * @return bool Whether the request came back with a 2xx response
+     * @throws GuzzleException
+     * @throws Exception
      */
     public function sendRequest(int $requestId): bool
     {
@@ -530,7 +530,7 @@ class Plugin extends \craft\base\Plugin
         ];
 
         $event = new RegisterComponentTypesEvent([
-            'types' => $filterTypes
+            'types' => $filterTypes,
         ]);
         $this->trigger(self::EVENT_REGISTER_FILTER_TYPES, $event);
 
