@@ -300,16 +300,15 @@ class Plugin extends \craft\base\Plugin
 
             // If so and we get a lock on it, update that request instead of creating a new one
             if ($requestId && $this->_lockRequest($requestId)) {
-                $db->createCommand()
-                    ->update('{{%webhookrequests}}', [
-                        'method' => $method,
-                        'url' => $url,
-                        'requestHeaders' => $headers ? Json::encode($headers) : null,
-                        'requestBody' => $body,
-                        'dateCreated' => Db::prepareDateForDb(new DateTime()),
-                    ], [
-                        'id' => $requestId,
-                    ], [], false);
+                Db::update('{{%webhookrequests}}', [
+                    'method' => $method,
+                    'url' => $url,
+                    'requestHeaders' => $headers ? Json::encode($headers) : null,
+                    'requestBody' => $body,
+                    'dateCreated' => Db::prepareDateForDb(new DateTime()),
+                ], [
+                    'id' => $requestId,
+                ], [], false);
                 $this->_unlockRequest($requestId);
                 return;
             }
