@@ -46,7 +46,7 @@ class Settings extends Model
     /**
      * @inheritdoc
      */
-    public function setAttributes($values, $safeOnly = true)
+    public function setAttributes($values, $safeOnly = true): void
     {
         // attemptDelay → retryDelay
         if (($retryDelay = ArrayHelper::remove($values, 'attemptDelay')) !== null) {
@@ -80,7 +80,7 @@ class Settings extends Model
     /**
      * @inheritdoc
      */
-    public function fields()
+    public function fields(): array
     {
         $fields = parent::fields();
         // guzzleConfig can't be set from the UI so no point in storing it in the project config
@@ -91,7 +91,7 @@ class Settings extends Model
     /**
      * @inheritdoc
      */
-    public function extraFields()
+    public function extraFields(): array
     {
         return [
             'guzzleConfig',

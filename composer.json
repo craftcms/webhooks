@@ -24,8 +24,9 @@
     "docs": "https://github.com/craftcms/webhooks/blob/master/README.md",
     "rss": "https://github.com/craftcms/webhooks/commits/master.atom"
   },
+  "minimum-stability": "dev",
   "require": {
-    "craftcms/cms": "^3.7.0"
+    "craftcms/cms": "^4.0.0-alpha"
   },
   "require-dev": {
     "phpstan/phpstan": "^0.12.96"

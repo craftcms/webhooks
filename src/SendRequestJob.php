@@ -28,7 +28,7 @@ class SendRequestJob extends BaseJob
     /**
      * @inheritdoc
      */
-    public function defaultDescription()
+    public function defaultDescription(): ?string
     {
         if ($webhook = $this->_webhook()) {
             $description = Craft::t('webhooks', 'Sending webhook “{name}”', [
@@ -48,7 +48,7 @@ class SendRequestJob extends BaseJob
     /**
      * @inheritdoc
      */
-    public function execute($queue)
+    public function execute($queue): void
     {
         $success = Plugin::getInstance()->sendRequest($this->requestId);
 

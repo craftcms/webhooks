@@ -7,9 +7,9 @@
 
 namespace craft\webhooks\assets\manage;
 
-use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
 use craft\web\View;
+use yii\web\AssetBundle;
 
 /**
  * Webhooks index asset bundle
