@@ -37,7 +37,7 @@ class ActivityController extends BaseController
             ->orderBy(['id' => SORT_DESC]);
 
         $paginator = new Paginator($query, [
-            'currentPage' => Craft::$app->getRequest()->getPageNum(),
+            'currentPage' => $this->request->getPageNum(),
         ]);
 
         $requests = $paginator->getPageResults();
@@ -71,7 +71,7 @@ class ActivityController extends BaseController
      */
     public function actionDetails(): Response
     {
-        $requestId = Craft::$app->getRequest()->getRequiredBodyParam('requestId');
+        $requestId = $this->request->getRequiredBodyParam('requestId');
         $request = Plugin::getInstance()->getRequestData($requestId);
 
         if ($request['requestHeaders'] && $request['requestBody'] && $this->_isJson($request['requestHeaders'])) {
@@ -96,7 +96,7 @@ class ActivityController extends BaseController
      */
     public function actionRedeliver(): Response
     {
-        $requestId = Craft::$app->getRequest()->getRequiredBodyParam('requestId');
+        $requestId = $this->request->getRequiredBodyParam('requestId');
         Plugin::getInstance()->sendRequest($requestId);
 
         return $this->runAction('details');

@@ -46,11 +46,10 @@ class ManageController extends BaseController
     {
         $this->requirePostRequest();
 
-        $request = Craft::$app->getRequest();
         $manager = Plugin::getInstance()->getWebhookManager();
 
-        $id = $request->getBodyParam('id');
-        $name = $request->getRequiredBodyParam('name');
+        $id = $this->request->getBodyParam('id');
+        $name = $this->request->getRequiredBodyParam('name');
         $group = new Group(compact('id', 'name'));
 
         if (!$manager->saveGroup($group)) {
@@ -74,7 +73,7 @@ class ManageController extends BaseController
      */
     public function actionDeleteGroup(): Response
     {
-        $id = Craft::$app->getRequest()->getRequiredBodyParam('id');
+        $id = $this->request->getRequiredBodyParam('id');
         Plugin::getInstance()->getWebhookManager()->deleteGroupById($id);
         Craft::$app->getSession()->setNotice(Craft::t('webhooks', 'Group deleted.'));
         return $this->asJson([
