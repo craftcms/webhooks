@@ -4,6 +4,7 @@ namespace craft\webhooks;
 
 use Craft;
 use craft\db\Query;
+use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use yii\base\InvalidArgumentException;
@@ -69,19 +70,15 @@ class WebhookManager
         }
 
         if ($group->id) {
-            $db->createCommand()
-                ->update('{{%webhookgroups}}', [
-                    'name' => $name,
-                ], [
-                    'id' => $group->id,
-                ])
-                ->execute();
+            Db::update('{{%webhookgroups}}', [
+                'name' => $name,
+            ], [
+                'id' => $group->id,
+            ]);
         } else {
-            $db->createCommand()
-                ->insert('{{%webhookgroups}}', [
-                    'name' => $name,
-                ])
-                ->execute();
+            Db::insert('{{%webhookgroups}}', [
+                'name' => $name,
+            ]);
 
             $group->id = (int)$db->getLastInsertID('{{%webhookgroups}}');
         }
@@ -96,11 +93,9 @@ class WebhookManager
      */
     public function deleteGroupById(int $id)
     {
-        Craft::$app->getDb()->createCommand()
-            ->delete('{{%webhookgroups}}', [
-                'id' => $id,
-            ])
-            ->execute();
+        Db::delete('{{%webhookgroups}}', [
+            'id' => $id,
+        ]);
     }
 
     // Webhooks
@@ -205,17 +200,13 @@ class WebhookManager
             'userAttributes' => $webhook->userAttributes,
             'senderAttributes' => $webhook->senderAttributes,
             'eventAttributes' => $webhook->eventAttributes,
-            'payloadTemplate' => $webhook->payloadTemplate
+            'payloadTemplate' => $webhook->payloadTemplate,
         ];
 
         if ($webhook->id) {
-            $db->createCommand()
-                ->update('{{%webhooks}}', $data, ['id' => $webhook->id])
-                ->execute();
+            Db::update('{{%webhooks}}', $data, ['id' => $webhook->id]);
         } else {
-            $db->createCommand()
-                ->insert('{{%webhooks}}', $data)
-                ->execute();
+            Db::insert('{{%webhooks}}', $data);
             $webhook->id = (int)$db->getLastInsertID('{{%webhooks}}');
         }
 
@@ -229,9 +220,7 @@ class WebhookManager
      */
     public function deleteWebhookById(int $id)
     {
-        Craft::$app->getDb()->createCommand()
-            ->delete('{{%webhooks}}', ['id' => $id])
-            ->execute();
+        Db::delete('{{%webhooks}}', ['id' => $id]);
     }
 
     /**

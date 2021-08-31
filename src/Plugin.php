@@ -15,13 +15,13 @@ use craft\helpers\StringHelper;
 use craft\services\Gc;
 use craft\web\UrlManager;
 use craft\webhooks\filters\DraftFilter;
-use craft\webhooks\filters\ProvisionalDraftFilter;
 use craft\webhooks\filters\DuplicatingFilter;
 use craft\webhooks\filters\ElementEnabledFilter;
 use craft\webhooks\filters\FilterInterface;
 use craft\webhooks\filters\FirstSaveFilter;
 use craft\webhooks\filters\NewElementFilter;
 use craft\webhooks\filters\PropagatingFilter;
+use craft\webhooks\filters\ProvisionalDraftFilter;
 use craft\webhooks\filters\ResavingFilter;
 use craft\webhooks\filters\RevisionFilter;
 use DateTime;
@@ -207,8 +207,8 @@ class Plugin extends \craft\base\Plugin
                     if ($webhook->debounceKeyFormat) {
                         $debounceKey = Craft::parseEnv($webhook->debounceKeyFormat);
                         $debounceKey = $webhook->id . ':' . $view->renderString($debounceKey, [
-                            'event' => $e,
-                        ]);
+                                'event' => $e,
+                            ]);
                     }
 
                     $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
@@ -285,8 +285,6 @@ class Plugin extends \craft\base\Plugin
      */
     public function request(string $method, string $url, array $headers = null, string $body = null, int $webhookId = null, string $debounceKey = null)
     {
-        $db = Craft::$app->getDb();
-
         if ($debounceKey !== null) {
             // See if there is an existing pending request with the same key
             $requestId = (new Query())
@@ -300,37 +298,34 @@ class Plugin extends \craft\base\Plugin
 
             // If so and we get a lock on it, update that request instead of creating a new one
             if ($requestId && $this->_lockRequest($requestId)) {
-                $db->createCommand()
-                    ->update('{{%webhookrequests}}', [
-                        'method' => $method,
-                        'url' => $url,
-                        'requestHeaders' => $headers ? Json::encode($headers) : null,
-                        'requestBody' => $body,
-                        'dateCreated' => Db::prepareDateForDb(new DateTime()),
-                    ], [
-                        'id' => $requestId,
-                    ], [], false);
+                Db::update('{{%webhookrequests}}', [
+                    'method' => $method,
+                    'url' => $url,
+                    'requestHeaders' => $headers ? Json::encode($headers) : null,
+                    'requestBody' => $body,
+                    'dateCreated' => Db::prepareDateForDb(new DateTime()),
+                ], [
+                    'id' => $requestId,
+                ], [], false);
                 $this->_unlockRequest($requestId);
                 return;
             }
         }
 
-        $db->createCommand()
-            ->insert('{{%webhookrequests}}', [
-                'webhookId' => $webhookId,
-                'debounceKey' => $debounceKey,
-                'status' => self::STATUS_PENDING,
-                'method' => $method,
-                'url' => $url,
-                'requestHeaders' => $headers ? Json::encode($headers) : null,
-                'requestBody' => $body,
-                'dateCreated' => Db::prepareDateForDb(new DateTime()),
-                'uid' => StringHelper::UUID(),
-            ], false)
-            ->execute();
+        Db::insert('{{%webhookrequests}}', [
+            'webhookId' => $webhookId,
+            'debounceKey' => $debounceKey,
+            'status' => self::STATUS_PENDING,
+            'method' => $method,
+            'url' => $url,
+            'requestHeaders' => $headers ? Json::encode($headers) : null,
+            'requestBody' => $body,
+            'dateCreated' => Db::prepareDateForDb(new DateTime()),
+            'uid' => StringHelper::UUID(),
+        ], false);
 
         $this->_pendingJobs[] = new SendRequestJob([
-            'requestId' => $db->getLastInsertID('{{%webhookrequests}}'),
+            'requestId' => Craft::$app->getDb()->getLastInsertID('{{%webhookrequests}}'),
             'webhookId' => $webhookId,
         ]);
 
@@ -383,9 +378,9 @@ class Plugin extends \craft\base\Plugin
      * Sends a request by its ID.
      *
      * @param int $requestId
-     * @throws Exception
-     * @throws GuzzleException
      * @return bool Whether the request came back with a 2xx response
+     * @throws GuzzleException
+     * @throws Exception
      */
     public function sendRequest(int $requestId): bool
     {
@@ -405,13 +400,10 @@ class Plugin extends \craft\base\Plugin
         }
 
         // Update the request
-        $db = Craft::$app->getDb();
-        $db->createCommand()
-            ->update('{{%webhookrequests}}', [
-                'status' => self::STATUS_REQUESTED,
-                'dateRequested' => Db::prepareDateForDb(new DateTime()),
-            ], ['id' => $requestId], [], false)
-            ->execute();
+        Db::update('{{%webhookrequests}}', [
+            'status' => self::STATUS_REQUESTED,
+            'dateRequested' => Db::prepareDateForDb(new DateTime()),
+        ], ['id' => $requestId], [], false);
 
         $startTime = microtime(true);
         $response = null;
@@ -432,17 +424,14 @@ class Plugin extends \craft\base\Plugin
         $time = round(1000 * (microtime(true) - $startTime));
         $attempt = ($data['attempts'] ?? 0) + 1;
 
-        $db = Craft::$app->getDb();
-        $db->createCommand()
-            ->update('{{%webhookrequests}}', [
-                'status' => self::STATUS_DONE,
-                'attempts' => $attempt,
-                'responseStatus' => $response ? $response->getStatusCode() : null,
-                'responseHeaders' => $response ? Json::encode($response->getHeaders()) : null,
-                'responseBody' => $response ? (string)$response->getBody() : null,
-                'responseTime' => $time,
-            ], ['id' => $requestId], [], false)
-            ->execute();
+        Db::update('{{%webhookrequests}}', [
+            'status' => self::STATUS_DONE,
+            'attempts' => $attempt,
+            'responseStatus' => $response ? $response->getStatusCode() : null,
+            'responseHeaders' => $response ? Json::encode($response->getHeaders()) : null,
+            'responseBody' => $response ? (string)$response->getBody() : null,
+            'responseTime' => $time,
+        ], ['id' => $requestId], [], false);
 
         // Release the lock
         $this->_unlockRequest($requestId);
@@ -530,7 +519,7 @@ class Plugin extends \craft\base\Plugin
         ];
 
         $event = new RegisterComponentTypesEvent([
-            'types' => $filterTypes
+            'types' => $filterTypes,
         ]);
         $this->trigger(self::EVENT_REGISTER_FILTER_TYPES, $event);
 

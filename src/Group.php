@@ -25,7 +25,7 @@ class Group extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    protected function defineRules(): array
     {
         return [
             [['name'], 'trim'],

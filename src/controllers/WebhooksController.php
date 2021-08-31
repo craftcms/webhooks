@@ -61,13 +61,13 @@ class WebhooksController extends BaseController
         $crumbs = [
             [
                 'label' => Craft::t('webhooks', 'Webhooks'),
-                'url' => UrlHelper::url('webhooks')
-            ]
+                'url' => UrlHelper::url('webhooks'),
+            ],
         ];
 
         // Groups
         $groupOptions = [
-            ['value' => null, 'label' => Craft::t('webhooks', '(Ungrouped)')]
+            ['value' => null, 'label' => Craft::t('webhooks', '(Ungrouped)')],
         ];
 
         foreach ($manager->getAllGroups() as $group) {
@@ -76,7 +76,7 @@ class WebhooksController extends BaseController
             if ($webhook->groupId && $webhook->groupId == $group->id) {
                 $crumbs[] = [
                     'label' => $group->name,
-                    'url' => UrlHelper::url("webhooks/group/{$group->id}")
+                    'url' => UrlHelper::url("webhooks/group/{$group->id}"),
                 ];
             }
         }
@@ -116,10 +116,9 @@ class WebhooksController extends BaseController
     {
         $this->requirePostRequest();
 
-        $request = Craft::$app->getRequest();
         $manager = Plugin::getInstance()->getWebhookManager();
 
-        $id = $request->getBodyParam('id');
+        $id = $this->request->getBodyParam('id');
 
         if ($id) {
             try {
@@ -131,7 +130,7 @@ class WebhooksController extends BaseController
             $webhook = new Webhook();
         }
 
-        $attributes = $request->getBodyParams();
+        $attributes = $this->request->getBodyParams();
         $customPayload = ArrayHelper::remove($attributes, 'customPayload');
         if ($customPayload !== null) {
             if ($customPayload) {
@@ -149,7 +148,7 @@ class WebhooksController extends BaseController
         $webhook->setAttributes($attributes);
 
         if (!Plugin::getInstance()->getWebhookManager()->saveWebhook($webhook)) {
-            if ($request->getAcceptsJson()) {
+            if ($this->request->getAcceptsJson()) {
                 return $this->asJson([
                     'success' => false,
                     'errors' => $webhook->getErrors(),
@@ -164,7 +163,7 @@ class WebhooksController extends BaseController
             return null;
         }
 
-        if ($request->getAcceptsJson()) {
+        if ($this->request->getAcceptsJson()) {
             return $this->asJson([
                 'success' => true,
                 'webhook' => $webhook->toArray(),
@@ -183,7 +182,7 @@ class WebhooksController extends BaseController
     public function actionDelete(): Response
     {
         $this->requirePostRequest();
-        $id = Craft::$app->getRequest()->getRequiredBodyParam('id');
+        $id = $this->request->getRequiredBodyParam('id');
         Plugin::getInstance()->getWebhookManager()->deleteWebhookById($id);
         return $this->redirectToPostedUrl();
     }
@@ -207,7 +206,7 @@ class WebhooksController extends BaseController
      */
     public function actionEventSuggestions(): Response
     {
-        $senderClass = Craft::$app->getRequest()->getRequiredBodyParam('senderClass');
+        $senderClass = $this->request->getRequiredBodyParam('senderClass');
 
         return $this->asJson([
             'events' => WebhookHelper::eventSuggestions($senderClass),
@@ -221,9 +220,8 @@ class WebhooksController extends BaseController
      */
     public function actionFilters(): Response
     {
-        $request = Craft::$app->getRequest();
-        $senderClass = $request->getRequiredBodyParam('senderClass');
-        $event = $request->getRequiredBodyParam('event');
+        $senderClass = $this->request->getRequiredBodyParam('senderClass');
+        $event = $this->request->getRequiredBodyParam('event');
 
         $filters = [];
 

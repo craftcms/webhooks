@@ -109,7 +109,7 @@ class Webhook extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    protected function defineRules(): array
     {
         return [
             [['name', 'event', 'url'], 'trim'],
@@ -118,7 +118,7 @@ class Webhook extends Model
                 'filter',
                 'filter' => function(string $value) {
                     return trim($value, ' \\');
-                }, 'skipOnArray' => true
+                }, 'skipOnArray' => true,
             ],
             [['name', 'class', 'event', 'method', 'url'], 'required'],
             [['name'], UniqueValidator::class, 'targetClass' => WebhookRecord::class],
@@ -131,7 +131,7 @@ class Webhook extends Model
                     if (!class_exists($this->class)) {
                         $validator->addError($this, $attribute, Craft::t('webhooks', 'Class {value} doesn’t exist.'));
                     }
-                }
+                },
             ],
             [
                 ['event'],
@@ -155,7 +155,7 @@ class Webhook extends Model
                             $validator->addError($this, $attribute, Craft::t('webhooks', 'Class {class} doesn’t appear to have a {value} event.', ['class' => $this->class]));
                         }
                     }
-                }
+                },
             ],
             [['debounceKeyFormat'], 'string'],
             [
@@ -171,13 +171,13 @@ class Webhook extends Model
                             unset($this->filters[$class]);
                         }
                     }
-                }
+                },
             ],
             [
                 ['headers'],
                 function() {
                     $this->headers = $this->headers ? array_values($this->headers) : [];
-                }
+                },
             ],
             [['userAttributes', 'senderAttributes'], 'validateAttributeList'],
             [['eventAttributes'], 'validateAttributeList', 'params' => ['regex' => '/^[a-z]\w*\.[a-z]\w*(?:\.[a-z]\w*)*$/i']],
