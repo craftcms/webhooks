@@ -5,6 +5,7 @@ namespace craft\webhooks\controllers;
 use Craft;
 use craft\db\Paginator;
 use craft\db\Query;
+use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\web\twig\variables\Paginate;
 use craft\webhooks\assets\activity\ActivityAsset;
@@ -58,10 +59,7 @@ class ActivityController extends BaseController
      */
     public function actionClear(): Response
     {
-        Craft::$app->getDb()->createCommand()
-            ->delete('{{%webhookrequests}}', ['status' => Plugin::STATUS_DONE])
-            ->execute();
-
+        Db::delete('{{%webhookrequests}}', ['status' => Plugin::STATUS_DONE]);
         return $this->redirect('webhooks/activity');
     }
 
