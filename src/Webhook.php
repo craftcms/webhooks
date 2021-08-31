@@ -109,7 +109,7 @@ class Webhook extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    protected function defineRules(): array
     {
         return [
             [['name', 'event', 'url'], 'trim'],
