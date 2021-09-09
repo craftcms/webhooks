@@ -59,6 +59,8 @@
       </tbody>
     </table>
   {% else %}
-    <p>{{ 'No webhooks exist yet.'|t('webhooks') }}</p>
+    <div class="zilch">
+      <p>{{ 'No webhooks exist yet.'|t('webhooks') }}</p>
+    </div>
   {% endif %}
 {% endblock %}
