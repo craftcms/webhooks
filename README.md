@@ -40,6 +40,7 @@ To configure Webhooks, go to **Settings** → **Webhooks**, or create a `config/
 ```php
 <?php
 return [
+    'disableAllWebhooks' => false,
     'maxDepth' => 10,
     'maxAttempts' => 3,
     'initialDelay' => null,
@@ -50,6 +51,7 @@ return [
 
 The array can define the following keys:
 
+- `disableAllWebhooks` – Whether all webhooks should be disabled.
 - `maxDepth` – The maximum depth that the plugin should go into objects/arrays when converting them to arrays for event payloads. (Default is `5`.)
 - `maxAttempts` – The maximum number of attempts each webhook should have before giving up, if the requests are coming back with non 2xx responses. (Default is `1`.)
 - `initialDelay` – The delay (in seconds) that initial webhook request attempts should have.
@@ -199,6 +201,15 @@ If the output is valid JSON, then webhook requests will be sent with an `applica
 Webhooks can be enabled or disabled from both the Webhooks index page and within their Edit Webhook pages.
 
 Only enabled webhooks will send webhook requests when their corresponding events are triggered.
+
+You can disable *all* webhooks by setting `disableAllWebhooks` to `true` in your `config/webhooks.php` file.
+
+```php
+return [
+    'disableAllWebhooks' => true,
+    // ...
+];
+```
 
 ## Integrating with Task Automation Tools
 

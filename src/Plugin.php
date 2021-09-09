@@ -117,12 +117,14 @@ class Plugin extends \craft\base\Plugin
         $this->set('webhookManager', $manager);
 
         // Register webhook events
-        try {
-            $webhooks = $manager->getEnabledWebhooks();
-        } catch (Throwable $e) {
-            Craft::error('Unable to fetch enabled webhooks: ' . $e->getMessage(), __METHOD__);
-            Craft::$app->getErrorHandler()->logException($e);
-            $webhooks = [];
+        $webhooks = [];
+        if (!$this->getSettings()->disableAllWebhooks) {
+            try {
+                $webhooks = $manager->getEnabledWebhooks();
+            } catch (Throwable $e) {
+                Craft::error('Unable to fetch enabled webhooks: ' . $e->getMessage(), __METHOD__);
+                Craft::$app->getErrorHandler()->logException($e);
+            }
         }
 
         foreach ($webhooks as $webhook) {

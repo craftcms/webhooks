@@ -1,5 +1,10 @@
 # Release Notes for Webhooks for Craft CMS
 
+## 2.4.1 - 2021-09-09
+
+### Added
+- Added the `disableAllWebhooks` setting. ([#4](https://github.com/craftcms/webhooks/issues/4))
+
 ## 2.4.0.1 - 2021-08-30
 
 ### Fixed
