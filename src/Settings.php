@@ -8,6 +8,12 @@ use craft\helpers\ArrayHelper;
 class Settings extends Model
 {
     /**
+     * @var bool Whether all webhooks should be disabled.
+     * @since 2.4.1
+     */
+    public $disableAllWebhooks = false;
+
+    /**
      * @var int The maximum depth that the plugin should go into objects/arrays when converting them to arrays for
      * event payloads.
      */
