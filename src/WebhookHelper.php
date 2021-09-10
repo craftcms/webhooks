@@ -164,7 +164,7 @@ class WebhookHelper
      * @param string $doc
      * @return string|null
      */
-    private static function _shortDesc(string $doc)
+    private static function _shortDesc(string $doc): ?string
     {
         foreach (preg_split("/\r\n|\n|\r/", $doc) as $line) {
             $line = preg_replace('/^[\/\*\s]*(?:@event\s+[^\s]+\s+)?/', '', $line);

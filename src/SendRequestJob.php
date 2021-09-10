@@ -18,12 +18,12 @@ class SendRequestJob extends BaseJob
     /**
      * @var int The request ID to send
      */
-    public $requestId;
+    public int $requestId;
 
     /**
      * @var int|null The webhook ID
      */
-    public $webhookId;
+    public ?int $webhookId = null;
 
     /**
      * @inheritdoc
@@ -79,7 +79,7 @@ class SendRequestJob extends BaseJob
      *
      * @return Webhook|null
      */
-    private function _webhook()
+    private function _webhook(): ?Webhook
     {
         if (!$this->webhookId) {
             return null;

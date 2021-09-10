@@ -99,7 +99,7 @@ class Plugin extends \craft\base\Plugin
      * @see request()
      * @since 2.3.0
      */
-    private $_pendingJobs = [];
+    private array $_pendingJobs = [];
 
     /**
      * @inheritdoc

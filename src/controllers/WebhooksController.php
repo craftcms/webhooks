@@ -112,7 +112,7 @@ class WebhooksController extends BaseController
      * @return Response|null
      * @throws BadRequestHttpException
      */
-    public function actionSave()
+    public function actionSave(): ?Response
     {
         $this->requirePostRequest();
 

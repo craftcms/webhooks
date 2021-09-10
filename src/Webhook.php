@@ -19,84 +19,84 @@ use yii\validators\Validator;
 class Webhook extends Model
 {
     /**
-     * @var int
+     * @var int|null
      */
-    public $id;
+    public ?int $id = null;
 
     /**
      * @var int|null
      */
-    public $groupId;
+    public ?int $groupId = null;
 
     /**
      * @var bool
      */
-    public $enabled = true;
+    public bool $enabled = true;
 
     /**
-     * @var string
+     * @var string|null
      */
-    public $name;
+    public ?string $name = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    public $class;
+    public ?string $class = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    public $event;
+    public ?string $event = null;
 
     /**
      * @var array
      */
-    public $filters = [];
+    public array $filters = [];
 
     /**
      * @var string|null
      */
-    public $debounceKeyFormat;
+    public ?string $debounceKeyFormat = null;
 
     /**
      * @var string
      */
-    public $method = 'post';
+    public string $method = 'post';
 
     /**
-     * @var string
+     * @var string|null
      */
-    public $url;
+    public ?string $url = null;
 
     /**
      * @var array
      */
-    public $headers = [];
+    public array $headers = [];
 
     /**
      * @var string|null
      */
-    public $userAttributes;
+    public ?string $userAttributes = null;
 
     /**
      * @var string|null
      */
-    public $senderAttributes;
+    public ?string $senderAttributes = null;
 
     /**
      * @var string|null
      */
-    public $eventAttributes;
+    public ?string $eventAttributes = null;
 
     /**
      * @var string|null
      */
-    public $payloadTemplate;
+    public ?string $payloadTemplate = null;
 
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'class' => Craft::t('webhooks', 'Sender Class'),
@@ -190,7 +190,7 @@ class Webhook extends Model
      * @param array|null $params
      * @param Validator $validator
      */
-    public function validateAttributeList(string $attribute, array $params = null, Validator $validator)
+    public function validateAttributeList(string $attribute, ?array $params, Validator $validator)
     {
         $regex = $params['regex'] ?? '/^[a-z]\w*(?:\.[a-z]\w*)*$/i';
 

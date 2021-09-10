@@ -13,14 +13,14 @@ use craft\base\Model;
 class Group extends Model
 {
     /**
-     * @var int
+     * @var int|null
      */
-    public $id;
+    public ?int $id = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    public $name;
+    public ?string $name = null;
 
     /**
      * @inheritdoc
