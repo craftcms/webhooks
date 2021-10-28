@@ -107,9 +107,13 @@ use yii\base\Event;
 use craft\webhooks\Plugin as Webhooks;
 use craft\events\RegisterComponentTypesEvent;
 
-Event::on(Webhooks::class, Webhooks::EVENT_REGISTER_FILTER_TYPES, function(RegisterComponentTypesEvent $e) {
-    $e->types[] = ArticleFilter::class;
-});
+Event::on(
+    Webhooks::class, 
+    Webhooks::EVENT_REGISTER_FILTER_TYPES, 
+    function(RegisterComponentTypesEvent $event) {
+        $event->types[] = ArticleFilter::class;
+    }
+);
 ```
 
 Filter type classes must implement `craft\webhooks\filters\FilterInterface`:
