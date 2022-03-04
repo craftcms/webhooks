@@ -24,11 +24,13 @@
     "docs": "https://github.com/craftcms/webhooks/blob/master/README.md",
     "rss": "https://github.com/craftcms/webhooks/commits/master.atom"
   },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "require": {
     "craftcms/cms": "^3.7.0"
   },
   "require-dev": {
-    "phpstan/phpstan": "^0.12.96"
+    "craftcms/phpstan": "dev-main"
   },
   "autoload": {
     "psr-4": {
@@ -42,5 +44,11 @@
     "name": "Webhooks",
     "handle": "webhooks",
     "documentationUrl": "https://github.com/craftcms/webhooks/blob/master/README.md"
+  },
+  "config": {
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true,
+      "craftcms/plugin-installer": true
+    }
   }
 }
