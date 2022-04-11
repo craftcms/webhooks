@@ -65,7 +65,7 @@ class Settings extends Model
 
         if (empty($values['purgeDuration'])) {
             $values['purgeDuration'] = null;
-        } else if (is_numeric($values['purgeDuration'])) {
+        } elseif (is_numeric($values['purgeDuration'])) {
             $values['purgeDuration'] = (int)$values['purgeDuration'];
         }
 

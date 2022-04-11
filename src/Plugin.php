@@ -247,7 +247,6 @@ class Plugin extends \craft\base\Plugin
                 } catch (InvalidConfigException $e) {
                     Craft::warning("Couldn't purge webhook requests: {$e->getMessage()}");
                 }
-
             }
         });
     }
