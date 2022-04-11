@@ -164,7 +164,7 @@ class Webhook extends Model
                     foreach ($this->filters as $class => &$value) {
                         if ($value === 'yes') {
                             $value = true;
-                        } else if ($value === 'no') {
+                        } elseif ($value === 'no') {
                             $value = false;
                         }
                         if (!is_bool($value)) {
