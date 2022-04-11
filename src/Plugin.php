@@ -52,9 +52,9 @@ use yii\base\InvalidConfigException;
  */
 class Plugin extends \craft\base\Plugin
 {
-    const STATUS_PENDING = 'pending';
-    const STATUS_REQUESTED = 'requested';
-    const STATUS_DONE = 'done';
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_REQUESTED = 'requested';
+    public const STATUS_DONE = 'done';
 
     /**
      * @event RegisterComponentTypesEvent The event that is triggered when registering filter types.
@@ -77,7 +77,7 @@ class Plugin extends \craft\base\Plugin
      * ```
      * @since 2.1.0
      */
-    const EVENT_REGISTER_FILTER_TYPES = 'registerFilterTypes';
+    public const EVENT_REGISTER_FILTER_TYPES = 'registerFilterTypes';
 
     /**
      * @inheritdoc
