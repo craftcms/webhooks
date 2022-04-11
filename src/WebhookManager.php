@@ -157,7 +157,7 @@ class WebhookManager
             ->where(['id' => $id])
             ->one();
 
-        if ($result === null) {
+        if (!$result) {
             throw new InvalidArgumentException('Invalid webhook ID: ' . $id);
         }
 
