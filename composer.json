@@ -49,6 +49,9 @@
     "documentationUrl": "https://github.com/craftcms/webhooks/blob/master/README.md"
   },
   "config": {
+    "platform": {
+      "php": "7.2.5"
+    },
     "allow-plugins": {
       "yiisoft/yii2-composer": true,
       "craftcms/plugin-installer": true
