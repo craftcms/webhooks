@@ -1,9 +1,12 @@
 # Release Notes for Webhooks for Craft CMS
 
-## 3.0.0-beta.1 - 2022-03-04
+## 3.0.0 - 2022-05-03
 
 ### Added
 - Added Craft 4 compatibility.
+
+### Changed
+- The `webhookManager` component can now be configured via `craft\services\Plugins::$pluginConfigs`.
 
 ## 2.4.1 - 2021-09-09
 
