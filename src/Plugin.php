@@ -82,6 +82,18 @@ class Plugin extends \craft\base\Plugin
     /**
      * @inheritdoc
      */
+    public static function config(): array
+    {
+        return [
+            'components' => [
+                'webhookManager' => ['class' => WebhookManager::class],
+            ],
+        ];
+    }
+
+    /**
+     * @inheritdoc
+     */
     public bool $hasCpSettings = true;
 
     /**
@@ -112,15 +124,11 @@ class Plugin extends \craft\base\Plugin
             return;
         }
 
-        // Set the webhookManager component
-        $manager = new WebhookManager();
-        $this->set('webhookManager', $manager);
-
         // Register webhook events
         $webhooks = [];
         if (!$this->getSettings()->disableAllWebhooks) {
             try {
-                $webhooks = $manager->getEnabledWebhooks();
+                $webhooks = $this->getWebhookManager()->getEnabledWebhooks();
             } catch (Throwable $e) {
                 Craft::error('Unable to fetch enabled webhooks: ' . $e->getMessage(), __METHOD__);
                 Craft::$app->getErrorHandler()->logException($e);
