@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## ## 3.0.1 - 2022-05-11
 
 ### Fixed
 - Fixed PHP error. ([#70](https://github.com/craftcms/webhooks/issues/70))
