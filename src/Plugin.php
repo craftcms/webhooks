@@ -332,7 +332,7 @@ class Plugin extends \craft\base\Plugin
             'requestBody' => $body,
             'dateCreated' => Db::prepareDateForDb(new DateTime()),
             'uid' => StringHelper::UUID(),
-        ], false);
+        ]);
 
         $this->_pendingJobs[] = new SendRequestJob([
             'requestId' => Craft::$app->getDb()->getLastInsertID('{{%webhookrequests}}'),
