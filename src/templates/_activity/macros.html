@@ -4,10 +4,10 @@
   {% elseif request.status == 'requested' %}
     <span class="light">{{ 'Requested'|t('webhooks') }}</span>
   {% else %}
-    {% spaceless %}
+    {% apply spaceless %}
       <span class="status {{ request.responseStatus >= 200 and request.responseStatus < 300 ? 'green' : 'red' }}"></span>
       <span class="code">{{ request.responseStatus ?? 'Unknown'|t('webhooks') }}</span>
-    {% endspaceless %}
+    {% endapply %}
   {% endif %}
 {% endmacro %}
 
