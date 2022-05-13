@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 3.0.2 - 2022-05-12
 
 ### Fixed
 - Fixed a Twig error when accessing the activity page. ([#71](https://github.com/craftcms/webhooks/issues/71))
