@@ -1,5 +1,10 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+### Fixed
+- Fixed a bug where you couldn’t add custom headers when defining a webhook. ([#73](https://github.com/craftcms/webhooks/pull/73))
+
 ## 3.0.2 - 2022-05-12
 
 ### Fixed
@@ -26,7 +31,7 @@
 ## 2.4.0.1 - 2021-08-30
 
 ### Fixed
-- Fixed a bug where pending webhook requests weren’t being updated when new webhooks were trigered with matching debounce keys.
+- Fixed a bug where pending webhook requests weren’t being updated when new webhooks were triggered with matching debounce keys.
 
 ## 2.4.0 - 2021-08-30
 
