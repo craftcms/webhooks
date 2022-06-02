@@ -31,6 +31,6 @@ class FirstSaveFilter extends BaseElementFilter
 
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
-        return $element->firstSave;
+        return $element->firstSave === $value;
     }
 }
