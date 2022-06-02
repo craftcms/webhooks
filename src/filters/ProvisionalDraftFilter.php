@@ -31,6 +31,6 @@ class ProvisionalDraftFilter extends BaseElementFilter
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
         $root = ElementHelper::rootElement($element);
-        return $root->isProvisionalDraft;
+        return $root->isProvisionalDraft === $value;
     }
 }
