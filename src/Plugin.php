@@ -9,6 +9,7 @@ use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\ArrayHelper;
 use craft\helpers\ConfigHelper;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\helpers\Queue;
@@ -380,6 +381,7 @@ class Plugin extends \craft\base\Plugin
         if ($data['responseHeaders']) {
             $data['responseHeaders'] = Json::decode($data['responseHeaders']);
         }
+        $data['dateRequested'] = DateTimeHelper::toDateTime($data['dateRequested']);
 
         return $data;
     }

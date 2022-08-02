@@ -5,6 +5,7 @@ namespace craft\webhooks\controllers;
 use Craft;
 use craft\db\Paginator;
 use craft\db\Query;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\web\twig\variables\Paginate;
@@ -43,6 +44,7 @@ class ActivityController extends BaseController
         $requests = $paginator->getPageResults();
         foreach ($requests as &$request) {
             $request['host'] = parse_url($request['url'], PHP_URL_HOST);
+            $request['dateRequested'] = DateTimeHelper::toDateTime($request['dateRequested']);
         }
 
         return $this->renderTemplate('webhooks/_activity/index', [
