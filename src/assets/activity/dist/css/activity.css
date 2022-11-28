@@ -1,13 +1,13 @@
 .webhook-activity-slideout {
-    overflow-y: auto;
+  overflow-y: auto;
 }
 
 .webhook-activity-slideout .meta {
-    margin-left: -24px;
-    margin-right: -24px;
+  margin-left: -24px;
+  margin-right: -24px;
 }
 
 .webhook-activity-slideout .pane.code {
-    max-height: 500px;
-    overflow: auto;
+  max-height: 500px;
+  overflow: auto;
 }
