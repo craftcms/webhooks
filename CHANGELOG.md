@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 3.0.4 - 2022-06-01
 
 ### Fixed
 - Fixed a bug where the `FirstSave` and `ProvisionalDraft` filters would not respect negation. ([#74](https://github.com/craftcms/webhooks/pull/74))
