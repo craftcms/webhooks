@@ -1,5 +1,11 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+### Fixed
+
+- Fixed a potential SSRF vulnerability.
+
 ## 2.4.1 - 2021-09-09
 
 ### Added
@@ -8,7 +14,7 @@
 ## 2.4.0.1 - 2021-08-30
 
 ### Fixed
-- Fixed a bug where pending webhook requests weren’t being updated when new webhooks were trigered with matching debounce keys.
+- Fixed a bug where pending webhook requests weren’t being updated when new webhooks were triggered with matching debounce keys.
 
 ## 2.4.0 - 2021-08-30
 
