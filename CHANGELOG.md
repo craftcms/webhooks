@@ -1,5 +1,11 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+### Fixed
+
+- Fixed a potential SSRF vulnerability.
+
 ## 3.0.4 - 2022-06-01
 
 ### Fixed
