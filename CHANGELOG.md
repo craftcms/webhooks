@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 2.4.2 - 2023-09-18
 
 ### Fixed
 
