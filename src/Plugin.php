@@ -194,6 +194,7 @@ class Plugin extends \craft\base\Plugin
                             if (!isset($headers[$header['name']])) {
                                 $headers[$header['name']] = $line;
                             } else {
+                                /** @phpstan-ignore-next-line */
                                 if (!is_array($headers[$header['name']])) {
                                     $headers[$header['name']] = [$headers[$header['name']]];
                                 }
