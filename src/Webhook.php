@@ -126,6 +126,15 @@ class Webhook extends Model
             [['enabled'], 'boolean'],
             [['method'], 'in', 'range' => ['get', 'post', 'put']],
             [
+                ['url'],
+                function(string $attribute, array $params = null, Validator $validator) {
+                    // Don't allow connecting to well-known cloud instance metadata endpoints
+                    if (str_contains($this->url, '169.254.169.254') || str_contains($this->url, 'metadata.google.internal')) {
+                        $validator->addError($this, $attribute, Craft::t('webhooks', 'Invalid URL.'));
+                    }
+                },
+            ],
+            [
                 ['class'],
                 function(string $attribute, array $params = null, Validator $validator) {
                     if (!class_exists($this->class)) {
