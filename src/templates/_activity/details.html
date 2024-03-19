@@ -8,7 +8,7 @@
   {% if request.dateRequested %}
     <div class="data">
       <div class="heading">{{ 'Date'|t('webhooks') }}</div>
-      <div class="value">{{ date(request.dateRequested)|datetime }}</div>
+      <div class="value">{{ request.dateRequested|datetime }}</div>
     </div>
   {% endif %}
   <div class="data">

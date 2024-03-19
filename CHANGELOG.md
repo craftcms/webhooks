@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added Craft 5 compatibility.
+- Fixed a bug where request timestamps in the Activity section weren’t using the system time zone. ([#78](https://github.com/craftcms/webhooks/pull/78))
 
 ## 3.0.5 - 2023-09-18
 
