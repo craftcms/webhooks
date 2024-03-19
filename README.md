@@ -8,7 +8,7 @@ It can be used to integrate your Craft project with task automation tools like [
 
 ## Requirements
 
-This plugin requires Craft CMS 4.0 or later.
+This plugin requires Craft CMS 4.0.0+ or 5.0.0+.
 
 ## Installation
 
