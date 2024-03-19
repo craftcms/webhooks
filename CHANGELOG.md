@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 3.1.0 - 2024-03-19
 
 - Added Craft 5 compatibility.
 - Fixed a bug where request timestamps in the Activity section weren’t using the system time zone. ([#78](https://github.com/craftcms/webhooks/pull/78))
