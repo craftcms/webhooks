@@ -1,5 +1,9 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+- Added Craft 5 compatibility.
+
 ## 3.0.5 - 2023-09-18
 
 ### Fixed
