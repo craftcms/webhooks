@@ -21,6 +21,7 @@ use craft\webhooks\filters\DuplicatingFilter;
 use craft\webhooks\filters\ElementEnabledFilter;
 use craft\webhooks\filters\FilterInterface;
 use craft\webhooks\filters\FirstSaveFilter;
+use craft\webhooks\filters\NestedElementFilter;
 use craft\webhooks\filters\NewElementFilter;
 use craft\webhooks\filters\PropagatingFilter;
 use craft\webhooks\filters\ProvisionalDraftFilter;
@@ -529,6 +530,7 @@ class Plugin extends \craft\base\Plugin
             DuplicatingFilter::class,
             PropagatingFilter::class,
             ResavingFilter::class,
+            NestedElementFilter::class,
         ];
 
         $event = new RegisterComponentTypesEvent([
