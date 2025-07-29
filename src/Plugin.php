@@ -186,11 +186,16 @@ class Plugin extends \craft\base\Plugin
 
                     foreach ($webhook->headers as $header) {
                         $header['value'] = App::parseEnv($header['value']);
-                        $header['value'] = $view->renderString($header['value'], [
-                            'event' => $e,
-                        ]);
+
+                        if (is_string($header['value'])) {
+                            $header['value'] = $view->renderString($header['value'], [
+                                'event' => $e,
+                            ]);
+                        }
+
                         // Get the trimmed lines
-                        $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', $header['value'])));
+                        $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', (string)$header['value'])));
+
                         // Add to the header array one-by-one, ensuring that we don't overwrite existing values
                         foreach ($lines as $line) {
                             if (!isset($headers[$header['name']])) {
