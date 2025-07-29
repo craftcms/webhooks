@@ -7,6 +7,7 @@ use craft\base\Model;
 use craft\db\Query;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\helpers\App;
 use craft\helpers\ArrayHelper;
 use craft\helpers\ConfigHelper;
 use craft\helpers\DateTimeHelper;
@@ -184,7 +185,7 @@ class Plugin extends \craft\base\Plugin
                     $headers = [];
 
                     foreach ($webhook->headers as $header) {
-                        $header['value'] = Craft::parseEnv($header['value']);
+                        $header['value'] = App::parseEnv($header['value']);
                         $header['value'] = $view->renderString($header['value'], [
                             'event' => $e,
                         ]);
@@ -212,13 +213,13 @@ class Plugin extends \craft\base\Plugin
                     }
 
                     // Queue the send request up
-                    $url = Craft::parseEnv($webhook->url);
+                    $url = App::parseEnv($webhook->url);
                     $url = $view->renderString($url, [
                         'event' => $e,
                     ]);
 
                     if ($webhook->debounceKeyFormat) {
-                        $debounceKey = Craft::parseEnv($webhook->debounceKeyFormat);
+                        $debounceKey = App::parseEnv($webhook->debounceKeyFormat);
                         $debounceKey = $webhook->id . ':' . $view->renderString($debounceKey, [
                                 'event' => $e,
                             ]);
