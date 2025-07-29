@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 3.1.1 - 2025-07-29
 
 - Fixed a PHP error that could occur if a webhook header was null. ([#97](https://github.com/craftcms/webhooks/issues/97))
 
