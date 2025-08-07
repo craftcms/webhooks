@@ -18,7 +18,7 @@ class Install extends Migration
     public function safeUp(): bool
     {
         // Cleanup
-        $this->_dropTables();
+        $this->_archiveTables();
 
         // Create the webhookgroups table
         $this->createTable('{{%webhookgroups}}', [
@@ -89,6 +89,13 @@ class Install extends Migration
     {
         $this->_dropTables();
         return true;
+    }
+
+    private function _archiveTables(): void
+    {
+        $this->archiveTableIfExists('{{%webhookrequests}}');
+        $this->archiveTableIfExists('{{%webhooks}}');
+        $this->archiveTableIfExists('{{%webhookgroups}}');
     }
 
     private function _dropTables(): void
