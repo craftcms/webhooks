@@ -119,11 +119,12 @@ Event::on(
 Filter type classes must implement `craft\webhooks\filters\FilterInterface`:
 
 ```php
+use craft\base\Component;
 use craft\webhooks\filters\FilterInterface;
 use craft\elements\Entry;
 use yii\base\Event;
 
-class ArticleFilter implements FilterInterface
+class ArticleFilter extends Component implements FilterInterface
 {
     public static function displayName(): string
     {
@@ -145,6 +146,35 @@ class ArticleFilter implements FilterInterface
     }
 }
 ```
+
+Alternatively, element filters can extend `craft\webhooks\filters\BaseElementFilter`:
+
+```php
+use craft\webhooks\filters\BaseElementFilter;
+use craft\elements\Entry;
+
+use yii\base\Event;
+
+class ArticleFilter extends BaseElementFilter
+{
+    public static function displayName(): string
+    {
+        return 'Entry has an “Article” type';
+    }
+
+    public static function check(Event $event, bool $value): bool
+    {
+        // Filter based on whether the entry's type is 'article':
+        /** @var Entry $entry */
+        $entry = $event->sender;
+        return ($entry->type->handle === 'article') === $value;
+    }
+}
+```
+
+Note When extending `BaseElementFilter`, the `show()` method is provided automatically
+and will display the filter for all element types. To limit it to specific element types,
+override `show()` as shown in the first example.
 
 #### Debouncing Webhooks
 
