@@ -155,7 +155,7 @@ class Plugin extends \craft\base\Plugin
                     if (in_array($webhook->method, ['post', 'put'], true)) {
                         // Build out the body data
                         if ($webhook->payloadTemplate) {
-                            $json = $view->renderString($webhook->payloadTemplate, [
+                            $json = $view->renderSandboxedString($webhook->payloadTemplate, [
                                 'event' => $e,
                             ]);
                             $data = Json::decodeIfJson($json);
@@ -188,7 +188,7 @@ class Plugin extends \craft\base\Plugin
                         $header['value'] = App::parseEnv($header['value']);
 
                         if (is_string($header['value'])) {
-                            $header['value'] = $view->renderString($header['value'], [
+                            $header['value'] = $view->renderSandboxedString($header['value'], [
                                 'event' => $e,
                             ]);
                         }
@@ -219,13 +219,13 @@ class Plugin extends \craft\base\Plugin
 
                     // Queue the send request up
                     $url = App::parseEnv($webhook->url);
-                    $url = $view->renderString($url, [
+                    $url = $view->renderSandboxedString($url, [
                         'event' => $e,
                     ]);
 
                     if ($webhook->debounceKeyFormat) {
                         $debounceKey = App::parseEnv($webhook->debounceKeyFormat);
-                        $debounceKey = $webhook->id . ':' . $view->renderString($debounceKey, [
+                        $debounceKey = $webhook->id . ':' . $view->renderSandboxedString($debounceKey, [
                                 'event' => $e,
                             ]);
                     }
