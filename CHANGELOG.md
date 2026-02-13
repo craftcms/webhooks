@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 3.2.0 - 2026-02-12
 
 > [!WARNING]
 > Payload, header, webhook URL, and debounce key templates are now rendered in a sandboxed Twig environment, when `enableTwigSandbox` is enabled.
