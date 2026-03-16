@@ -6,7 +6,7 @@
 > Payload, header, webhook URL, and debounce key templates are now rendered in a sandboxed Twig environment, when `enableTwigSandbox` is enabled.
  
 - Webhooks now requires Craft 4.17+ or 5.9+.
-- Fixed a [high-severity](https://github.com/craftcms/cms/security/policy#severity--remediation) RCE vulnerability. (GHSA-8wg7-wm29-2rvg)
+- Fixed a [high-severity](https://github.com/craftcms/cms/security/policy#severity--remediation) RCE vulnerability. ([GHSA-8wg7-wm29-2rvg](https://github.com/craftcms/webhooks/security/advisories/GHSA-8wg7-wm29-2rvg))
 
 ## 3.1.1 - 2025-07-29
 
