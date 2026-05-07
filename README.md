@@ -8,7 +8,7 @@ It can be used to integrate your Craft project with task automation tools like [
 
 ## Requirements
 
-This plugin requires Craft CMS 4.0.0+ or 5.0.0+.
+This plugin requires Craft CMS 4.0.0+ or 5.0.0+ or 6.0.0-alpha.1+ with the `craftcms/yii2-adapter` package.
 
 ## Installation
 
@@ -35,7 +35,7 @@ composer require craftcms/webhooks
 
 ## Configuration
 
-To configure Webhooks, go to **Settings** → **Webhooks**, or create a `config/webhooks.php` file, which returns an array.
+To configure Webhooks, go to **Settings** → **Webhooks**, or create a `config/webhooks.php` file (or `config/craft/webhooks.php` if you’re using Craft CMS v6), which returns an array.
 
 ```php
 <?php
