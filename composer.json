@@ -20,14 +20,14 @@
     "email": "support@craftcms.com",
     "issues": "https://github.com/craftcms/webhooks/issues?state=open",
     "source": "https://github.com/craftcms/webhooks",
-    "docs": "https://github.com/craftcms/webhooks/blob/master/README.md",
-    "rss": "https://github.com/craftcms/webhooks/commits/master.atom"
+    "docs": "https://github.com/craftcms/webhooks/blob/3.x/README.md",
+    "rss": "https://github.com/craftcms/webhooks/commits/3.x.atom"
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
     "php": "^8.0.2",
-    "craftcms/cms": "^4.17.0|^5.9.0"
+    "craftcms/cms": "^4.17.0|^5.9.0|^6.0.0-alpha.1"
   },
   "require-dev": {
     "craftcms/ecs": "dev-main",
@@ -47,7 +47,7 @@
   "extra": {
     "name": "Webhooks",
     "handle": "webhooks",
-    "documentationUrl": "https://github.com/craftcms/webhooks/blob/master/README.md"
+    "documentationUrl": "https://github.com/craftcms/webhooks/blob/3.x/README.md"
   },
   "config": {
     "platform": {
