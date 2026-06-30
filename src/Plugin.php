@@ -185,8 +185,6 @@ class Plugin extends \craft\base\Plugin
                     $headers = [];
 
                     foreach ($webhook->headers as $header) {
-                        $header['value'] = App::parseEnv($header['value']);
-
                         if (is_string($header['value'])) {
                             $header['value'] = $view->renderSandboxedString($header['value'], [
                                 'event' => $e,
@@ -218,8 +216,7 @@ class Plugin extends \craft\base\Plugin
                     }
 
                     // Queue the send request up
-                    $url = App::parseEnv($webhook->url);
-                    $url = $view->renderSandboxedString($url, [
+                    $url = $view->renderSandboxedString($webhook->url, [
                         'event' => $e,
                     ]);
 
@@ -412,11 +409,16 @@ class Plugin extends \craft\base\Plugin
         $options = [];
         $data = $this->getRequestData($requestId);
         if ($data['requestHeaders']) {
+            $data['requestHeaders'] = array_map(
+                fn($header) => App::parseEnv($header),
+                $data['requestHeaders'],
+            );
             $options[RequestOptions::HEADERS] = $data['requestHeaders'];
         }
         if ($data['requestBody']) {
             $options[RequestOptions::BODY] = $data['requestBody'];
         }
+        $data['url'] = App::parseEnv($data['url']);
 
         // Update the request
         Db::update('{{%webhookrequests}}', [
