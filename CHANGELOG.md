@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fixed an error that could occur when a triggering a webhook without a URL. ([#103](https://github.com/craftcms/webhooks/issues/103))
+- Fixed a [high-severity](https://github.com/craftcms/cms/security/policy#severity--remediation) SSRF vulnerability.
 
 ## 3.2.0 - 2026-02-12
 

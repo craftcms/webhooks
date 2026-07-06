@@ -27,6 +27,8 @@ use craft\webhooks\filters\PropagatingFilter;
 use craft\webhooks\filters\ProvisionalDraftFilter;
 use craft\webhooks\filters\ResavingFilter;
 use craft\webhooks\filters\RevisionFilter;
+use CraftCms\UrlValidator\UrlValidationException;
+use CraftCms\UrlValidator\UrlValidator;
 use DateTime;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
@@ -138,6 +140,10 @@ class Plugin extends \craft\base\Plugin
         }
 
         foreach ($webhooks as $webhook) {
+            if (!$webhook->url) {
+                return;
+            }
+
             Event::on(
                 $webhook->class,
                 $webhook->event,
@@ -185,8 +191,6 @@ class Plugin extends \craft\base\Plugin
                     $headers = [];
 
                     foreach ($webhook->headers as $header) {
-                        $header['value'] = App::parseEnv($header['value']);
-
                         if (is_string($header['value'])) {
                             $header['value'] = $view->renderSandboxedString($header['value'], [
                                 'event' => $e,
@@ -218,13 +222,7 @@ class Plugin extends \craft\base\Plugin
                     }
 
                     // Queue the send request up
-                    $url = App::parseEnv($webhook->url);
-
-                    if (!$url) {
-                        return;
-                    }
-
-                    $url = $view->renderSandboxedString($url, [
+                    $url = $view->renderSandboxedString($webhook->url, [
                         'event' => $e,
                     ]);
 
@@ -422,11 +420,16 @@ class Plugin extends \craft\base\Plugin
         $options = [];
         $data = $this->getRequestData($requestId);
         if ($data['requestHeaders']) {
+            $data['requestHeaders'] = array_map(
+                fn($header) => App::parseEnv($header),
+                $data['requestHeaders'],
+            );
             $options[RequestOptions::HEADERS] = $data['requestHeaders'];
         }
         if ($data['requestBody']) {
             $options[RequestOptions::BODY] = $data['requestBody'];
         }
+        $data['url'] = App::parseEnv($data['url']);
 
         // Update the request
         Db::update('{{%webhookrequests}}', [
@@ -437,10 +440,31 @@ class Plugin extends \craft\base\Plugin
         $startTime = microtime(true);
         $response = null;
         try {
+            // and now validate the request URL again, get the IP addresses and pin the hostname/port
+            $urlValidator = new UrlValidator(options: [
+                'ipv4FilterFlags' => FILTER_FLAG_NO_RES_RANGE,
+                'ipv6FilterFlags' => FILTER_FLAG_NO_RES_RANGE,
+            ]);
+
+            // Returns the validated IP addresses the host resolves to.
+            $ips = $urlValidator->validate($data['url']);
+
+            $parts = parse_url($data['url']);
+            $host = $parts['host'];
+            $port = $parts['port'] ?? ($parts['scheme'] === 'https' ? 443 : 80);
+
+            $extraOptions = [
+                'curl' => [
+                    // Pin the hostname/port to the IPs we just validated.
+                    CURLOPT_RESOLVE => ["$host:$port:" . implode(',', $ips)],
+                ],
+            ];
+            $options = array_merge($options, $extraOptions);
+
             $response = Craft::createGuzzleClient($this->getSettings()->guzzleConfig)
                 ->request($data['method'], $data['url'], $options);
             $success = true;
-        } catch (TransferException $e) {
+        } catch (TransferException|UrlValidationException $e) {
             $success = false;
             if ($e instanceof RequestException) {
                 $response = $e->getResponse();
