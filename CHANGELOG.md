@@ -1,5 +1,9 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+- Fixed an error that could occur when a triggering a webhook without a URL. ([#103](https://github.com/craftcms/webhooks/issues/103))
+
 ## 3.2.0 - 2026-02-12
 
 > [!WARNING]

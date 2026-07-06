@@ -219,15 +219,25 @@ class Plugin extends \craft\base\Plugin
 
                     // Queue the send request up
                     $url = App::parseEnv($webhook->url);
+
+                    if (!$url) {
+                        return;
+                    }
+
                     $url = $view->renderSandboxedString($url, [
                         'event' => $e,
                     ]);
 
                     if ($webhook->debounceKeyFormat) {
                         $debounceKey = App::parseEnv($webhook->debounceKeyFormat);
-                        $debounceKey = $webhook->id . ':' . $view->renderSandboxedString($debounceKey, [
-                                'event' => $e,
-                            ]);
+
+                        if ($debounceKey) {
+                            $debounceKey = sprintf(
+                                '%s:%s',
+                                $webhook->id,
+                                $view->renderSandboxedString($debounceKey, ['event' => $e]),
+                            );
+                        }
                     }
 
                     $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
