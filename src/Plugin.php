@@ -140,6 +140,10 @@ class Plugin extends \craft\base\Plugin
         }
 
         foreach ($webhooks as $webhook) {
+            if (!$webhook->url) {
+                return;
+            }
+
             Event::on(
                 $webhook->class,
                 $webhook->event,
@@ -187,8 +191,6 @@ class Plugin extends \craft\base\Plugin
                     $headers = [];
 
                     foreach ($webhook->headers as $header) {
-                        $header['value'] = App::parseEnv($header['value']);
-
                         if (is_string($header['value'])) {
                             $header['value'] = $view->renderSandboxedString($header['value'], [
                                 'event' => $e,
@@ -220,16 +222,20 @@ class Plugin extends \craft\base\Plugin
                     }
 
                     // Queue the send request up
-                    $url = App::parseEnv($webhook->url);
-                    $url = $view->renderSandboxedString($url, [
+                    $url = $view->renderSandboxedString($webhook->url, [
                         'event' => $e,
                     ]);
 
                     if ($webhook->debounceKeyFormat) {
                         $debounceKey = App::parseEnv($webhook->debounceKeyFormat);
-                        $debounceKey = $webhook->id . ':' . $view->renderSandboxedString($debounceKey, [
-                                'event' => $e,
-                            ]);
+
+                        if ($debounceKey) {
+                            $debounceKey = sprintf(
+                                '%s:%s',
+                                $webhook->id,
+                                $view->renderSandboxedString($debounceKey, ['event' => $e]),
+                            );
+                        }
                     }
 
                     $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
@@ -414,11 +420,16 @@ class Plugin extends \craft\base\Plugin
         $options = [];
         $data = $this->getRequestData($requestId);
         if ($data['requestHeaders']) {
+            $data['requestHeaders'] = array_map(
+                fn($header) => App::parseEnv($header),
+                $data['requestHeaders'],
+            );
             $options[RequestOptions::HEADERS] = $data['requestHeaders'];
         }
         if ($data['requestBody']) {
             $options[RequestOptions::BODY] = $data['requestBody'];
         }
+        $data['url'] = App::parseEnv($data['url']);
 
         // Update the request
         Db::update('{{%webhookrequests}}', [
