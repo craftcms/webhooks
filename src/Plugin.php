@@ -138,6 +138,10 @@ class Plugin extends \craft\base\Plugin
         }
 
         foreach ($webhooks as $webhook) {
+            if (!$webhook->url) {
+                return;
+            }
+
             Event::on(
                 $webhook->class,
                 $webhook->event,
@@ -222,9 +226,14 @@ class Plugin extends \craft\base\Plugin
 
                     if ($webhook->debounceKeyFormat) {
                         $debounceKey = App::parseEnv($webhook->debounceKeyFormat);
-                        $debounceKey = $webhook->id . ':' . $view->renderSandboxedString($debounceKey, [
-                                'event' => $e,
-                            ]);
+
+                        if ($debounceKey) {
+                            $debounceKey = sprintf(
+                                '%s:%s',
+                                $webhook->id,
+                                $view->renderSandboxedString($debounceKey, ['event' => $e]),
+                            );
+                        }
                     }
 
                     $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
