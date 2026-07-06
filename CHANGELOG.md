@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 3.3.0 - 2026-07-06
 
 - Fixed an error that could occur when a triggering a webhook without a URL. ([#103](https://github.com/craftcms/webhooks/issues/103))
 - Fixed a [high-severity](https://github.com/craftcms/cms/security/policy#severity--remediation) SSRF vulnerability.
