@@ -52,7 +52,7 @@ class Settings extends Model
     /**
      * @var string[] Hostnames that are allowed to resolve to private IP addresses, e.g. `'my-api.internal'` or `'*.ddev.site'`.
      * A leading `*.` wildcard matches any subdomain. Can only be set in `config/webhooks.php`.
-     * @since 3.3.0
+     * @since 3.4.0
      */
     public array $allowedPrivateHosts = [];
 

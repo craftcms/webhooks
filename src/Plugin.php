@@ -487,7 +487,7 @@ class Plugin extends \craft\base\Plugin
      * Returns the URL validator used for webhook URLs.
      *
      * @return UrlValidator
-     * @since 3.3.0
+     * @since 3.4.0
      */
     public function getUrlValidator(): UrlValidator
     {
