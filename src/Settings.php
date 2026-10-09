@@ -50,6 +50,13 @@ class Settings extends Model
     public array $guzzleConfig = [];
 
     /**
+     * @var string[] Hostnames that are allowed to resolve to private IP addresses, e.g. `'my-api.internal'` or `'*.ddev.site'`.
+     * A leading `*.` wildcard matches any subdomain. Can only be set in `config/webhooks.php`.
+     * @since 3.3.0
+     */
+    public array $allowedPrivateHosts = [];
+
+    /**
      * @inheritdoc
      */
     public function setAttributes($values, $safeOnly = true): void
@@ -89,8 +96,8 @@ class Settings extends Model
     public function fields(): array
     {
         $fields = parent::fields();
-        // guzzleConfig can't be set from the UI so no point in storing it in the project config
-        unset($fields['guzzleConfig']);
+        // guzzleConfig and allowedPrivateHosts can't be set from the UI so no point in storing them in the project config
+        unset($fields['guzzleConfig'], $fields['allowedPrivateHosts']);
         return $fields;
     }
 
@@ -101,6 +108,7 @@ class Settings extends Model
     {
         return [
             'guzzleConfig',
+            'allowedPrivateHosts',
         ];
     }
 }

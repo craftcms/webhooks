@@ -28,7 +28,7 @@
   "require": {
     "php": "^8.0.2",
     "craftcms/cms": "^4.17.0|^5.9.0",
-    "craftcms/url-validator": "^1.1"
+    "craftcms/url-validator": "^1.2"
   },
   "require-dev": {
     "craftcms/ecs": "dev-main",

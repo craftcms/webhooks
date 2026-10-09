@@ -1,5 +1,13 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+> [!WARNING]
+> Webhook URLs that resolve to private IP addresses are now rejected, unless their hostname is listed in the `allowedPrivateHosts` config setting.
+> See [Sending Webhooks to Internal Services](https://github.com/craftcms/webhooks#sending-webhooks-to-internal-services) on how to do that.
+
+- Fixed a [medium-severity](https://github.com/craftcms/cms/security/policy#severity--remediation) SSRF vulnerability.
+
 ## 3.3.0 - 2026-07-06
 
 - Fixed an error that could occur when triggering a webhook without a URL. ([#103](https://github.com/craftcms/webhooks/issues/103))
