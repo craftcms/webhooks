@@ -6,7 +6,7 @@
 > Webhook URLs that resolve to private IP addresses are now rejected, unless their hostname is listed in the `allowedPrivateHosts` config setting.
 > See [Sending Webhooks to Internal Services](https://github.com/craftcms/webhooks#sending-webhooks-to-internal-services) on how to do that.
 
-- Fixed a [medium-severity](https://github.com/craftcms/cms/security/policy#severity--remediation) SSRF vulnerability.
+- Fixed a [medium-severity](https://github.com/craftcms/cms/security/policy#severity--remediation) SSRF vulnerability. (GHSA-7663-2jqv-x927)
 
 ## 3.3.0 - 2026-07-06
 
