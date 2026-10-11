@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 3.4.0 - 2026-10-11
 
 > [!WARNING]
 > Webhook URLs that resolve to private IP addresses are now rejected, unless their hostname is listed in the `allowedPrivateHosts` config setting.
