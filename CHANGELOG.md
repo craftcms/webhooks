@@ -1,12 +1,16 @@
 # Release Notes for Webhooks for Craft CMS
 
+## 3.4.0.1 - 2026-10-11
+
+- Updated incorrect GHSA link.
+
 ## 3.4.0 - 2026-10-11
 
 > [!WARNING]
 > Webhook URLs that resolve to private IP addresses are now rejected, unless their hostname is listed in the `allowedPrivateHosts` config setting.
 > See [Sending Webhooks to Internal Services](https://github.com/craftcms/webhooks#sending-webhooks-to-internal-services) on how to do that.
 
-- Fixed a [medium-severity](https://github.com/craftcms/cms/security/policy#severity--remediation) SSRF vulnerability. (GHSA-7663-2jqv-x927)
+- Fixed a [medium-severity](https://github.com/craftcms/cms/security/policy#severity--remediation) SSRF vulnerability. (GHSA-fr85-wg7m-6wvq)
 
 ## 3.3.0 - 2026-07-06
 
