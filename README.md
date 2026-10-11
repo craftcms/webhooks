@@ -46,6 +46,7 @@ return [
     'initialDelay' => null,
     'retryDelay' => 120,
     'purgeDuration' => 604800, // 7 days
+    'allowedPrivateHosts' => [],
 ];
 ```
 
@@ -57,6 +58,25 @@ The array can define the following keys:
 - `initialDelay` – The delay (in seconds) that initial webhook request attempts should have.
 - `retryDelay` – The delay (in seconds) between webhook attempts. (Default is `60`.)
 - `purgeDuration` – The time (in seconds) that request history should be saved in the database before being deletable via garbage collection.
+- `allowedPrivateHosts` – Hostnames that are allowed to resolve to private IP addresses (e.g. `10.0.0.0/8`, `192.168.0.0/16`), for webhooks sent to internal services. By default, URLs that resolve to private IP addresses are rejected. Can only be set in `config/webhooks.php`. See [Sending Webhooks to Internal Services](#sending-webhooks-to-internal-services).
+
+### Sending Webhooks to Internal Services
+
+Webhook URLs (and any URLs they redirect to) that resolve to private IP addresses (e.g. `10.0.0.0/8`, `192.168.0.0/16`) are rejected by default. If your webhooks need to reach internal services, for example in local development or between containers in Docker or Kubernetes, list their hostnames in `config/webhooks.php`.
+
+Use an exact hostname, or a leading `*.` wildcard to match any subdomain (`*.site.testing.local` matches `api.site.testing.local`, but not `site.testing.local` itself):
+
+```php
+'allowedPrivateHosts' => [
+    'my-api.internal',
+    '*.ddev.site',
+],
+```
+
+Only the private IP range check is relaxed for these hosts. Loopback, link-local and cloud metadata addresses are still rejected.
+
+> [!WARNING]
+> Only list hostnames whose DNS you control, and list individual services rather than whole internal domains.
 
 ## Managing Webhooks
 

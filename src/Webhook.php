@@ -8,7 +8,6 @@ use craft\helpers\App;
 use craft\validators\UniqueValidator;
 use craft\webhooks\records\Webhook as WebhookRecord;
 use CraftCms\UrlValidator\UrlValidationException;
-use CraftCms\UrlValidator\UrlValidator;
 use ReflectionClass;
 use Twig\Error\Error as TwigError;
 use yii\validators\Validator;
@@ -138,21 +137,19 @@ class Webhook extends Model
                     }
 
                     // if it contains a template - validation should allow it; we'll check it again before making a request
-                    if (!str_contains($this->url, '{')) {
+                    if (str_contains($this->url, '{')) {
                         return;
                     }
 
                     // otherwise - validate with UrlValidator
-                    $urlValidator = new UrlValidator(options: [
-                        'ipv4FilterFlags' => FILTER_FLAG_NO_RES_RANGE,
-                        'ipv6FilterFlags' => FILTER_FLAG_NO_RES_RANGE,
-                    ]);
                     try {
                         // validate the URL
-                        $urlValidator->validate($this->url);
+                        Plugin::getInstance()->getUrlValidator()->validate($this->url);
                     } catch (UrlValidationException $e) {
                         // The URL, or an IP it resolves to, is disallowed.
-                        $validator->addError($this, $attribute, Craft::t('webhooks', 'Invalid URL.'));
+                        $validator->addError($this, $attribute, Craft::t('webhooks', 'Invalid URL. {reason}', [
+                            'reason' => $e->getMessage(),
+                        ]));
                     }
                 },
             ],

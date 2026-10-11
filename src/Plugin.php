@@ -27,6 +27,7 @@ use craft\webhooks\filters\PropagatingFilter;
 use craft\webhooks\filters\ProvisionalDraftFilter;
 use craft\webhooks\filters\ResavingFilter;
 use craft\webhooks\filters\RevisionFilter;
+use CraftCms\UrlValidator\GuzzleMiddleware;
 use CraftCms\UrlValidator\UrlValidationException;
 use CraftCms\UrlValidator\UrlValidator;
 use DateTime;
@@ -411,6 +412,9 @@ class Plugin extends \craft\base\Plugin
      */
     public function sendRequest(int $requestId): bool
     {
+        // create it before acquiring the lock, so that an invalid allowedPrivateHosts config can't leave the request locked
+        $urlValidator = $this->getUrlValidator();
+
         // Acquire a lock on the request
         if (!$this->_lockRequest($requestId, 1)) {
             throw new Exception('Could not acquire a lock for the webhook request ' . $requestId);
@@ -440,29 +444,16 @@ class Plugin extends \craft\base\Plugin
         $startTime = microtime(true);
         $response = null;
         try {
-            // and now validate the request URL again, get the IP addresses and pin the hostname/port
-            $urlValidator = new UrlValidator(options: [
-                'ipv4FilterFlags' => FILTER_FLAG_NO_RES_RANGE,
-                'ipv6FilterFlags' => FILTER_FLAG_NO_RES_RANGE,
-            ]);
+            $client = Craft::createGuzzleClient($this->getSettings()->guzzleConfig);
 
-            // Returns the validated IP addresses the host resolves to.
-            $ips = $urlValidator->validate($data['url']);
+            // validate the request URL and every redirect target, and pin their hostnames/ports to the validated IPs
+            if (!GuzzleMiddleware::attach($client, $urlValidator)) {
+                // the client uses a custom handler, so we can only validate and pin the request URL itself
+                $options['curl'][CURLOPT_RESOLVE] = $urlValidator->curlResolve($data['url']);
+                $options[RequestOptions::ALLOW_REDIRECTS] = false;
+            }
 
-            $parts = parse_url($data['url']);
-            $host = $parts['host'];
-            $port = $parts['port'] ?? ($parts['scheme'] === 'https' ? 443 : 80);
-
-            $extraOptions = [
-                'curl' => [
-                    // Pin the hostname/port to the IPs we just validated.
-                    CURLOPT_RESOLVE => ["$host:$port:" . implode(',', $ips)],
-                ],
-            ];
-            $options = array_merge($options, $extraOptions);
-
-            $response = Craft::createGuzzleClient($this->getSettings()->guzzleConfig)
-                ->request($data['method'], $data['url'], $options);
+            $response = $client->request($data['method'], $data['url'], $options);
             $success = true;
         } catch (TransferException|UrlValidationException $e) {
             $success = false;
@@ -490,6 +481,20 @@ class Plugin extends \craft\base\Plugin
         $this->_unlockRequest($requestId);
 
         return $success;
+    }
+
+    /**
+     * Returns the URL validator used for webhook URLs.
+     *
+     * @return UrlValidator
+     * @since 3.4.0
+     */
+    public function getUrlValidator(): UrlValidator
+    {
+        return new UrlValidator(options: [
+            // only the hosts listed in config/webhooks.php can resolve to private IP addresses
+            'allowedPrivateHosts' => $this->getSettings()->allowedPrivateHosts,
+        ]);
     }
 
     /**
