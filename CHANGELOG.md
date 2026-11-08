@@ -10,6 +10,8 @@
 - Webhook requests are now sent by Laravel queue jobs with Laravel’s HTTP client. URLs and redirects are still validated against SSRF, and pinned to the validated IP addresses.
 - The Webhooks control panel pages are now built with Craft’s control panel UI components.
 - Saving a webhook now shows an error if its payload template uses a tag, filter or function that the Twig sandbox doesn’t allow.
+- Webhook URLs can now be longer than 255 characters. ([#95](https://github.com/craftcms/webhooks/pull/95))
+- Installing the plugin now archives existing Webhooks tables, renaming them with an `_old` suffix, instead of dropping them. ([#98](https://github.com/craftcms/webhooks/pull/98))
 
 ## 3.4.0.1 - 2026-10-11
 

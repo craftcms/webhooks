@@ -45,7 +45,7 @@ class SaveWebhookRequest extends FormRequest
                 }
             }],
             'method' => ['required', Rule::in(['get', 'post', 'put'])],
-            'url' => ['required', 'string', 'max:255', function (string $attribute, mixed $value, Closure $fail) use ($webhooks) {
+            'url' => ['required', 'string', function (string $attribute, mixed $value, Closure $fail) use ($webhooks) {
                 // Environment variables and templates are validated again before each request is sent
                 if (Env::parse($value) !== $value || str_contains($value, '{')) {
                     return;

@@ -17,7 +17,10 @@ class Install extends Migration
 {
     public function up(): void
     {
-        $this->dropTables();
+        // Keep any tables left over from a previous install, such as in a database restored from another environment
+        foreach (['webhookrequests', 'webhooks', 'webhookgroups'] as $table) {
+            $this->archiveTableIfExists($table);
+        }
 
         Schema::create('webhookgroups', function (Blueprint $table) {
             $table->integer('id', true);
@@ -36,7 +39,7 @@ class Install extends Migration
             $table->text('filters')->nullable();
             $table->string('debounceKeyFormat')->nullable();
             $table->string('method', 10);
-            $table->string('url');
+            $table->mediumText('url');
             $table->text('headers')->nullable();
             $table->text('userAttributes')->nullable();
             $table->text('senderAttributes')->nullable();
@@ -60,7 +63,7 @@ class Install extends Migration
             $table->string('status');
             $table->tinyInteger('attempts')->nullable();
             $table->string('method')->nullable();
-            $table->string('url')->nullable();
+            $table->mediumText('url')->nullable();
             $table->text('requestHeaders')->nullable();
             $table->mediumText('requestBody')->nullable();
             $table->smallInteger('responseStatus')->nullable();
@@ -78,11 +81,6 @@ class Install extends Migration
     }
 
     public function down(): void
-    {
-        $this->dropTables();
-    }
-
-    private function dropTables(): void
     {
         Schema::dropIfExists('webhookrequests');
         Schema::dropIfExists('webhooks');

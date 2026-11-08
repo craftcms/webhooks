@@ -73,10 +73,12 @@ it('shows its control panel screens', function () {
 
 it('saves webhooks', function () {
     actingAs(User::find()->admin()->one());
+    $url = TestCase::RECEIVER_URL.'?token='.str_repeat('a', 300);
 
-    postJson(route('webhooks.store'), webhookForm())->assertOk();
+    postJson(route('webhooks.store'), webhookForm(['url' => $url]))->assertOk();
 
     expect(Webhook::query()->sole())
+        ->url->toBe($url)
         ->event->toBe(ElementLifecycleSaved::class)
         ->class->toBe(Entry::class)
         ->filters->toBe([DraftFilter::class => false])

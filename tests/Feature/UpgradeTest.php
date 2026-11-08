@@ -8,10 +8,12 @@ use CraftCms\Cms\Entry\Elements\Entry;
 use CraftCms\Cms\Support\Json;
 use CraftCms\Cms\Support\Str;
 use CraftCms\Cms\User\Events\UserActivated;
+use CraftCms\Webhooks\Database\Migrations\Install;
 use CraftCms\Webhooks\Filters\DraftFilter;
 use CraftCms\Webhooks\Filters\NewElementFilter;
 use CraftCms\Webhooks\Models\Webhook;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 it('converts Craft 5 webhooks to Craft 6 events', function () {
     $insert = fn (string $name, string $class, string $event, ?array $filters = null) => DB::table('webhooks')->insertGetId([
@@ -50,4 +52,17 @@ it('converts Craft 5 webhooks to Craft 6 events', function () {
         ->class->toBe('acme\Plugin')
         ->event->toBe('afterThing')
         ->enabled->toBeFalse();
+});
+
+it('archives tables left over from a previous install', function () {
+    webhook(['name' => 'Left over']);
+
+    $install = new Install;
+    $install->up();
+    $install->up();
+
+    expect(Schema::hasTable('webhooks_old1'))->toBeTrue()
+        ->and(DB::table('webhooks_old')->pluck('name')->all())->toBe(['Left over'])
+        ->and(Webhook::query()->count())->toBe(0)
+        ->and(webhook(['name' => 'New'])->exists)->toBeTrue();
 });

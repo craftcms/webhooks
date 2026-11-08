@@ -131,11 +131,12 @@ The **Webhooks** plugin access permission (`accessPlugin-webhooks`) still contro
 
 ### Database and migrations
 
-The plugin keeps its `webhookgroups`, `webhooks` and `webhookrequests` tables. Updating runs one migration, which:
+The plugin keeps its `webhookgroups`, `webhooks` and `webhookrequests` tables. Updating runs two migrations, which:
 
-- makes `webhooks.class` nullable,
-- converts Craft 5 events and filter class names, as described above,
-- disables webhooks whose event has no Craft 6 equivalent.
+- make `webhooks.class` nullable,
+- convert Craft 5 events and filter class names, as described above,
+- disable webhooks whose event has no Craft 6 equivalent,
+- change the `url` columns from `varchar(255)` to `mediumtext`, so webhook URLs can be longer than 255 characters.
 
 ## Removed
 
