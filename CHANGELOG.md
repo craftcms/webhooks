@@ -1,5 +1,16 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+- Webhooks now requires Craft CMS 6.0 or later and PHP 8.5 or later, and runs natively on Craft 6 without the `craftcms/yii2-adapter` package. See [UPGRADE.md](UPGRADE.md).
+- Webhooks now listen for Laravel event classes, with an optional subject class. Updating converts Craft 5 element and service events, and disables webhooks whose event has no Craft 6 equivalent.
+- The plugin’s classes moved to the `CraftCms\Webhooks` namespace.
+- Plugin settings are now read from `config/craft/webhooks.php`. Run `php artisan vendor:publish --tag=webhooks` to create it.
+- Custom filters are now registered with the `CraftCms\Webhooks\Events\FilterTypesResolving` event, and `FilterInterface` methods receive the event class and event object.
+- Webhook requests are now sent by Laravel queue jobs with Laravel’s HTTP client. URLs and redirects are still validated against SSRF, and pinned to the validated IP addresses.
+- The Webhooks control panel pages are now built with Craft’s control panel UI components.
+- Saving a webhook now shows an error if its payload template uses a tag, filter or function that the Twig sandbox doesn’t allow.
+
 ## 3.4.0.1 - 2026-10-11
 
 - Updated incorrect GHSA link.

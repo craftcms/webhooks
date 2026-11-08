@@ -1,4 +1,4 @@
-<p align="center"><img src="./src/icon.svg" width="100" height="100" alt="Webhooks icon"></p>
+<p align="center"><img src="./resources/icon.svg" width="100" height="100" alt="Webhooks icon"></p>
 
 <h1 align="center">Webhooks for Craft CMS</h1>
 
@@ -8,7 +8,9 @@ It can be used to integrate your Craft project with task automation tools like [
 
 ## Requirements
 
-This plugin requires Craft CMS 4.0.0+ or 5.0.0+.
+This plugin requires Craft CMS 6.0 or later and PHP 8.5 or later. It doesn’t need the `craftcms/yii2-adapter` package.
+
+Upgrading from Webhooks 3.x? See [UPGRADE.md](UPGRADE.md). For Craft 4 and 5, use [Webhooks 3.x](https://github.com/craftcms/webhooks/tree/3.x).
 
 ## Installation
 
@@ -30,12 +32,12 @@ cd /path/to/my-project.test
 composer require craftcms/webhooks
 
 # tell Craft to install the plugin
-./craft install/plugin webhooks
+php artisan craft:plugin:install webhooks
 ```
 
 ## Configuration
 
-To configure Webhooks, go to **Settings** → **Webhooks**, or create a `config/webhooks.php` file, which returns an array.
+To configure Webhooks, go to **Settings** → **Webhooks**, or create a `config/craft/webhooks.php` file, which returns an array. Run `php artisan vendor:publish --tag=webhooks` to create one with every setting.
 
 ```php
 <?php
@@ -58,11 +60,11 @@ The array can define the following keys:
 - `initialDelay` – The delay (in seconds) that initial webhook request attempts should have.
 - `retryDelay` – The delay (in seconds) between webhook attempts. (Default is `60`.)
 - `purgeDuration` – The time (in seconds) that request history should be saved in the database before being deletable via garbage collection.
-- `allowedPrivateHosts` – Hostnames that are allowed to resolve to private IP addresses (e.g. `10.0.0.0/8`, `192.168.0.0/16`), for webhooks sent to internal services. By default, URLs that resolve to private IP addresses are rejected. Can only be set in `config/webhooks.php`. See [Sending Webhooks to Internal Services](#sending-webhooks-to-internal-services).
+- `allowedPrivateHosts` – Hostnames that are allowed to resolve to private IP addresses (e.g. `10.0.0.0/8`, `192.168.0.0/16`), for webhooks sent to internal services. By default, URLs that resolve to private IP addresses are rejected. Can only be set in `config/craft/webhooks.php`. See [Sending Webhooks to Internal Services](#sending-webhooks-to-internal-services).
 
 ### Sending Webhooks to Internal Services
 
-Webhook URLs (and any URLs they redirect to) that resolve to private IP addresses (e.g. `10.0.0.0/8`, `192.168.0.0/16`) are rejected by default. If your webhooks need to reach internal services, for example in local development or between containers in Docker or Kubernetes, list their hostnames in `config/webhooks.php`.
+Webhook URLs (and any URLs they redirect to) that resolve to private IP addresses (e.g. `10.0.0.0/8`, `192.168.0.0/16`) are rejected by default. If your webhooks need to reach internal services, for example in local development or between containers in Docker or Kubernetes, list their hostnames in `config/craft/webhooks.php`.
 
 Use an exact hostname, or a leading `*.` wildcard to match any subdomain (`*.site.testing.local` matches `api.site.testing.local`, but not `site.testing.local` itself):
 
@@ -80,11 +82,11 @@ Only the private IP range check is relaxed for these hosts. Loopback, link-local
 
 ## Managing Webhooks
 
-To manage your webhooks, go to Settings → Webhooks in your project’s Control Panel.
+To manage your webhooks, go to **Webhooks** in your project’s control panel.
 
 ### Webhook Groups
 
-Webhooks can optionally be organized into groups. You can create a new group by clicking the “New group” button in the sidebar.
+Webhooks can optionally be organized into groups. You can create a new group with the “New group” button on the Webhooks index page.
 
 If a group is deleted, any webhooks in it will become ungrouped. (They will **not** be deleted along with the group.)
 
@@ -92,9 +94,9 @@ If a group is deleted, any webhooks in it will become ungrouped. (They will **no
 
 To create a new webhook, click the “New webhook” button.
 
-Webhooks listen to [events](https://www.yiiframework.com/doc/guide/2.0/en/concept-events) triggered by system classes. So you must determine the name of the class that will be triggering the event (the “Sender Class”), as well as the event name (either an `EVENT_*` constant name, or its value).
+Webhooks listen for [Laravel events](https://laravel.com/docs/events) dispatched by Craft and plugins. Choose the event class in the “Event” field, which suggests the events available in your project.
 
-The Sender Class can be a subclass of the class that triggers the event. For example, all elements fire an [afterSave](https://docs.craftcms.com/api/v3/craft-base-element.html#event-after-save) event after they’ve been saved, courtesy of their base class, [craft\base\Element](https://docs.craftcms.com/api/v3/craft-base-element.html). However if you’re only interested in sending a webhook when an _entry_ gets saved, you can set the Sender Class to [craft\elements\Entry](https://docs.craftcms.com/api/v3/craft-elements-entry.html).
+You can also set a “Subject Class” to narrow the webhook down. The webhook only runs if one of the event’s properties is an instance of that class, and that object becomes the event’s “sender”. For example, Craft dispatches `CraftCms\Cms\Element\Events\ElementLifecycleSaved` after any element is saved, with the element in its `element` property. To send a webhook only when an _entry_ is saved, set the Subject Class to `CraftCms\Cms\Entry\Elements\Entry`.
 
 Webhook URLs can be set to an environment variable (`$VARIABLE_NAME`) or Twig code. If you set it to Twig code, you can reference the triggered event via an `event` variable. 
 
@@ -106,42 +108,36 @@ Webhooks can either send a GET request, or a POST request with a JSON body conta
 
 - `time` – an ISO-8601-formatted timestamp of the exact moment the event was triggered. (Webhooks are sent via the queue so there will be a slight delay between the time the event was triggered and the webhook was sent.)
 - `user` – an object representing the logged-in user at the time the event was triggered.
-- `name` – the name of the event.
-- `senderClass` – the class name of the event sender.
-- `sender` – an object representing the event sender.
+- `name` – the event class’s short name, such as `ElementLifecycleSaved`.
+- `senderClass` – the class name of the event’s sender (its subject).
+- `sender` – an object representing the event’s sender.
 - `eventClass` – the class name of the event.
-- `event` – an object with keys representing any event class properties that aren’t declared by [yii\base\Event](https://www.yiiframework.com/doc/api/2.0/yii-base-event). (For example, if a [craft\events\ElementEvent](https://docs.craftcms.com/api/v3/craft-events-elementevent.html) is triggered, this will contain [element](https://docs.craftcms.com/api/v3/craft-events-elementevent.html#property-element) and [isNew](https://docs.craftcms.com/api/v3/craft-events-elementevent.html#property-isnew) keys.)
+- `event` – an object with the event’s public properties. (For example, `ElementLifecycleSaved` has `element` and `isNew` properties.)
 
 #### Filtering Events
 
 Some events can have filters applied to them, which prevent webhooks from being executed under certain conditions.
 
-<img src="./images/event-filters.png" width="414" height="381" alt="Screenshot of the Event Filters setting">
+<img src="./images/event-filters.png" width="560" height="830" alt="Screenshot of the Event Filters setting">
 
-Ignored filters (`○`) will not have any impact. Positive filters (`✓`) will be required for a webhook to execute, and a negative filter (`×`) will prevent it.
+Filters set to “Any” have no impact. Filters set to “Yes” are required for a webhook to execute, and filters set to “No” prevent it. Some filters can’t be combined, so setting one disables the filters it conflicts with.
 
-Only element class events and certain `craft\services\Elements` events have any filters out of the box, but modules and plugins can register additional filters using the `craft\webhooks\Plugin::EVENT_REGISTER_FILTER_TYPES` event.
+Only events with an `element` property have any filters out of the box, but modules and plugins can register additional filters by listening for the `CraftCms\Webhooks\Events\FilterTypesResolving` event.
 
 ```php
-use yii\base\Event;
-use craft\webhooks\Plugin as Webhooks;
-use craft\events\RegisterComponentTypesEvent;
+use CraftCms\Webhooks\Events\FilterTypesResolving;
+use Illuminate\Support\Facades\Event;
 
-Event::on(
-    Webhooks::class, 
-    Webhooks::EVENT_REGISTER_FILTER_TYPES, 
-    function(RegisterComponentTypesEvent $event) {
-        $event->types[] = ArticleFilter::class;
-    }
-);
+Event::listen(function (FilterTypesResolving $event): void {
+    $event->types[] = ArticleFilter::class;
+});
 ```
 
-Filter type classes must implement `craft\webhooks\filters\FilterInterface`:
+Filter type classes must implement `CraftCms\Webhooks\Filters\FilterInterface`:
 
 ```php
-use craft\webhooks\filters\FilterInterface;
-use craft\elements\Entry;
-use yii\base\Event;
+use CraftCms\Cms\Entry\Elements\Entry;
+use CraftCms\Webhooks\Filters\FilterInterface;
 
 class ArticleFilter implements FilterInterface
 {
@@ -150,18 +146,20 @@ class ArticleFilter implements FilterInterface
         return 'Entry has an “Article” type';
     }
 
-    public static function show(string $class, string $event): bool
+    public static function show(string $eventClass): bool
     {
-        // Only show this filter if the Sender Class is set to 'craft\elements\Entry' 
-        return $class === Entry::class;
+        // Only show this filter for events with an `element` property
+        return property_exists($eventClass, 'element');
     }
 
-    public static function check(Event $event, bool $value): bool
+    public static function check(object $event, bool $value): bool
     {
-        // Filter based on whether the entry's type is 'article':
-        /** @var Entry $entry */
-        $entry = $event->sender;
-        return ($entry->type->handle === 'article') === $value;
+        // Filter based on whether the entry’s type is 'article'
+        if (! $event->element instanceof Entry) {
+            return true;
+        }
+
+        return ($event->element->getType()->handle === 'article') === $value;
     }
 }
 ```
@@ -172,13 +170,13 @@ You can prevent multiple similar webhooks from being sent by setting a “Deboun
 
 An `event` variable will be available to it that references the event that was triggered.
 
-For example, if your webhook is for an entry (`craft\elements\Entry`), then you could set the Debounce Key Format to `{{ event.sender.id }}` to prevent multiple webhook requests from being queued up at the same time.
+For example, if your webhook is for an entry (`CraftCms\Cms\Entry\Elements\Entry`), then you could set the Debounce Key Format to `{{ event.sender.id }}` to prevent multiple webhook requests from being queued up at the same time.
 
 #### Sending Custom Headers
 
 You can send custom headers along with webhook requests using the Custom Headers setting.
 
-<img src="./images/custom-headers.png" width="696" height="292" alt="Screenshot of the Custom Headers setting">
+<img src="./images/custom-headers.png" width="952" height="215" alt="Screenshot of the Custom Headers setting">
 
 Header values can be set to an environment variable using the `$VARIABLE_NAME` syntax, or a Twig template.
 
@@ -190,7 +188,7 @@ You can have multiple headers that have the same name, and if a header value tak
 
 If you need more data than what’s in the default POST request payload, you can fill in the “Extra User Attributes”, “Extra Sender Attributes”, and “Extra Event Attributes” fields.
 
-The attributes listed here (separated by newlines) will be passed to the `$extraFields` argument of the user/sender/event-property’s [toArray()](https://www.yiiframework.com/doc/api/2.0/yii-base-arrayabletrait#toArray()-detail) method (if it has one).
+The attributes listed here (separated by newlines) will be included when the user, sender or event property is converted to an array (for elements and other Craft components, they’re passed to `toArray()` as extra fields).
 
 For “Extra Event Attributes”, each attribute should be prefixed with the name of the property and a dot (e.g. `element.author` will include the `author` attribute of an `$element` property).
 
@@ -204,11 +202,10 @@ That field supports Twig, so you can make this dynamic. An `event` variable will
 {% set entry = event.sender %}
 {{
   {
-    time: now|atom,
+    time: 'now'|date('c'),
     user: currentUser.username ?? null,
     name: event.name,
     entry: {
-      class: className(entry),
       id: entry.id,
       title: entry.title,
       slug: entry.slug,
@@ -220,13 +217,21 @@ That field supports Twig, so you can make this dynamic. An `event` variable will
 
 If the output is valid JSON, then webhook requests will be sent with an `application/json` content type.
 
+Craft renders payload templates in the Twig sandbox, which only allows some tags, filters and functions. The sandbox doesn’t allow the `json_encode` filter by default, so allow it in `config/craft/twig-sandbox.php` to use templates like this one:
+
+```php
+return [
+    'allowedFilters' => ['json_encode'],
+];
+```
+
 ### Toggling Webhooks
 
 Webhooks can be enabled or disabled from both the Webhooks index page and within their Edit Webhook pages.
 
 Only enabled webhooks will send webhook requests when their corresponding events are triggered.
 
-You can disable *all* webhooks by setting `disableAllWebhooks` to `true` in your `config/webhooks.php` file.
+You can disable *all* webhooks by setting `disableAllWebhooks` to `true` in your `config/craft/webhooks.php` file.
 
 ```php
 return [
