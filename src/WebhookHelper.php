@@ -60,7 +60,9 @@ class WebhookHelper
      */
     public static function eventSuggestions(string $senderClass): array
     {
-        if (!class_exists($senderClass) || !is_subclass_of($senderClass, Component::class)) {
+        // Craft 6 element classes (e.g. craft\elements\Entry) are aliases of native classes that aren't
+        // yii\base\Component subclasses, but still define the EVENT_* constants
+        if (!class_exists($senderClass)) {
             return [];
         }
 

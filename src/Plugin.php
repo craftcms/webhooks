@@ -158,12 +158,13 @@ class Plugin extends \craft\base\Plugin
                     }
 
                     $view = Craft::$app->getView();
+                    $twigEvent = $this->twigEvent($e);
 
                     if (in_array($webhook->method, ['post', 'put'], true)) {
                         // Build out the body data
                         if ($webhook->payloadTemplate) {
                             $json = $view->renderSandboxedString($webhook->payloadTemplate, [
-                                'event' => $e,
+                                'event' => $twigEvent,
                             ]);
                             $data = Json::decodeIfJson($json);
                         } else {
@@ -194,7 +195,7 @@ class Plugin extends \craft\base\Plugin
                     foreach ($webhook->headers as $header) {
                         if (is_string($header['value'])) {
                             $header['value'] = $view->renderSandboxedString($header['value'], [
-                                'event' => $e,
+                                'event' => $twigEvent,
                             ]);
                         }
 
@@ -224,7 +225,7 @@ class Plugin extends \craft\base\Plugin
 
                     // Queue the send request up
                     $url = $view->renderSandboxedString($webhook->url, [
-                        'event' => $e,
+                        'event' => $twigEvent,
                     ]);
 
                     if ($webhook->debounceKeyFormat) {
@@ -234,7 +235,7 @@ class Plugin extends \craft\base\Plugin
                             $debounceKey = sprintf(
                                 '%s:%s',
                                 $webhook->id,
-                                $view->renderSandboxedString($debounceKey, ['event' => $e]),
+                                $view->renderSandboxedString($debounceKey, ['event' => $twigEvent]),
                             );
                         }
                     }
@@ -356,7 +357,10 @@ class Plugin extends \craft\base\Plugin
             'webhookId' => $webhookId,
         ]);
 
-        if (count($this->_pendingJobs) === 1) {
+        if ($this->isCraft6() && Craft::$app->getRequest()->getIsConsoleRequest()) {
+            // Craft 6 only triggers EVENT_AFTER_REQUEST for web requests, so push console requests right away
+            $this->pushPendingJobs();
+        } elseif (count($this->_pendingJobs) === 1) {
             Craft::$app->on(Application::EVENT_AFTER_REQUEST, [$this, 'pushPendingJobs'], null, false);
         }
     }
@@ -484,6 +488,32 @@ class Plugin extends \craft\base\Plugin
     }
 
     /**
+     * Returns the event as it should be passed to sandboxed Twig templates.
+     *
+     * Craft 6's sandbox no longer allows `yii\base\Event` objects, so the event’s public properties
+     * are passed as an array there, which keeps `event.sender`, `event.name`, etc. working.
+     *
+     * @param Event $event
+     * @return Event|array
+     */
+    private function twigEvent(Event $event): Event|array
+    {
+        if (!$this->isCraft6()) {
+            return $event;
+        }
+
+        return get_object_vars($event);
+    }
+
+    /**
+     * Returns whether this is running on Craft 6 (via the Yii 2 adapter).
+     */
+    private function isCraft6(): bool
+    {
+        return version_compare(Craft::$app->getVersion(), '6.0.0-alpha.1', '>=');
+    }
+
+    /**
      * Returns the URL validator used for webhook URLs.
      *
      * @return UrlValidator
@@ -508,6 +538,10 @@ class Plugin extends \craft\base\Plugin
     public function toArray($object, array $extra, int $depth = 1): array
     {
         if ($object instanceof Arrayable) {
+            $arr = $object->toArray([], $extra, false);
+        } elseif (is_a($object, 'Yiisoft\Arrays\ArrayableInterface')) {
+            // Craft 6 components implement Yiisoft\Arrays\ArrayableInterface rather than yii\base\Arrayable
+            /** @phpstan-ignore-next-line */
             $arr = $object->toArray([], $extra, false);
         } else {
             $arr = ArrayHelper::toArray($object, [], false);

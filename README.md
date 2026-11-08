@@ -220,6 +220,9 @@ That field supports Twig, so you can make this dynamic. An `event` variable will
 
 If the output is valid JSON, then webhook requests will be sent with an `application/json` content type.
 
+> [!NOTE]
+> Payload templates are rendered in Craft’s Twig sandbox, which doesn’t allow the `json_encode` filter by default. Add it to the `allowedFilters` array in `config/twig-sandbox.php` (`config/craft/twig-sandbox.php` on Craft 6) to use the example above.
+
 ### Toggling Webhooks
 
 Webhooks can be enabled or disabled from both the Webhooks index page and within their Edit Webhook pages.

@@ -7,7 +7,11 @@
     },
   });
 
-  Garnish.$doc.ready(function () {
+  // Craft 6 bridged screens mount their markup after document ready, and provide Craft.whenReady() for that
+  const whenReady =
+    Craft.whenReady || ((callback) => Garnish.$doc.ready(callback));
+
+  whenReady(function () {
     $('#activity a').on('click', function () {
       var $a = $(this);
       var requestId = $a.data('id');

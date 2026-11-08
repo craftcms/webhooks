@@ -58,3 +58,9 @@
   background: rgba(255, 255, 255, 0.85);
   z-index: 1;
 }
+
+/* Craft 6’s .hidden utility isn’t !important, so it needs to beat the ID selectors above */
+#filter-pane p.hidden,
+#filter-spinner.hidden {
+  display: none;
+}

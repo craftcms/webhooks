@@ -1,5 +1,15 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+- Added Craft CMS 6 compatibility, via the `craftcms/yii2-adapter` package.
+- Fixed an error that occurred when a webhook’s URL, headers, debounce key format, or payload template referenced the event on Craft 6.
+- Fixed a bug where webhooks triggered from console commands and queue jobs were never sent on Craft 6.
+- Fixed a bug where default payloads contained raw date objects, and ignored “Extra Sender Attributes”, on Craft 6.
+- Fixed a bug where the Edit Webhook page’s event suggestions and event filters didn’t work on Craft 6.
+- Fixed a bug where webhooks couldn’t be enabled or disabled from the Webhooks index page on Craft 6.
+- Fixed a bug where request details couldn’t be viewed from the Activity page on Craft 6.
+
 ## 3.4.0.1 - 2026-10-11
 
 - Updated incorrect GHSA link.

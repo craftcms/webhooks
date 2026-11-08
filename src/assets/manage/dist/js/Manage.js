@@ -31,30 +31,37 @@
         }, this);
       }
 
-      $('#content .lightswitch').on('change', function () {
-        var enabled = $(this).data('lightswitch').on;
-        var data = {
-          id: $(this).closest('tr').data('id'),
-          enabled: enabled ? '1' : '0',
-        };
-        Craft.postActionRequest(
-          'webhooks/webhooks/save',
-          data,
-          function (response, textStatus, jqXHR) {
-            if (textStatus === 'success' && response.success) {
-              Craft.cp.displayNotice(
-                enabled
-                  ? Craft.t('webhooks', 'Webhook enabled.')
-                  : Craft.t('webhooks', 'Webhook disabled.')
-              );
-            } else {
-              Craft.cp.displayError(
-                Craft.t('app', 'An unknown error occurred.')
-              );
+      // Craft 6 renders lightswitches as <craft-switch> elements
+      $('#content .lightswitch, #content craft-switch').on(
+        'change',
+        function () {
+          var enabled =
+            this.tagName === 'CRAFT-SWITCH'
+              ? this.checked
+              : $(this).data('lightswitch').on;
+          var data = {
+            id: $(this).closest('tr').data('id'),
+            enabled: enabled ? '1' : '0',
+          };
+          Craft.postActionRequest(
+            'webhooks/webhooks/save',
+            data,
+            function (response, textStatus, jqXHR) {
+              if (textStatus === 'success' && response.success) {
+                Craft.cp.displayNotice(
+                  enabled
+                    ? Craft.t('webhooks', 'Webhook enabled.')
+                    : Craft.t('webhooks', 'Webhook disabled.')
+                );
+              } else {
+                Craft.cp.displayError(
+                  Craft.t('app', 'An unknown error occurred.')
+                );
+              }
             }
-          }
-        );
-      });
+          );
+        }
+      );
     },
 
     addNewGroup: function () {
@@ -172,7 +179,11 @@
     },
   });
 
-  Garnish.$doc.ready(function () {
+  // Craft 6 bridged screens mount their markup after document ready, and provide Craft.whenReady() for that
+  const whenReady =
+    Craft.whenReady || ((callback) => Garnish.$doc.ready(callback));
+
+  whenReady(function () {
     new Manager();
   });
 })(jQuery);
