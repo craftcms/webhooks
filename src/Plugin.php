@@ -109,7 +109,7 @@ class Plugin extends \craft\base\Plugin
     /**
      * @inheritdoc
      */
-    public string $schemaVersion = '2.4.0';
+    public string $schemaVersion = '2.4.1';
 
     /**
      * @var SendRequestJob[] The request jobs that should be queued up at the end of the web request.

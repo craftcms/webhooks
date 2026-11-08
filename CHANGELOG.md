@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added Craft CMS 6 compatibility, via the `craftcms/yii2-adapter` package.
+- Webhook URLs can now be longer than 255 characters. ([#95](https://github.com/craftcms/webhooks/pull/95))
+- Installing the plugin now archives existing Webhooks tables, renaming them with an `_old` suffix, instead of dropping them. ([#98](https://github.com/craftcms/webhooks/pull/98))
 - Fixed an error that occurred when a webhook’s URL, headers, debounce key format, or payload template referenced the event on Craft 6.
 - Fixed a bug where webhooks triggered from console commands and queue jobs were never sent on Craft 6.
 - Fixed a bug where default payloads contained raw date objects, and ignored “Extra Sender Attributes”, on Craft 6.
