@@ -149,98 +149,104 @@ class Plugin extends \craft\base\Plugin
                 $webhook->class,
                 $webhook->event,
                 function(Event $e) use ($webhook) {
-                    // Make sure it passes the filters
-                    foreach ($webhook->filters as $filterClass => $filterValue) {
-                        /** @var string|FilterInterface $filterClass */
-                        if (class_exists($filterClass) && !$filterClass::check($e, $filterValue)) {
-                            return;
-                        }
-                    }
-
-                    $view = Craft::$app->getView();
-                    $twigEvent = $this->twigEvent($e);
-
-                    if (in_array($webhook->method, ['post', 'put'], true)) {
-                        // Build out the body data
-                        if ($webhook->payloadTemplate) {
-                            $json = $view->renderSandboxedString($webhook->payloadTemplate, [
-                                'event' => $twigEvent,
-                            ]);
-                            $data = Json::decodeIfJson($json);
-                        } else {
-                            $user = Craft::$app->getUser()->getIdentity();
-                            $data = [
-                                'time' => (new DateTime())->format(DateTime::ATOM),
-                                'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
-                                'name' => $e->name,
-                                'senderClass' => get_class($e->sender),
-                                'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
-                                'eventClass' => get_class($e),
-                                'event' => [],
-                            ];
-
-                            $eventAttributes = $webhook->getEventAttributes();
-                            $ref = new ReflectionClass($e);
-                            foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
-                                if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
-                                    $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
-                                }
+                    // Log errors rather than throwing them, so a broken webhook can't stop the action that triggered it
+                    try {
+                        // Make sure it passes the filters
+                        foreach ($webhook->filters as $filterClass => $filterValue) {
+                            /** @var string|FilterInterface $filterClass */
+                            if (class_exists($filterClass) && !$filterClass::check($e, $filterValue)) {
+                                return;
                             }
                         }
-                    }
 
-                    // Set the headers and body
-                    $headers = [];
+                        $view = Craft::$app->getView();
+                        $twigEvent = $this->twigEvent($e);
 
-                    foreach ($webhook->headers as $header) {
-                        if (is_string($header['value'])) {
-                            $header['value'] = $view->renderSandboxedString($header['value'], [
-                                'event' => $twigEvent,
-                            ]);
-                        }
-
-                        // Get the trimmed lines
-                        $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', (string)$header['value'])));
-
-                        // Add to the header array one-by-one, ensuring that we don't overwrite existing values
-                        foreach ($lines as $line) {
-                            if (!isset($headers[$header['name']])) {
-                                $headers[$header['name']] = $line;
+                        if (in_array($webhook->method, ['post', 'put'], true)) {
+                            // Build out the body data
+                            if ($webhook->payloadTemplate) {
+                                $json = $view->renderSandboxedString($webhook->payloadTemplate, [
+                                    'event' => $twigEvent,
+                                ]);
+                                $data = Json::decodeIfJson($json);
                             } else {
-                                /** @phpstan-ignore-next-line */
-                                if (!is_array($headers[$header['name']])) {
-                                    $headers[$header['name']] = [$headers[$header['name']]];
+                                $user = Craft::$app->getUser()->getIdentity();
+                                $data = [
+                                    'time' => (new DateTime())->format(DateTime::ATOM),
+                                    'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
+                                    'name' => $e->name,
+                                    'senderClass' => get_class($e->sender),
+                                    'sender' => $this->toArray($e->sender, $webhook->getSenderAttributes()),
+                                    'eventClass' => get_class($e),
+                                    'event' => [],
+                                ];
+
+                                $eventAttributes = $webhook->getEventAttributes();
+                                $ref = new ReflectionClass($e);
+                                foreach (ArrayHelper::toArray($e, [], false) as $name => $value) {
+                                    if (!$ref->hasProperty($name) || $ref->getProperty($name)->getDeclaringClass()->getName() !== Event::class) {
+                                        $data['event'][$name] = $this->toArray($value, $eventAttributes[$name] ?? []);
+                                    }
                                 }
-                                $headers[$header['name']][] = $line;
                             }
                         }
-                    }
 
-                    if (isset($data) && is_array($data)) {
-                        $body = Json::encode($data);
-                        $headers['Content-Type'] = 'application/json';
-                    } else {
-                        $body = $data ?? null;
-                    }
+                        // Set the headers and body
+                        $headers = [];
 
-                    // Queue the send request up
-                    $url = $view->renderSandboxedString($webhook->url, [
-                        'event' => $twigEvent,
-                    ]);
+                        foreach ($webhook->headers as $header) {
+                            if (is_string($header['value'])) {
+                                $header['value'] = $view->renderSandboxedString($header['value'], [
+                                    'event' => $twigEvent,
+                                ]);
+                            }
 
-                    if ($webhook->debounceKeyFormat) {
-                        $debounceKey = App::parseEnv($webhook->debounceKeyFormat);
+                            // Get the trimmed lines
+                            $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', (string)$header['value'])));
 
-                        if ($debounceKey) {
-                            $debounceKey = sprintf(
-                                '%s:%s',
-                                $webhook->id,
-                                $view->renderSandboxedString($debounceKey, ['event' => $twigEvent]),
-                            );
+                            // Add to the header array one-by-one, ensuring that we don't overwrite existing values
+                            foreach ($lines as $line) {
+                                if (!isset($headers[$header['name']])) {
+                                    $headers[$header['name']] = $line;
+                                } else {
+                                    /** @phpstan-ignore-next-line */
+                                    if (!is_array($headers[$header['name']])) {
+                                        $headers[$header['name']] = [$headers[$header['name']]];
+                                    }
+                                    $headers[$header['name']][] = $line;
+                                }
+                            }
                         }
-                    }
 
-                    $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
+                        if (isset($data) && is_array($data)) {
+                            $body = Json::encode($data);
+                            $headers['Content-Type'] = 'application/json';
+                        } else {
+                            $body = $data ?? null;
+                        }
+
+                        // Queue the send request up
+                        $url = $view->renderSandboxedString($webhook->url, [
+                            'event' => $twigEvent,
+                        ]);
+
+                        if ($webhook->debounceKeyFormat) {
+                            $debounceKey = App::parseEnv($webhook->debounceKeyFormat);
+
+                            if ($debounceKey) {
+                                $debounceKey = sprintf(
+                                    '%s:%s',
+                                    $webhook->id,
+                                    $view->renderSandboxedString($debounceKey, ['event' => $twigEvent]),
+                                );
+                            }
+                        }
+
+                        $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
+                    } catch (Throwable $exception) {
+                        Craft::error("Unable to trigger webhook “{$webhook->name}”: {$exception->getMessage()}", __METHOD__);
+                        Craft::$app->getErrorHandler()->logException($exception);
+                    }
                 }
             );
         }
