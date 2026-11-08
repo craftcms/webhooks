@@ -4,8 +4,10 @@ namespace craft\webhooks;
 
 use Craft;
 use craft\base\Model;
+use craft\helpers\App;
 use craft\validators\UniqueValidator;
 use craft\webhooks\records\Webhook as WebhookRecord;
+use CraftCms\UrlValidator\UrlValidationException;
 use ReflectionClass;
 use Twig\Error\Error as TwigError;
 use yii\validators\Validator;
@@ -128,9 +130,26 @@ class Webhook extends Model
             [
                 ['url'],
                 function(string $attribute, array $params = null, Validator $validator) {
-                    // Don't allow connecting to well-known cloud instance metadata endpoints
-                    if (str_contains($this->url, '169.254.169.254') || str_contains($this->url, 'metadata.google.internal')) {
-                        $validator->addError($this, $attribute, Craft::t('webhooks', 'Invalid URL.'));
+                    // if it contains env var - validation should allow it; we'll check it again before making a request
+                    $url = App::parseEnv($this->url);
+                    if ($url !== $this->url) {
+                        return;
+                    }
+
+                    // if it contains a template - validation should allow it; we'll check it again before making a request
+                    if (str_contains($this->url, '{')) {
+                        return;
+                    }
+
+                    // otherwise - validate with UrlValidator
+                    try {
+                        // validate the URL
+                        Plugin::getInstance()->getUrlValidator()->validate($this->url);
+                    } catch (UrlValidationException $e) {
+                        // The URL, or an IP it resolves to, is disallowed.
+                        $validator->addError($this, $attribute, Craft::t('webhooks', 'Invalid URL. {reason}', [
+                            'reason' => $e->getMessage(),
+                        ]));
                     }
                 },
             ],

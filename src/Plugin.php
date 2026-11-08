@@ -27,6 +27,9 @@ use craft\webhooks\filters\PropagatingFilter;
 use craft\webhooks\filters\ProvisionalDraftFilter;
 use craft\webhooks\filters\ResavingFilter;
 use craft\webhooks\filters\RevisionFilter;
+use CraftCms\UrlValidator\GuzzleMiddleware;
+use CraftCms\UrlValidator\UrlValidationException;
+use CraftCms\UrlValidator\UrlValidator;
 use DateTime;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
@@ -138,6 +141,10 @@ class Plugin extends \craft\base\Plugin
         }
 
         foreach ($webhooks as $webhook) {
+            if (!$webhook->url) {
+                return;
+            }
+
             Event::on(
                 $webhook->class,
                 $webhook->event,
@@ -185,8 +192,6 @@ class Plugin extends \craft\base\Plugin
                     $headers = [];
 
                     foreach ($webhook->headers as $header) {
-                        $header['value'] = App::parseEnv($header['value']);
-
                         if (is_string($header['value'])) {
                             $header['value'] = $view->renderSandboxedString($header['value'], [
                                 'event' => $e,
@@ -218,16 +223,20 @@ class Plugin extends \craft\base\Plugin
                     }
 
                     // Queue the send request up
-                    $url = App::parseEnv($webhook->url);
-                    $url = $view->renderSandboxedString($url, [
+                    $url = $view->renderSandboxedString($webhook->url, [
                         'event' => $e,
                     ]);
 
                     if ($webhook->debounceKeyFormat) {
                         $debounceKey = App::parseEnv($webhook->debounceKeyFormat);
-                        $debounceKey = $webhook->id . ':' . $view->renderSandboxedString($debounceKey, [
-                                'event' => $e,
-                            ]);
+
+                        if ($debounceKey) {
+                            $debounceKey = sprintf(
+                                '%s:%s',
+                                $webhook->id,
+                                $view->renderSandboxedString($debounceKey, ['event' => $e]),
+                            );
+                        }
                     }
 
                     $this->request($webhook->method, $url, $headers, $body, $webhook->id, $debounceKey ?? null);
@@ -403,6 +412,9 @@ class Plugin extends \craft\base\Plugin
      */
     public function sendRequest(int $requestId): bool
     {
+        // create it before acquiring the lock, so that an invalid allowedPrivateHosts config can't leave the request locked
+        $urlValidator = $this->getUrlValidator();
+
         // Acquire a lock on the request
         if (!$this->_lockRequest($requestId, 1)) {
             throw new Exception('Could not acquire a lock for the webhook request ' . $requestId);
@@ -412,11 +424,16 @@ class Plugin extends \craft\base\Plugin
         $options = [];
         $data = $this->getRequestData($requestId);
         if ($data['requestHeaders']) {
+            $data['requestHeaders'] = array_map(
+                fn($header) => App::parseEnv($header),
+                $data['requestHeaders'],
+            );
             $options[RequestOptions::HEADERS] = $data['requestHeaders'];
         }
         if ($data['requestBody']) {
             $options[RequestOptions::BODY] = $data['requestBody'];
         }
+        $data['url'] = App::parseEnv($data['url']);
 
         // Update the request
         Db::update('{{%webhookrequests}}', [
@@ -427,10 +444,18 @@ class Plugin extends \craft\base\Plugin
         $startTime = microtime(true);
         $response = null;
         try {
-            $response = Craft::createGuzzleClient($this->getSettings()->guzzleConfig)
-                ->request($data['method'], $data['url'], $options);
+            $client = Craft::createGuzzleClient($this->getSettings()->guzzleConfig);
+
+            // validate the request URL and every redirect target, and pin their hostnames/ports to the validated IPs
+            if (!GuzzleMiddleware::attach($client, $urlValidator)) {
+                // the client uses a custom handler, so we can only validate and pin the request URL itself
+                $options['curl'][CURLOPT_RESOLVE] = $urlValidator->curlResolve($data['url']);
+                $options[RequestOptions::ALLOW_REDIRECTS] = false;
+            }
+
+            $response = $client->request($data['method'], $data['url'], $options);
             $success = true;
-        } catch (TransferException $e) {
+        } catch (TransferException|UrlValidationException $e) {
             $success = false;
             if ($e instanceof RequestException) {
                 $response = $e->getResponse();
@@ -456,6 +481,20 @@ class Plugin extends \craft\base\Plugin
         $this->_unlockRequest($requestId);
 
         return $success;
+    }
+
+    /**
+     * Returns the URL validator used for webhook URLs.
+     *
+     * @return UrlValidator
+     * @since 3.4.0
+     */
+    public function getUrlValidator(): UrlValidator
+    {
+        return new UrlValidator(options: [
+            // only the hosts listed in config/webhooks.php can resolve to private IP addresses
+            'allowedPrivateHosts' => $this->getSettings()->allowedPrivateHosts,
+        ]);
     }
 
     /**
