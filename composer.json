@@ -3,11 +3,10 @@
   "description": "Post webhooks when events are triggered in Craft CMS.",
   "type": "craft-plugin",
   "keywords": [
-    "html",
     "cms",
     "craftcms",
-    "webhooks",
-    "yii2"
+    "laravel",
+    "webhooks"
   ],
   "license": "MIT",
   "authors": [
@@ -20,43 +19,55 @@
     "email": "support@craftcms.com",
     "issues": "https://github.com/craftcms/webhooks/issues?state=open",
     "source": "https://github.com/craftcms/webhooks",
-    "docs": "https://github.com/craftcms/webhooks/blob/master/README.md",
-    "rss": "https://github.com/craftcms/webhooks/commits/master.atom"
+    "docs": "https://github.com/craftcms/webhooks/blob/4.x/README.md",
+    "rss": "https://github.com/craftcms/webhooks/commits/4.x.atom"
   },
-  "minimum-stability": "dev",
-  "prefer-stable": true,
   "require": {
-    "php": "^8.0.2",
-    "craftcms/cms": "^4.17.0|^5.9.0",
-    "craftcms/url-validator": "^1.2"
+    "php": "^8.5",
+    "craftcms/cms": "^6.0.0",
+    "craftcms/url-validator": "^1.2",
+    "guzzlehttp/guzzle": "^7.2"
   },
   "require-dev": {
-    "craftcms/ecs": "dev-main",
-    "craftcms/phpstan": "dev-main",
-    "craftcms/rector": "dev-main"
+    "larastan/larastan": "^3.13",
+    "laravel/pint": "^1.22",
+    "orchestra/testbench": "^11.0",
+    "pestphp/pest": "^5.0",
+    "pestphp/pest-plugin-laravel": "^5.0",
+    "phpstan/phpstan": "^2.1"
   },
   "autoload": {
     "psr-4": {
-      "craft\\webhooks\\": "src/"
+      "CraftCms\\Webhooks\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "CraftCms\\Webhooks\\Tests\\": "tests/",
+      "CraftCms\\Cms\\Database\\Factories\\": "vendor/craftcms/cms/database/Factories/"
     }
   },
   "scripts": {
-    "check-cs": "ecs check --ansi",
-    "fix-cs": "ecs check --ansi --fix",
-    "phpstan": "phpstan --memory-limit=1G"
+    "check-cs": "pint --test",
+    "fix-cs": "pint",
+    "phpstan": "phpstan --memory-limit=1G",
+    "test": "pest"
   },
   "extra": {
+    "class": "CraftCms\\Webhooks\\Plugin",
     "name": "Webhooks",
     "handle": "webhooks",
-    "documentationUrl": "https://github.com/craftcms/webhooks/blob/master/README.md"
+    "documentationUrl": "https://github.com/craftcms/webhooks/blob/4.x/README.md"
   },
   "config": {
     "platform": {
-      "php": "8.0.2"
+      "php": "8.5"
     },
     "allow-plugins": {
-      "yiisoft/yii2-composer": true,
-      "craftcms/plugin-installer": true
+      "craftcms/plugin-installer": true,
+      "pestphp/pest-plugin": true
     }
-  }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }

@@ -1,35 +1,32 @@
 <?php
 
-namespace craft\webhooks;
+declare(strict_types=1);
 
-use craft\base\Model;
+namespace CraftCms\Webhooks\Models;
+
+use CraftCms\Cms\Shared\BaseModel;
+use CraftCms\Cms\Shared\Concerns\HasUid;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Override;
 
 /**
- * Webhook group model
+ * A webhook group.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
+ * @property int $id
+ * @property string $name
+ *
  * @since 1.0.0
  */
-class Group extends Model
+class Group extends BaseModel
 {
-    /**
-     * @var int|null
-     */
-    public ?int $id = null;
+    use HasUid;
 
-    /**
-     * @var string|null
-     */
-    public ?string $name = null;
+    #[Override]
+    protected $table = 'webhookgroups';
 
-    /**
-     * @inheritdoc
-     */
-    protected function defineRules(): array
+    /** @return HasMany<Webhook, $this> */
+    public function webhooks(): HasMany
     {
-        return [
-            [['name'], 'trim'],
-            [['name'], 'required'],
-        ];
+        return $this->hasMany(Webhook::class, 'groupId');
     }
 }

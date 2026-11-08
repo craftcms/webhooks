@@ -1,37 +1,23 @@
 <?php
 
-namespace craft\webhooks\filters;
+declare(strict_types=1);
 
-use craft\base\Component;
-use craft\base\ElementInterface;
-use craft\events\ElementEvent;
-use craft\services\Elements;
-use yii\base\Event;
-use yii\base\NotSupportedException;
+namespace CraftCms\Webhooks\Filters;
+
+use CraftCms\Cms\Element\Contracts\ElementInterface;
+use CraftCms\Cms\Element\Events\ElementSaved;
 
 /**
- * Base filter for elements
+ * Base filter for events that carry an element in their `element` property, such as
+ * {@see ElementSaved}.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since 2.1.0
  */
-abstract class BaseElementFilter extends Component implements ExclusiveFilterInterface
+abstract class BaseElementFilter implements ExclusiveFilterInterface
 {
-    public static function show(string $class, string $event): bool
+    public static function show(string $eventClass): bool
     {
-        return (is_subclass_of($class, ElementInterface::class) || (
-                $class === Elements::class &&
-                in_array($event, [
-                    Elements::EVENT_BEFORE_DELETE_ELEMENT,
-                    Elements::EVENT_AFTER_DELETE_ELEMENT,
-                    Elements::EVENT_BEFORE_RESTORE_ELEMENT,
-                    Elements::EVENT_AFTER_RESTORE_ELEMENT,
-                    Elements::EVENT_BEFORE_SAVE_ELEMENT,
-                    Elements::EVENT_AFTER_SAVE_ELEMENT,
-                    Elements::EVENT_BEFORE_UPDATE_SLUG_AND_URI,
-                    Elements::EVENT_AFTER_UPDATE_SLUG_AND_URI,
-                ])
-            ));
+        return property_exists($eventClass, 'element');
     }
 
     public static function excludes(): array
@@ -39,28 +25,19 @@ abstract class BaseElementFilter extends Component implements ExclusiveFilterInt
         return [];
     }
 
-    public static function check(Event $event, bool $value): bool
+    public static function check(object $event, bool $value): bool
     {
-        if ($event->sender instanceof ElementInterface) {
-            return static::checkElement($event->sender, $value);
+        $element = $event->element ?? null;
+
+        if (! $element instanceof ElementInterface) {
+            return true;
         }
 
-        if ($event instanceof ElementEvent) {
-            return static::checkElement($event->element, $value);
-        }
-
-        throw new NotSupportedException('Invalid element event: ' . get_class($event));
+        return static::checkElement($element, $value);
     }
 
     /**
      * Returns whether the element passes the filter.
-     *
-     * @param ElementInterface $element
-     * @param bool $value
-     * @return bool
      */
-    protected static function checkElement(ElementInterface $element, bool $value): bool
-    {
-        return true;
-    }
+    abstract protected static function checkElement(ElementInterface $element, bool $value): bool;
 }

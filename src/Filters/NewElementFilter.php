@@ -1,34 +1,34 @@
 <?php
 
-namespace craft\webhooks\filters;
+declare(strict_types=1);
 
-use Craft;
-use craft\events\ElementEvent;
-use craft\events\ModelEvent;
-use yii\base\Event;
+namespace CraftCms\Webhooks\Filters;
+
+use function CraftCms\Cms\t;
 
 /**
- * Filters events based on whether the element is propagating
+ * Filters events based on whether the element is new.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since 2.1.0
  */
-class NewElementFilter extends BaseElementFilter
+class NewElementFilter implements FilterInterface
 {
     public static function displayName(): string
     {
-        return Craft::t('webhooks', 'Element is new');
+        return t('Element is new', category: 'webhooks');
     }
 
-    public static function check(Event $event, bool $value): bool
+    public static function show(string $eventClass): bool
     {
-        if (
-            $event instanceof ModelEvent ||
-            $event instanceof ElementEvent
-        ) {
-            return (bool)$event->isNew === $value;
+        return property_exists($eventClass, 'element') && property_exists($eventClass, 'isNew');
+    }
+
+    public static function check(object $event, bool $value): bool
+    {
+        if (! property_exists($event, 'isNew')) {
+            return true;
         }
 
-        return true;
+        return (bool) $event->isNew === $value;
     }
 }

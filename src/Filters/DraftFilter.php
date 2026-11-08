@@ -1,22 +1,24 @@
 <?php
 
-namespace craft\webhooks\filters;
+declare(strict_types=1);
 
-use Craft;
-use craft\base\ElementInterface;
-use craft\helpers\ElementHelper;
+namespace CraftCms\Webhooks\Filters;
+
+use CraftCms\Cms\Element\Contracts\ElementInterface;
+use CraftCms\Cms\Element\ElementHelper;
+
+use function CraftCms\Cms\t;
 
 /**
- * Filters events based on whether the element is a draft
+ * Filters events based on whether the element is a draft.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since 2.1.0
  */
 class DraftFilter extends BaseElementFilter
 {
     public static function displayName(): string
     {
-        return Craft::t('webhooks', 'Element is a draft');
+        return t('Element is a draft', category: 'webhooks');
     }
 
     public static function excludes(): array
@@ -29,7 +31,6 @@ class DraftFilter extends BaseElementFilter
 
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
-        $root = ElementHelper::rootElement($element);
-        return $root->getIsDraft() === $value;
+        return ElementHelper::rootElement($element)->getIsDraft() === $value;
     }
 }

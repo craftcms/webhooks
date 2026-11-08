@@ -1,89 +1,59 @@
 <?php
 
-namespace craft\webhooks;
+declare(strict_types=1);
 
-use Craft;
-use craft\helpers\Queue;
-use craft\queue\BaseJob;
-use yii\base\InvalidArgumentException;
+namespace CraftCms\Webhooks\Jobs;
+
+use CraftCms\Cms\Queue\Job;
+use CraftCms\Webhooks\Models\Webhook;
+use CraftCms\Webhooks\Models\WebhookRequest;
+use CraftCms\Webhooks\Settings;
+use CraftCms\Webhooks\Webhooks;
+use Override;
+
+use function CraftCms\Cms\t;
 
 /**
- * Send Request job
+ * Sends a webhook request, and queues another attempt if it fails and `maxAttempts` allows it.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since 1.0.0
  */
-class SendRequestJob extends BaseJob
+class SendRequest extends Job
 {
-    /**
-     * @var int The request ID to send
-     */
-    public int $requestId;
+    public function __construct(
+        public readonly int $requestId,
+        public readonly ?int $webhookId = null,
+    ) {
+        parent::__construct();
+    }
 
-    /**
-     * @var int|null The webhook ID
-     */
-    public ?int $webhookId = null;
-
-    /**
-     * @inheritdoc
-     */
-    public function defaultDescription(): ?string
+    public function handle(Webhooks $webhooks, Settings $settings): void
     {
-        if ($webhook = $this->_webhook()) {
-            $description = Craft::t('webhooks', 'Sending webhook “{name}”', [
-                'name' => $webhook->name,
-            ]);
-        } else {
-            $description = Craft::t('webhooks', 'Sending webhook');
+        if ($webhooks->send($this->requestId)) {
+            return;
         }
-        if ($attempts = $this->_data()['attempts']) {
-            $description .= ' ' . Craft::t('webhooks', '(attempt {num})', [
-                    'num' => $attempts + 1,
-                ]);
+
+        $attempts = (int) WebhookRequest::query()->whereKey($this->requestId)->value('attempts');
+
+        if ($attempts < $settings->maxAttempts) {
+            self::dispatch($this->requestId, $this->webhookId)->delay($settings->retryDelay);
         }
+    }
+
+    #[Override]
+    protected function defaultDescription(): string
+    {
+        $name = $this->webhookId ? Webhook::query()->whereKey($this->webhookId)->value('name') : null;
+        $description = $name
+            ? t('Sending webhook “{name}”', ['name' => $name], 'webhooks')
+            : t('Sending webhook', category: 'webhooks');
+
+        $attempts = (int) WebhookRequest::query()->whereKey($this->requestId)->value('attempts');
+
+        if ($attempts) {
+            $description .= ' '.t('(attempt {num})', ['num' => $attempts + 1], 'webhooks');
+        }
+
         return $description;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function execute($queue): void
-    {
-        $success = Plugin::getInstance()->sendRequest($this->requestId);
-
-        if (!$success) {
-            $attempts = $this->_data()['attempts'];
-            $settings = Plugin::getInstance()->getSettings();
-            if ($attempts < $settings->maxAttempts) {
-                Queue::push(new self([
-                    'requestId' => $this->requestId,
-                ]), null, $settings->retryDelay);
-            }
-        }
-    }
-
-    /**
-     * Returns the request data.
-     *
-     * @return array
-     * @throws InvalidArgumentException
-     */
-    private function _data(): array
-    {
-        return Plugin::getInstance()->getRequestData($this->requestId);
-    }
-
-    /**
-     * Returns the webhook associated with this request (if any).
-     *
-     * @return Webhook|null
-     */
-    private function _webhook(): ?Webhook
-    {
-        if (!$this->webhookId) {
-            return null;
-        }
-        return Plugin::getInstance()->getWebhookManager()->getWebhookById($this->webhookId);
     }
 }

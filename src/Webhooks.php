@@ -1,293 +1,433 @@
 <?php
 
-namespace craft\webhooks;
+declare(strict_types=1);
 
-use Craft;
-use craft\db\Query;
-use craft\helpers\Db;
-use craft\helpers\Json;
-use craft\helpers\StringHelper;
-use yii\base\InvalidArgumentException;
+namespace CraftCms\Webhooks;
+
+use CraftCms\Cms\Component\Component;
+use CraftCms\Cms\Support\Env;
+use CraftCms\Cms\Support\Facades\Security;
+use CraftCms\Cms\Support\Json;
+use CraftCms\UrlValidator\GuzzleMiddleware;
+use CraftCms\UrlValidator\UrlValidationException;
+use CraftCms\UrlValidator\UrlValidator;
+use CraftCms\Webhooks\Enums\RequestStatus;
+use CraftCms\Webhooks\Events\FilterTypesResolving;
+use CraftCms\Webhooks\Filters\DraftFilter;
+use CraftCms\Webhooks\Filters\DuplicatingFilter;
+use CraftCms\Webhooks\Filters\ElementEnabledFilter;
+use CraftCms\Webhooks\Filters\FilterInterface;
+use CraftCms\Webhooks\Filters\FirstSaveFilter;
+use CraftCms\Webhooks\Filters\NewElementFilter;
+use CraftCms\Webhooks\Filters\PropagatingFilter;
+use CraftCms\Webhooks\Filters\ProvisionalDraftFilter;
+use CraftCms\Webhooks\Filters\ResavingFilter;
+use CraftCms\Webhooks\Filters\RevisionFilter;
+use CraftCms\Webhooks\Jobs\SendRequest;
+use CraftCms\Webhooks\Models\Webhook;
+use CraftCms\Webhooks\Models\WebhookRequest;
+use DateTimeInterface;
+use GuzzleHttp\Exception\TransferException;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Throwable;
+
+use function CraftCms\Cms\currentUserElement;
+use function CraftCms\Cms\renderSandboxedString;
 
 /**
- * Webhook Manager
+ * Listens for the events that enabled webhooks are configured for, and queues and sends their requests.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 1.0.0
+ * @since 4.0.0
  */
-class WebhookManager
+class Webhooks
 {
-    // Groups
-    // -------------------------------------------------------------------------
+    public function __construct(
+        private readonly Settings $settings,
+        private readonly UrlValidator $urlValidator,
+    ) {}
 
     /**
-     * Returns all the webhook groups
+     * Returns the URL validator used for webhook URLs.
      *
-     * @return Group[]
+     * Only the hosts listed in the `allowedPrivateHosts` setting can resolve to private IP addresses.
      */
-    public function getAllGroups(): array
+    public function urlValidator(): UrlValidator
     {
-        $results = (new Query())
-            ->select(['id', 'name'])
-            ->from(['{{%webhookgroups}}'])
-            ->orderBy(['name' => SORT_ASC])
-            ->all();
+        return $this->urlValidator;
+    }
 
-        $groups = [];
-        $isMysql = Craft::$app->getDb()->getIsMysql();
+    /**
+     * Registers a listener for each event that an enabled webhook is configured for.
+     */
+    public function registerListeners(): void
+    {
+        if ($this->settings->disableAllWebhooks) {
+            return;
+        }
 
-        foreach ($results as $result) {
-            if ($isMysql) {
-                $result['name'] = html_entity_decode($result['name'], ENT_QUOTES | ENT_HTML5);
+        try {
+            $webhooks = Webhook::query()->enabled()->get();
+        } catch (Throwable $e) {
+            Log::error('Unable to fetch enabled webhooks: '.$e->getMessage());
+            report($e);
+
+            return;
+        }
+
+        foreach ($webhooks->groupBy('event') as $eventClass => $group) {
+            if (! class_exists($eventClass)) {
+                continue;
             }
 
-            $groups[] = new Group($result);
+            Event::listen($eventClass, function (object $event) use ($group): void {
+                foreach ($group as $webhook) {
+                    $this->trigger($webhook, $event);
+                }
+            });
         }
-
-        return $groups;
     }
 
     /**
-     * Saves a webhook group.
+     * Queues the webhook’s request for an event, if the event matches its subject class and filters.
      *
-     * @param Group $group
-     * @param bool $runValidation
-     * @return bool
+     * Errors are logged rather than thrown, so a broken webhook can’t stop the action that triggered it.
      */
-    public function saveGroup(Group $group, bool $runValidation = true): bool
+    public function trigger(Webhook $webhook, object $event): ?WebhookRequest
     {
-        if ($runValidation && !$group->validate()) {
-            Craft::info('Webhook group not saved due to validation error.', __METHOD__);
-            return false;
+        try {
+            return $this->triggerInternal($webhook, $event);
+        } catch (Throwable $e) {
+            Log::error("Unable to trigger webhook “{$webhook->name}”: {$e->getMessage()}");
+            report($e);
+
+            return null;
+        }
+    }
+
+    private function triggerInternal(Webhook $webhook, object $event): ?WebhookRequest
+    {
+        if (! $webhook->url) {
+            return null;
         }
 
-        $db = Craft::$app->getDb();
+        $subject = $this->subject($webhook, $event);
 
-        if ($db->getIsMysql()) {
-            $name = StringHelper::encodeMb4($group->name);
-        } else {
-            $name = $group->name;
+        if ($webhook->class && $subject === null) {
+            return null;
         }
 
-        if ($group->id) {
-            Db::update('{{%webhookgroups}}', [
-                'name' => $name,
-            ], [
-                'id' => $group->id,
-            ]);
-        } else {
-            Db::insert('{{%webhookgroups}}', [
-                'name' => $name,
-            ]);
-
-            $group->id = (int)$db->getLastInsertID('{{%webhookgroups}}');
+        foreach ($webhook->filters ?? [] as $filterClass => $value) {
+            if (is_subclass_of($filterClass, FilterInterface::class) && ! $filterClass::check($event, (bool) $value)) {
+                return null;
+            }
         }
 
-        return true;
+        $variables = ['event' => $this->twigEvent($event, $subject)];
+        $headers = [];
+        $body = null;
+
+        if ($webhook->hasBody()) {
+            $data = $webhook->payloadTemplate
+                ? Json::decodeIfJson(renderSandboxedString($webhook->payloadTemplate, $variables))
+                : $this->defaultPayload($webhook, $event, $subject);
+
+            if (is_array($data)) {
+                $body = Json::encode($data);
+                $json = true;
+            } else {
+                $body = (string) $data;
+            }
+        }
+
+        foreach ($webhook->headers ?? [] as $header) {
+            $value = renderSandboxedString($header['value'], $variables);
+            $lines = array_filter(array_map('trim', preg_split('/[\r\n]+/', $value) ?: []));
+
+            // Add the lines one by one, without overwriting earlier values for the same header
+            foreach ($lines as $line) {
+                $name = $header['name'];
+
+                if (! isset($headers[$name])) {
+                    $headers[$name] = $line;
+                } else {
+                    $headers[$name] = [...(array) $headers[$name], $line];
+                }
+            }
+        }
+
+        if ($json ?? false) {
+            $headers['Content-Type'] = 'application/json';
+        }
+
+        $debounceKey = null;
+
+        if ($webhook->debounceKeyFormat && ($format = Env::parse($webhook->debounceKeyFormat))) {
+            $debounceKey = "$webhook->id:".renderSandboxedString($format, $variables);
+        }
+
+        return $this->request(
+            $webhook->method,
+            renderSandboxedString($webhook->url, $variables),
+            $headers,
+            $body,
+            $webhook->id,
+            $debounceKey,
+        );
     }
 
     /**
-     * Deletes a webhook group by its ID.
+     * Queues up a webhook request to be sent.
      *
-     * @param int $id
-     */
-    public function deleteGroupById(int $id)
-    {
-        Db::delete('{{%webhookgroups}}', [
-            'id' => $id,
-        ]);
-    }
-
-    // Webhooks
-    // -------------------------------------------------------------------------
-
-    /**
-     * Returns all the webhooks
+     * If a pending request has the same debounce key, it’s replaced instead.
      *
-     * @return Webhook[]
+     * @param  array<string, string|string[]>  $headers
      */
-    public function getAllWebhooks(): array
-    {
-        $results = $this->_createWebhookQuery()
-            ->all();
-
-        return $this->_createWebhooks($results);
-    }
-
-    /**
-     * Returns all the webhooks
-     *
-     * @return Webhook[]
-     */
-    public function getEnabledWebhooks(): array
-    {
-        $results = $this->_createWebhookQuery()
-            ->where(['enabled' => true])
-            ->all();
-
-        return $this->_createWebhooks($results);
-    }
-
-    /**
-     * Returns all the webhooks in the given group ID.
-     *
-     * @param int|null $groupId The group ID, or null for ungrouped webhooks
-     * @return Webhook[]
-     */
-    public function getWebhooksByGroupId(int $groupId = null): array
-    {
-        $results = $this->_createWebhookQuery()
-            ->where(['groupId' => $groupId])
-            ->orderBy(['name' => SORT_ASC])
-            ->all();
-
-        return $this->_createWebhooks($results);
-    }
-
-    /**
-     * Returns a webhook by its ID.
-     *
-     * @param int $id
-     * @return Webhook
-     * @throws InvalidArgumentException if $id is invalid
-     */
-    public function getWebhookById(int $id): Webhook
-    {
-        $result = $this->_createWebhookQuery()
-            ->where(['id' => $id])
-            ->one();
-
-        if (!$result) {
-            throw new InvalidArgumentException('Invalid webhook ID: ' . $id);
-        }
-
-        return $this->_createWebhook($result);
-    }
-
-    /**
-     * Saves a webhook.
-     *
-     * @param Webhook $webhook
-     * @param bool $runValidation
-     * @return bool
-     */
-    public function saveWebhook(Webhook $webhook, bool $runValidation = true): bool
-    {
-        if ($runValidation && !$webhook->validate()) {
-            Craft::info('Webhook not saved due to validation error.', __METHOD__);
-            return false;
-        }
-
-        $db = Craft::$app->getDb();
-
-        if ($db->getIsMysql()) {
-            $name = StringHelper::encodeMb4($webhook->name);
-        } else {
-            $name = $webhook->name;
-        }
-
-        $data = [
-            'groupId' => $webhook->groupId,
-            'enabled' => (bool)$webhook->enabled,
-            'name' => $name,
-            'class' => $webhook->class,
-            'event' => $webhook->event,
-            'filters' => $webhook->filters ? Json::encode($webhook->filters) : null,
-            'debounceKeyFormat' => $webhook->debounceKeyFormat,
-            'method' => $webhook->method,
-            'url' => $webhook->url,
-            'headers' => $webhook->headers ? Json::encode($webhook->headers) : null,
-            'userAttributes' => $webhook->userAttributes,
-            'senderAttributes' => $webhook->senderAttributes,
-            'eventAttributes' => $webhook->eventAttributes,
-            'payloadTemplate' => $webhook->payloadTemplate,
+    public function request(
+        string $method,
+        string $url,
+        array $headers = [],
+        ?string $body = null,
+        ?int $webhookId = null,
+        ?string $debounceKey = null,
+    ): WebhookRequest {
+        $attributes = [
+            'method' => $method,
+            'url' => $url,
+            'requestHeaders' => $headers ?: null,
+            'requestBody' => $body,
+            'dateCreated' => now(),
         ];
 
-        if ($webhook->id) {
-            Db::update('{{%webhooks}}', $data, ['id' => $webhook->id]);
-        } else {
-            Db::insert('{{%webhooks}}', $data);
-            $webhook->id = (int)$db->getLastInsertID('{{%webhooks}}');
+        if ($debounceKey !== null) {
+            $pending = WebhookRequest::query()
+                ->where('debounceKey', $debounceKey)
+                ->where('status', RequestStatus::Pending)
+                ->first();
+
+            $lock = $pending ? Cache::lock($this->lockKey($pending->id), 10) : null;
+
+            if ($pending && $lock->get()) {
+                try {
+                    $pending->update($attributes);
+                } finally {
+                    $lock->release();
+                }
+
+                return $pending;
+            }
         }
 
-        return true;
+        $request = WebhookRequest::query()->create([
+            ...$attributes,
+            'webhookId' => $webhookId,
+            'debounceKey' => $debounceKey,
+            'status' => RequestStatus::Pending,
+        ]);
+
+        $job = SendRequest::dispatch($request->id, $webhookId)->afterCommit();
+
+        if ($this->settings->initialDelay) {
+            $job->delay($this->settings->initialDelay);
+        }
+
+        return $request;
     }
 
     /**
-     * Deletes a webhook by its ID.
+     * Sends a request, and records its response.
      *
-     * @param int $id
+     * Environment variables in the URL and header values are parsed now, so their values aren’t stored.
+     *
+     * @return bool Whether the request came back with a 2xx response
      */
-    public function deleteWebhookById(int $id)
+    public function send(int $requestId): bool
     {
-        Db::delete('{{%webhooks}}', ['id' => $id]);
+        $request = WebhookRequest::query()->findOrFail($requestId);
+
+        // Throws if another worker is already sending it
+        $lock = Cache::lock($this->lockKey($requestId), 300);
+        $lock->block(1);
+
+        try {
+            $request->update([
+                'status' => RequestStatus::Requested,
+                'dateRequested' => now(),
+            ]);
+
+            $headers = array_map(
+                fn (string|array $value) => is_array($value) ? array_map(Env::parse(...), $value) : Env::parse($value),
+                $request->requestHeaders ?? [],
+            );
+
+            $options = $request->requestBody !== null && $request->requestBody !== ''
+                ? ['body' => $request->requestBody]
+                : [];
+
+            $start = hrtime(true);
+            $response = null;
+
+            try {
+                $response = Http::create($this->settings->guzzleConfig)
+                    ->withHeaders($headers)
+                    // Validates the URL and every redirect target, and pins them to the validated IPs
+                    ->withMiddleware(GuzzleMiddleware::validateRequests($this->urlValidator))
+                    ->send(strtoupper($request->method), (string) Env::parse($request->url), $options);
+            } catch (RequestException $e) {
+                $response = $e->response;
+                Log::warning("Unable to send webhook: {$e->getMessage()}");
+            } catch (ConnectionException|TransferException|UrlValidationException $e) {
+                Log::warning("Unable to send webhook: {$e->getMessage()}");
+            }
+
+            $request->update([
+                'status' => RequestStatus::Done,
+                'attempts' => ($request->attempts ?? 0) + 1,
+                'responseStatus' => $response?->status(),
+                'responseHeaders' => $response?->headers(),
+                'responseBody' => $response?->body(),
+                'responseTime' => (int) round((hrtime(true) - $start) / 1e6),
+            ]);
+
+            return $response instanceof Response && $response->successful();
+        } finally {
+            $lock->release();
+        }
     }
 
     /**
-     * @return Query
+     * Returns all available filter classes.
+     *
+     * @return array<class-string<FilterInterface>>
      */
-    private function _createWebhookQuery(): Query
+    public function filterTypes(): array
     {
-        return (new Query())
-            ->select([
-                'id',
-                'groupId',
-                'enabled',
-                'name',
-                'class',
-                'event',
-                'filters',
-                'debounceKeyFormat',
-                'method',
-                'url',
-                'headers',
-                'userAttributes',
-                'senderAttributes',
-                'eventAttributes',
-                'payloadTemplate',
-            ])
-            ->from(['{{%webhooks}}']);
+        event($event = new FilterTypesResolving([
+            NewElementFilter::class,
+            ElementEnabledFilter::class,
+            DraftFilter::class,
+            ProvisionalDraftFilter::class,
+            RevisionFilter::class,
+            FirstSaveFilter::class,
+            DuplicatingFilter::class,
+            PropagatingFilter::class,
+            ResavingFilter::class,
+        ]));
+
+        return array_values(array_filter(
+            $event->types,
+            fn (string $class) => is_subclass_of($class, FilterInterface::class),
+        ));
     }
 
     /**
-     * @param array $result
-     * @param bool|null $isMysql
-     * @return Webhook
+     * Converts a value to an array for a payload, including the given extra attributes.
+     *
+     * @param  string[]  $extra
+     * @return array<array-key, mixed>
      */
-    private function _createWebhook(array $result, bool $isMysql = null): Webhook
+    public function toArray(mixed $object, array $extra = [], int $depth = 1): array
     {
-        if ($isMysql ?? Craft::$app->getDb()->getIsMysql()) {
-            $result['name'] = html_entity_decode($result['name'], ENT_QUOTES | ENT_HTML5);
+        $arr = match (true) {
+            $object instanceof Component => $object->toArray([], $extra, false),
+            $object instanceof Arrayable => $object->toArray(),
+            is_object($object) => get_object_vars($object),
+            default => (array) $object,
+        };
+
+        $indexedExtra = [];
+
+        foreach ($extra as $field) {
+            $fieldParts = explode('.', $field, 2);
+
+            if (isset($fieldParts[1])) {
+                $indexedExtra[$fieldParts[0]][] = $fieldParts[1];
+            }
         }
 
-        if ($result['filters']) {
-            $result['filters'] = Json::decode($result['filters']);
-        } else {
-            $result['filters'] = [];
+        foreach ($arr as $k => $v) {
+            if ($v instanceof DateTimeInterface) {
+                $arr[$k] = $v->format(DATE_ATOM);
+            } elseif (is_array($v) || is_object($v)) {
+                if ($depth >= $this->settings->maxDepth) {
+                    unset($arr[$k]);
+                } else {
+                    $arr[$k] = $this->toArray($v, $indexedExtra[$k] ?? [], $depth + 1);
+                }
+            }
         }
 
-        if ($result['headers']) {
-            $result['headers'] = Json::decode($result['headers']);
-        } else {
-            $result['headers'] = [];
-        }
-
-        return new Webhook($result);
+        return $depth === 1 ? Security::redactIfSensitive('', $arr) : $arr;
     }
 
     /**
-     * @param array $results
-     * @return Webhook[]
+     * Returns the event’s subject: the first object it carries that is an instance of the webhook’s class (any object,
+     * if the webhook has no class).
      */
-    private function _createWebhooks(array $results): array
+    private function subject(Webhook $webhook, object $event): ?object
     {
-        $webhooks = [];
-        $isMysql = Craft::$app->getDb()->getIsMysql();
-
-        foreach ($results as $result) {
-            $webhooks[] = $this->_createWebhook($result, $isMysql);
+        foreach (get_object_vars($event) as $value) {
+            if (is_object($value) && (! $webhook->class || $value instanceof $webhook->class)) {
+                return $value;
+            }
         }
 
-        return $webhooks;
+        return null;
+    }
+
+    /**
+     * Returns the `event` variable for the webhook’s templates.
+     *
+     * Craft’s Twig sandbox doesn’t allow arbitrary event objects, so the event’s public properties are passed as an
+     * array, along with its `name` and its `sender` (the subject), as in Craft 5.
+     *
+     * @return array<string, mixed>
+     */
+    private function twigEvent(object $event, ?object $subject): array
+    {
+        return [
+            'name' => class_basename($event),
+            'sender' => $subject,
+            ...get_object_vars($event),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function defaultPayload(Webhook $webhook, object $event, ?object $subject): array
+    {
+        $user = currentUserElement();
+        $eventAttributes = $webhook->getEventAttributes();
+        $data = [
+            'time' => now()->format(DATE_ATOM),
+            'user' => $user ? $this->toArray($user, $webhook->getUserAttributes()) : null,
+            'name' => class_basename($event),
+            'senderClass' => $subject ? $subject::class : null,
+            'sender' => $subject ? $this->toArray($subject, $webhook->getSenderAttributes()) : null,
+            'eventClass' => $event::class,
+            'event' => [],
+        ];
+
+        foreach (get_object_vars($event) as $name => $value) {
+            $data['event'][$name] = match (true) {
+                $value instanceof DateTimeInterface => $value->format(DATE_ATOM),
+                is_array($value) || is_object($value) => $this->toArray($value, $eventAttributes[$name] ?? []),
+                default => $value,
+            };
+        }
+
+        return $data;
+    }
+
+    private function lockKey(int $requestId): string
+    {
+        return "webhooks:request:$requestId";
     }
 }

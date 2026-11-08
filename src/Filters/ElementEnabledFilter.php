@@ -1,27 +1,27 @@
 <?php
 
-namespace craft\webhooks\filters;
+declare(strict_types=1);
 
-use Craft;
-use craft\base\Element;
-use craft\base\ElementInterface;
+namespace CraftCms\Webhooks\Filters;
+
+use CraftCms\Cms\Element\Contracts\ElementInterface;
+
+use function CraftCms\Cms\t;
 
 /**
- * Filters events based on whether the element is enabled
+ * Filters events based on whether the element is enabled.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since 2.3.1
  */
 class ElementEnabledFilter extends BaseElementFilter
 {
     public static function displayName(): string
     {
-        return Craft::t('webhooks', 'Element is enabled');
+        return t('Element is enabled', category: 'webhooks');
     }
 
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
-        /** @var Element $element */
         return $value === ($element->enabled && $element->getEnabledForSite());
     }
 }

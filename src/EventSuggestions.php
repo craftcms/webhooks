@@ -1,177 +1,168 @@
 <?php
 
-namespace craft\webhooks;
+declare(strict_types=1);
+
+namespace CraftCms\Webhooks;
 
 use Composer\Autoload\ClassLoader;
-use Craft;
-use craft\base\Element;
-use craft\elements\Asset;
-use craft\elements\Category;
-use craft\elements\Entry;
-use craft\elements\GlobalSet;
-use craft\elements\Tag;
-use craft\elements\User;
-use craft\services\Assets;
-use craft\services\Categories;
-use craft\services\Elements;
-use craft\services\Entries;
-use craft\services\Globals;
-use craft\services\Tags;
-use craft\services\Users;
+use CraftCms\Cms\Address\Elements\Address;
+use CraftCms\Cms\Asset\Elements\Asset;
+use CraftCms\Cms\Element\Element;
+use CraftCms\Cms\Entry\Elements\Entry;
+use CraftCms\Cms\Field\Elements\ContentBlock;
+use CraftCms\Cms\Plugin\Plugins;
+use CraftCms\Cms\Support\Str;
+use CraftCms\Cms\User\Elements\User;
+use Illuminate\Support\Facades\Cache;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use ReflectionClass;
-use ReflectionClassConstant;
 use Throwable;
-use yii\base\Component;
-use yii\caching\FileDependency;
 
 /**
- * Webhook Helper
+ * Suggests the event classes and subject classes a webhook can be configured for.
+ *
+ * Event classes are found in the `Events` namespaces of Craft and installed plugins.
  *
  * @since 1.2.0
  */
-class WebhookHelper
+class EventSuggestions
 {
+    public function __construct(
+        private readonly Plugins $plugins,
+    ) {}
+
     /**
-     * Returns suggestions for the Sender Class input.
+     * Returns the event classes that webhooks can listen for.
      *
-     * @return array
+     * @return list<array{value: class-string, label: string, hint: string|null}>
      */
-    public static function classSuggestions(): array
+    public function events(): array
     {
-        return Craft::$app->getCache()->getOrSet('webhooks.classSuggestions', function() {
-            $classes = [];
-            foreach (self::_findClasses() as $class) {
-                $classes[] = [
-                    'name' => $class,
-                    'hint' => self::_shortDesc((new ReflectionClass($class))->getDocComment()),
+        $namespaces = ['CraftCms\\Cms\\'];
+
+        foreach ($this->plugins->getAllPlugins() as $plugin) {
+            $namespaces[] = Str::beforeLast($plugin::class, '\\').'\\';
+        }
+
+        $namespaces = array_values(array_unique($namespaces));
+        $key = 'webhooks.eventSuggestions.'.md5(implode(',', $namespaces).$this->installedTime());
+
+        return Cache::remember($key, 86400, function () use ($namespaces) {
+            $suggestions = [];
+
+            foreach ($this->findEventClasses($namespaces) as $class) {
+                $suggestions[] = [
+                    'value' => $class,
+                    'label' => $class,
+                    'hint' => self::shortDescription((string) new ReflectionClass($class)->getDocComment()),
                 ];
             }
-            return $classes;
-        }, null, new FileDependency([
-            'fileName' => Craft::$app->getPath()->getVendorPath() . '/composer/autoload_real.php',
-        ]));
+
+            usort($suggestions, fn (array $a, array $b) => strcmp($a['value'], $b['value']));
+
+            return $suggestions;
+        });
     }
 
     /**
-     * Returns suggestions for the Event Name input.
+     * Returns suggested subject classes: the element types.
      *
-     * @param string $senderClass
-     * @return array
+     * @return list<class-string>
      */
-    public static function eventSuggestions(string $senderClass): array
+    public function subjectClasses(): array
     {
-        if (!class_exists($senderClass) || !is_subclass_of($senderClass, Component::class)) {
-            return [];
-        }
-
-        $events = [];
-
-        foreach ((new ReflectionClass($senderClass))->getConstants() as $name => $value) {
-            if (strpos($name, 'EVENT_') === 0) {
-                $events[] = [
-                    'name' => $value,
-                    'hint' => self::_shortDesc((new ReflectionClassConstant($senderClass, $name))->getDocComment()),
-                ];
-            }
-        }
-
-        return $events;
+        return [
+            Element::class,
+            Entry::class,
+            Asset::class,
+            User::class,
+            Address::class,
+            ContentBlock::class,
+        ];
     }
 
     /**
-     * Returns known component classes.
-     *
-     * @return Component[]|string[]
+     * @param  list<string>  $namespaces
+     * @return list<class-string>
      */
-    private static function _findClasses(): array
+    private function findEventClasses(array $namespaces): array
     {
-        // See if Composer has an optimized autoloader
-        // h/t https://stackoverflow.com/a/46435124/1688568
-        $autoloadClass = null;
-        foreach (get_declared_classes() as $class) {
-            if (strpos($class, 'ComposerAutoloaderInit') === 0) {
-                $autoloadClass = $class;
-                break;
-            }
-        }
-        if ($autoloadClass !== null) {
-            try {
-                // Get a list of namespaces we care about
-                $namespaces = ['craft'];
-                foreach (Craft::$app->getPlugins()->getAllPlugins() as $plugin) {
-                    $classParts = explode('\\', get_class($plugin));
-                    if (count($classParts) > 1) {
-                        $namespaces[] = implode('\\', array_slice($classParts, 0, -1));
-                    }
+        $classes = [];
+
+        foreach (ClassLoader::getRegisteredLoaders() as $loader) {
+            foreach ($loader->getPrefixesPsr4() as $prefix => $dirs) {
+                if (! array_any($namespaces, fn (string $namespace) => str_starts_with($prefix, $namespace))) {
+                    continue;
                 }
-                $namespaces = array_unique($namespaces);
 
-                /** @var ClassLoader $classLoader */
-                $classLoader = $autoloadClass::getLoader();
-                foreach ($classLoader->getClassMap() as $class => $file) {
-                    if (
-                        !class_exists($class, false) &&
-                        !interface_exists($class, false) &&
-                        !trait_exists($class, false) &&
-                        strpos($class, 'craft\\test\\') !== 0 &&
-                        file_exists($file) &&
-                        substr($class, -4) !== 'Test' &&
-                        substr($class, -8) !== 'TestCase'
-                    ) {
-                        // See if it's in a namespace we care about
-                        foreach ($namespaces as $namespace) {
-                            if (strpos($class, $namespace . '\\') === 0) {
-                                require $file;
-                                break;
+                foreach ($dirs as $dir) {
+                    foreach ($this->eventFiles($dir) as $relativePath) {
+                        $class = $prefix.str_replace('/', '\\', substr($relativePath, 0, -4));
+
+                        try {
+                            if (class_exists($class) && ! new ReflectionClass($class)->isAbstract()) {
+                                $classes[$class] = true;
                             }
+                        } catch (Throwable) {
                         }
                     }
                 }
-            } catch (Throwable $e) {
             }
         }
 
-        $classes = [
-            Asset::class => true,
-            Assets::class => true,
-            Categories::class => true,
-            Category::class => true,
-            Element::class => true,
-            Elements::class => true,
-            Entries::class => true,
-            Entry::class => true,
-            Globals::class => true,
-            GlobalSet::class => true,
-            Tag::class => true,
-            Tags::class => true,
-            User::class => true,
-            Users::class => true,
-        ];
-
-        foreach (get_declared_classes() as $class) {
-            if (is_subclass_of($class, Component::class)) {
-                $classes[$class] = true;
-            }
-        }
-
-        ksort($classes);
         return array_keys($classes);
     }
 
     /**
-     * Returns the short description from a given PHPDoc comment.
+     * Returns the PHP files in `Events` directories under the given directory, relative to it.
      *
-     * @param string $doc
-     * @return string|null
+     * @return list<string>
      */
-    private static function _shortDesc(string $doc): ?string
+    private function eventFiles(string $dir): array
     {
-        foreach (preg_split("/\r\n|\n|\r/", $doc) as $line) {
-            $line = preg_replace('/^[\/\*\s]*(?:@event\s+[^\s]+\s+)?/', '', $line);
-            if (strpos($line, '@') === 0) {
+        $dir = realpath($dir);
+
+        if ($dir === false || ! is_dir($dir)) {
+            return [];
+        }
+
+        $files = [];
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS));
+
+        foreach ($iterator as $file) {
+            if ($file->isFile() && $file->getExtension() === 'php' && basename($file->getPath()) === 'Events') {
+                $files[] = str_replace(DIRECTORY_SEPARATOR, '/', substr($file->getPathname(), strlen($dir) + 1));
+            }
+        }
+
+        return $files;
+    }
+
+    private function installedTime(): int
+    {
+        foreach (ClassLoader::getRegisteredLoaders() as $vendorDir => $loader) {
+            if (is_file($file = "$vendorDir/composer/installed.php")) {
+                return (int) filemtime($file);
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Returns the first line of a doc comment’s description.
+     */
+    private static function shortDescription(string $doc): ?string
+    {
+        foreach (preg_split('/\R/', $doc) ?: [] as $line) {
+            $line = trim((string) preg_replace('/^[\/\*\s]*(?:@event\s+\S+\s+)?/', '', $line));
+
+            if (str_starts_with($line, '@')) {
                 return null;
             }
-            if ($line) {
+
+            if ($line !== '') {
                 return $line;
             }
         }

@@ -1,22 +1,24 @@
 <?php
 
-namespace craft\webhooks\filters;
+declare(strict_types=1);
 
-use Craft;
-use craft\base\ElementInterface;
-use craft\helpers\ElementHelper;
+namespace CraftCms\Webhooks\Filters;
+
+use CraftCms\Cms\Element\Contracts\ElementInterface;
+use CraftCms\Cms\Element\ElementHelper;
+
+use function CraftCms\Cms\t;
 
 /**
- * Filters events based on whether the element is a revision
+ * Filters events based on whether the element is a revision.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @since 2.1.0
  */
 class RevisionFilter extends BaseElementFilter
 {
     public static function displayName(): string
     {
-        return Craft::t('webhooks', 'Element is a revision');
+        return t('Element is a revision', category: 'webhooks');
     }
 
     public static function excludes(): array
@@ -30,7 +32,6 @@ class RevisionFilter extends BaseElementFilter
 
     protected static function checkElement(ElementInterface $element, bool $value): bool
     {
-        $root = ElementHelper::rootElement($element);
-        return $root->getIsRevision() === $value;
+        return ElementHelper::rootElement($element)->getIsRevision() === $value;
     }
 }

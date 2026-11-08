@@ -1,33 +1,37 @@
 <?php
 
-namespace craft\webhooks\filters;
+declare(strict_types=1);
 
-use craft\base\ComponentInterface;
-use yii\base\Event;
+namespace CraftCms\Webhooks\Filters;
+
+use CraftCms\Webhooks\Events\FilterTypesResolving;
 
 /**
- * Filter Interface
+ * A check that can determine whether a webhook should be executed.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
+ * Register custom filter types by listening for {@see FilterTypesResolving}.
+ *
  * @since 2.1.0
  */
-interface FilterInterface extends ComponentInterface
+interface FilterInterface
 {
     /**
-     * Returns whether the filter should be shown for the given class and event.
-     *
-     * @param string $class
-     * @param string $event
-     * @return bool
+     * Returns the filter’s display name.
      */
-    public static function show(string $class, string $event): bool;
+    public static function displayName(): string;
+
+    /**
+     * Returns whether the filter should be shown for the given event class.
+     *
+     * @param  class-string  $eventClass
+     */
+    public static function show(string $eventClass): bool;
 
     /**
      * Returns whether the event passes the filter.
      *
-     * @param Event $event The event being filtered
-     * @param bool $value The filter value
-     * @return bool
+     * @param  object  $event  The event being filtered
+     * @param  bool  $value  The filter value
      */
-    public static function check(Event $event, bool $value): bool;
+    public static function check(object $event, bool $value): bool;
 }

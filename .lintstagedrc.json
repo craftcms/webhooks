@@ -1,7 +1,0 @@
-{
-  "**/*.php": [
-    "./vendor/bin/ecs check --ansi --fix",
-    "./vendor/bin/phpstan analyse"
-  ],
-  "*": "prettier --ignore-unknown --write"
-}

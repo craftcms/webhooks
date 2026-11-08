@@ -1,252 +1,86 @@
 <?php
 
-namespace craft\webhooks;
+declare(strict_types=1);
 
-use Craft;
-use craft\base\Model;
-use craft\helpers\App;
-use craft\validators\UniqueValidator;
-use craft\webhooks\records\Webhook as WebhookRecord;
-use CraftCms\UrlValidator\UrlValidationException;
-use ReflectionClass;
-use Twig\Error\Error as TwigError;
-use yii\validators\Validator;
+namespace CraftCms\Webhooks\Models;
+
+use CraftCms\Cms\Shared\BaseModel;
+use CraftCms\Cms\Shared\Concerns\HasUid;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Override;
 
 /**
- * Webhook model
+ * A webhook: the event that triggers it, and the request it sends.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
+ * @property int $id
+ * @property int|null $groupId
+ * @property bool $enabled
+ * @property string $name
+ * @property class-string|null $class The class the event’s subject (e.g. its element) must be an instance of
+ * @property string $event The event class that triggers the webhook
+ * @property array<class-string, bool> $filters
+ * @property string|null $debounceKeyFormat
+ * @property string $method
+ * @property string $url
+ * @property list<array{name: string, value: string}> $headers
+ * @property string|null $userAttributes
+ * @property string|null $senderAttributes
+ * @property string|null $eventAttributes
+ * @property string|null $payloadTemplate
+ * @property-read Group|null $group
+ *
  * @since 1.0.0
  */
-class Webhook extends Model
+class Webhook extends BaseModel
 {
-    /**
-     * @var int|null
-     */
-    public ?int $id = null;
+    use HasUid;
 
-    /**
-     * @var int|null
-     */
-    public ?int $groupId = null;
+    #[Override]
+    protected $table = 'webhooks';
 
-    /**
-     * @var bool
-     */
-    public bool $enabled = true;
+    #[Override]
+    protected $attributes = [
+        'enabled' => true,
+        'method' => 'post',
+    ];
 
-    /**
-     * @var string|null
-     */
-    public ?string $name = null;
-
-    /**
-     * @var string|null
-     */
-    public ?string $class = null;
-
-    /**
-     * @var string|null
-     */
-    public ?string $event = null;
-
-    /**
-     * @var array
-     */
-    public array $filters = [];
-
-    /**
-     * @var string|null
-     */
-    public ?string $debounceKeyFormat = null;
-
-    /**
-     * @var string
-     */
-    public string $method = 'post';
-
-    /**
-     * @var string|null
-     */
-    public ?string $url = null;
-
-    /**
-     * @var array
-     */
-    public array $headers = [];
-
-    /**
-     * @var string|null
-     */
-    public ?string $userAttributes = null;
-
-    /**
-     * @var string|null
-     */
-    public ?string $senderAttributes = null;
-
-    /**
-     * @var string|null
-     */
-    public ?string $eventAttributes = null;
-
-    /**
-     * @var string|null
-     */
-    public ?string $payloadTemplate = null;
-
-    /**
-     * @inheritdoc
-     */
-    public function attributeLabels(): array
+    #[Override]
+    protected function casts(): array
     {
         return [
-            'class' => Craft::t('webhooks', 'Sender Class'),
-            'event' => Craft::t('webhooks', 'Event Name'),
-            'name' => Craft::t('webhooks', 'Name'),
-            'url' => Craft::t('webhooks', 'URL'),
+            'groupId' => 'integer',
+            'enabled' => 'boolean',
+            'filters' => 'array',
+            'headers' => 'array',
         ];
     }
 
-    /**
-     * @inheritdoc
-     */
-    protected function defineRules(): array
+    /** @return BelongsTo<Group, $this> */
+    public function group(): BelongsTo
     {
-        return [
-            [['name', 'event', 'url'], 'trim'],
-            [
-                ['class'],
-                'filter',
-                'filter' => function(string $value) {
-                    return trim($value, ' \\');
-                }, 'skipOnArray' => true,
-            ],
-            [['name', 'class', 'event', 'method', 'url'], 'required'],
-            [['name'], UniqueValidator::class, 'targetClass' => WebhookRecord::class],
-            [['groupId'], 'number'],
-            [['enabled'], 'boolean'],
-            [['method'], 'in', 'range' => ['get', 'post', 'put']],
-            [
-                ['url'],
-                function(string $attribute, array $params = null, Validator $validator) {
-                    // if it contains env var - validation should allow it; we'll check it again before making a request
-                    $url = App::parseEnv($this->url);
-                    if ($url !== $this->url) {
-                        return;
-                    }
+        return $this->belongsTo(Group::class, 'groupId');
+    }
 
-                    // if it contains a template - validation should allow it; we'll check it again before making a request
-                    if (str_contains($this->url, '{')) {
-                        return;
-                    }
+    /** @return HasMany<WebhookRequest, $this> */
+    public function requests(): HasMany
+    {
+        return $this->hasMany(WebhookRequest::class, 'webhookId');
+    }
 
-                    // otherwise - validate with UrlValidator
-                    try {
-                        // validate the URL
-                        Plugin::getInstance()->getUrlValidator()->validate($this->url);
-                    } catch (UrlValidationException $e) {
-                        // The URL, or an IP it resolves to, is disallowed.
-                        $validator->addError($this, $attribute, Craft::t('webhooks', 'Invalid URL. {reason}', [
-                            'reason' => $e->getMessage(),
-                        ]));
-                    }
-                },
-            ],
-            [
-                ['class'],
-                function(string $attribute, array $params = null, Validator $validator) {
-                    if (!class_exists($this->class)) {
-                        $validator->addError($this, $attribute, Craft::t('webhooks', 'Class {value} doesn’t exist.'));
-                    }
-                },
-            ],
-            [
-                ['event'],
-                function(string $attribute, array $params = null, Validator $validator) {
-                    if (class_exists($this->class)) {
-                        $foundEvent = false;
-                        foreach ((new ReflectionClass($this->class))->getConstants() as $name => $value) {
-                            if (strpos($name, 'EVENT_') === 0) {
-                                if ($value === $this->event) {
-                                    $foundEvent = true;
-                                    break;
-                                }
-                                if ($name === $this->event) {
-                                    $this->event = $value;
-                                    $foundEvent = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!$foundEvent) {
-                            $validator->addError($this, $attribute, Craft::t('webhooks', 'Class {class} doesn’t appear to have a {value} event.', ['class' => $this->class]));
-                        }
-                    }
-                },
-            ],
-            [['debounceKeyFormat'], 'string'],
-            [
-                ['filters'],
-                function() {
-                    foreach ($this->filters as $class => &$value) {
-                        if ($value === 'yes') {
-                            $value = true;
-                        } elseif ($value === 'no') {
-                            $value = false;
-                        }
-                        if (!is_bool($value)) {
-                            unset($this->filters[$class]);
-                        }
-                    }
-                },
-            ],
-            [
-                ['headers'],
-                function() {
-                    $this->headers = $this->headers ? array_values($this->headers) : [];
-                },
-            ],
-            [['userAttributes', 'senderAttributes'], 'validateAttributeList'],
-            [['eventAttributes'], 'validateAttributeList', 'params' => ['regex' => '/^[a-z]\w*\.[a-z]\w*(?:\.[a-z]\w*)*$/i']],
-            [['payloadTemplate'], 'validatePayloadTemplate'],
-        ];
+    /** @param Builder<self> $query */
+    public function scopeEnabled(Builder $query): void
+    {
+        $query->where('enabled', true);
     }
 
     /**
-     * @param string $attribute
-     * @param array|null $params
-     * @param Validator $validator
+     * Whether the webhook sends a request body.
      */
-    public function validateAttributeList(string $attribute, ?array $params, Validator $validator)
+    public function hasBody(): bool
     {
-        $regex = $params['regex'] ?? '/^[a-z]\w*(?:\.[a-z]\w*)*$/i';
-
-        $attributes = array_filter(array_map('trim', $this->_splitAttributes($this->$attribute)));
-        $this->$attribute = implode("\n", $attributes);
-
-        foreach ($attributes as $attr) {
-            if (!preg_match($regex, $attr)) {
-                $validator->addError($this, $attribute, Craft::t('webhooks', '{value} isn’t a valid attribute.'), ['value' => $attr]);
-            }
-        }
-    }
-
-    /**
-     * Validates the JSON payload template.
-     *
-     * @param string $attribute
-     * @param array|null $params
-     * @param Validator $validator
-     */
-    public function validatePayloadTemplate(string $attribute, array $params = null, Validator $validator)
-    {
-        try {
-            Craft::$app->getView()->getTwig()->createTemplate($this->payloadTemplate);
-        } catch (TwigError $e) {
-            $message = preg_replace('/ in "__string_template__\w+"/', '', $e->getMessage());
-            $validator->addError($this, $attribute, $message);
-        }
+        return in_array($this->method, ['post', 'put'], true);
     }
 
     /**
@@ -254,7 +88,7 @@ class Webhook extends Model
      */
     public function getUserAttributes(): array
     {
-        return $this->_splitAttributes($this->userAttributes);
+        return self::splitAttributes($this->userAttributes);
     }
 
     /**
@@ -262,29 +96,31 @@ class Webhook extends Model
      */
     public function getSenderAttributes(): array
     {
-        return $this->_splitAttributes($this->senderAttributes);
+        return self::splitAttributes($this->senderAttributes);
     }
 
     /**
-     * @return array[]
+     * Returns the extra event attributes, indexed by the event property they belong to.
+     *
+     * @return array<string, string[]>
      */
     public function getEventAttributes(): array
     {
-        $split = $this->_splitAttributes($this->eventAttributes);
         $attributes = [];
-        foreach ($split as $attribute) {
+
+        foreach (self::splitAttributes($this->eventAttributes) as $attribute) {
             [$property, $attribute] = explode('.', $attribute, 2);
-            $attributes[$property][] = $$attribute;
+            $attributes[$property][] = $attribute;
         }
+
         return $attributes;
     }
 
     /**
-     * @param string|null $attributes
      * @return string[]
      */
-    private function _splitAttributes(string $attributes = null): array
+    public static function splitAttributes(?string $attributes): array
     {
-        return array_filter(preg_split('/[\r\n]+/', $attributes ?? ''));
+        return array_values(array_filter(array_map('trim', preg_split('/[\r\n]+/', $attributes ?? '') ?: [])));
     }
 }
