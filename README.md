@@ -200,30 +200,24 @@ That field supports Twig, so you can make this dynamic. An `event` variable will
 
 ```twig
 {% set entry = event.sender %}
-{{
-  {
-    time: now|date('c'),
-    user: currentUser.username ?? null,
-    name: event.name,
-    entry: {
-      id: entry.id,
-      title: entry.title,
-      slug: entry.slug,
-      isNew: event.isNew
-    }
-  }|json_encode|raw
-}}
+{
+  "time": "{{ now|date('c') }}",
+  "name": "{{ event.name|e('js') }}",
+  "entry": {
+    "id": {{ entry.id ?? 'null' }},
+    "title": "{{ entry.title|e('js') }}",
+    "slug": "{{ entry.slug|e('js') }}",
+    "isNew": {{ event.isNew ? 'true' : 'false' }}
+  }
+}
 ```
 
 If the output is valid JSON, then webhook requests will be sent with an `application/json` content type.
 
-Craft renders payload templates in the Twig sandbox, which only allows some tags, filters and functions. The sandbox doesn’t allow the `json_encode` filter by default, so allow it in `config/craft/twig-sandbox.php` to use templates like this one:
+Craft renders payload templates in the Twig sandbox, which only allows some tags, filters and functions. Escape each string value with `|e('js')`, so quotes and line breaks don’t break the JSON, and output `null` for missing numbers.
 
-```php
-return [
-    'allowedFilters' => ['json_encode'],
-];
-```
+> [!WARNING]
+> Don’t add `json_encode` to the sandbox’s `allowedFilters`. It can output properties of objects, such as element queries, that the sandbox otherwise hides.
 
 ### Toggling Webhooks
 

@@ -15,7 +15,7 @@ Webhooks 4.0 is a native Craft 6 plugin. This guide lists what changed from 3.x 
 2. Update the plugin: `composer require craftcms/webhooks:^4.0`.
 3. Run `php artisan craft:up`. A migration converts your webhooks to Craft 6 events (see [Database and migrations](#database-and-migrations)).
 4. Move `config/webhooks.php` to `config/craft/webhooks.php`, or run `php artisan vendor:publish --tag=webhooks` to create a new one.
-5. If a payload template uses `json_encode`, allow it in the Twig sandbox, and check templates for other filters and functions the sandbox doesn’t allow (see [Templates and Twig](#templates-and-twig)).
+5. Rewrite payload templates that use `json_encode`, and check templates for other filters and functions the sandbox doesn’t allow (see [Templates and Twig](#templates-and-twig)).
 6. Check that a queue worker is running (`php artisan queue:work`). Webhook requests are sent by queue jobs.
 7. Review the webhooks that the migration disabled, and update anything that reads webhook payloads.
 
@@ -56,13 +56,16 @@ Element class names in `senderClass` and `sender` also changed, such as `craft\e
 
 URL, header, debounce key and payload templates still get an `event` variable. It’s now an array with the event’s public properties, plus `name` (the event class’s short name) and `sender` (the subject). `event.sender.id`, `event.sender.title` and `event.isNew` work as before.
 
-Craft 6 always renders these templates in the Twig sandbox, and the `enableTwigSandbox` setting was removed. The sandbox only allows the tags, filters and functions listed in Craft’s `twig-sandbox` config, so templates that worked on Craft 5 can fail. For example, it doesn’t allow the `json_encode` and `atom` filters or the `className()` function. Use `now|date('c')` instead of `now|atom`, and allow `json_encode` in `config/craft/twig-sandbox.php`:
+Craft 6 always renders these templates in the Twig sandbox, and the `enableTwigSandbox` setting was removed. The sandbox only allows the tags, filters and functions listed in Craft’s `twig-sandbox` config, so templates that worked on Craft 5 can fail. For example, it doesn’t allow the `json_encode` and `atom` filters or the `className()` function. Use `now|date('c')` instead of `now|atom`, and write JSON payloads out, escaping each string value with `|e('js')`:
 
-```php
-return [
-    'allowedFilters' => ['json_encode'],
-];
+```twig
+{
+  "id": {{ event.sender.id ?? 'null' }},
+  "title": "{{ event.sender.title|e('js') }}"
+}
 ```
+
+Don’t allow `json_encode` in `config/craft/twig-sandbox.php`. It can output properties of objects, such as element queries, that the sandbox otherwise hides.
 
 Saving a webhook now shows an error if its payload template uses a tag, filter or function that the sandbox doesn’t allow.
 
