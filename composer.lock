@@ -424,12 +424,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/craftcms/cms.git",
-                "reference": "fd1763ffdebd6abeb0d923fd6eec0b7884054378"
+                "reference": "c48add6919dd1a5c8b7facd9f34678aa62af623f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/craftcms/cms/zipball/fd1763ffdebd6abeb0d923fd6eec0b7884054378",
-                "reference": "fd1763ffdebd6abeb0d923fd6eec0b7884054378",
+                "url": "https://api.github.com/repos/craftcms/cms/zipball/c48add6919dd1a5c8b7facd9f34678aa62af623f",
+                "reference": "c48add6919dd1a5c8b7facd9f34678aa62af623f",
                 "shasum": ""
             },
             "require": {
@@ -615,8 +615,8 @@
                 "rss": "https://github.com/craftcms/cms/releases.atom",
                 "source": "https://github.com/craftcms/cms"
             },
-            "time": "2026-11-08T15:51:44+00:00",
-            "published-time": "2026-11-08T15:52:37+00:00"
+            "time": "2026-11-08T16:35:23+00:00",
+            "published-time": "2026-11-08T16:36:18+00:00"
         },
         {
             "name": "craftcms/cms-assets",
