@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace CraftCms\Webhooks\Tests;
 
 use CraftCms\Cms\Plugin\Testing\PluginTestCase;
-use CraftCms\Cms\User\Models\User as UserModel;
 use CraftCms\UrlValidator\UrlValidator;
 use CraftCms\Webhooks\Settings;
 use CraftCms\Webhooks\Webhooks;
@@ -48,9 +47,6 @@ abstract class TestCase extends PluginTestCase
     protected function defineEnvironment($app): void
     {
         parent::defineEnvironment($app);
-
-        // Testbench’s default user model can’t receive the notifications that control panel pages show
-        $app['config']->set('auth.providers.users.model', UserModel::class);
 
         $app['config']->set('craft.webhooks', [
             'maxAttempts' => 3,

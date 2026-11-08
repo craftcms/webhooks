@@ -70,7 +70,7 @@ it('renders payload templates and headers, and parses environment variables when
             {% set entry = event.sender %}
             {{
               {
-                time: 'now'|date('c'),
+                time: now|date('c'),
                 user: currentUser.username ?? null,
                 name: event.name,
                 entry: {

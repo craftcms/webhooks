@@ -202,7 +202,7 @@ That field supports Twig, so you can make this dynamic. An `event` variable will
 {% set entry = event.sender %}
 {{
   {
-    time: 'now'|date('c'),
+    time: now|date('c'),
     user: currentUser.username ?? null,
     name: event.name,
     entry: {

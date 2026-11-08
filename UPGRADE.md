@@ -56,7 +56,7 @@ Element class names in `senderClass` and `sender` also changed, such as `craft\e
 
 URL, header, debounce key and payload templates still get an `event` variable. It’s now an array with the event’s public properties, plus `name` (the event class’s short name) and `sender` (the subject). `event.sender.id`, `event.sender.title` and `event.isNew` work as before.
 
-Craft 6 always renders these templates in the Twig sandbox, and the `enableTwigSandbox` setting was removed. The sandbox only allows the tags, filters and functions listed in Craft’s `twig-sandbox` config, so templates that worked on Craft 5 can fail. For example, it doesn’t allow the `json_encode` and `atom` filters or the `className()` function. Use `'now'|date('c')` instead of `now|atom`, and allow `json_encode` in `config/craft/twig-sandbox.php`:
+Craft 6 always renders these templates in the Twig sandbox, and the `enableTwigSandbox` setting was removed. The sandbox only allows the tags, filters and functions listed in Craft’s `twig-sandbox` config, so templates that worked on Craft 5 can fail. For example, it doesn’t allow the `json_encode` and `atom` filters or the `className()` function. Use `now|date('c')` instead of `now|atom`, and allow `json_encode` in `config/craft/twig-sandbox.php`:
 
 ```php
 return [
