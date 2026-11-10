@@ -14,6 +14,7 @@
     classVal: null,
     eventVal: null,
     filterTimeout: null,
+    eventSuggestionsTimeout: null,
 
     init: function () {
       this.$nameInput = $('#name');
@@ -79,6 +80,39 @@
         clearTimeout(this.filterTimeout);
         this.filterTimeout = setTimeout(this.updateFilters.bind(this), 500);
       }
+      if (classChanged) {
+        clearTimeout(this.eventSuggestionsTimeout);
+        this.eventSuggestionsTimeout = setTimeout(
+          this.updateEventSuggestions.bind(this),
+          500
+        );
+      }
+    },
+
+    updateEventSuggestions: function () {
+      // Craft 6 renders the Event Name field as a <craft-combobox>, which only lists the options it’s given.
+      // (Craft 4 and 5 render a Vue autosuggest that fetches them itself.)
+      const combobox = this.$eventInput.get(0);
+      if (!combobox || combobox.tagName !== 'CRAFT-COMBOBOX') {
+        return;
+      }
+      const senderClass = this.classVal;
+      if (!senderClass) {
+        combobox.options = [];
+        return;
+      }
+      Craft.sendActionRequest('POST', 'webhooks/webhooks/event-suggestions', {
+        data: {senderClass},
+      }).then((response) => {
+        if (senderClass !== this.classVal) {
+          return;
+        }
+        combobox.options = response.data.events.map((event) => ({
+          label: event.name,
+          value: event.name,
+          data: {hint: event.hint, keywords: event.hint},
+        }));
+      });
     },
 
     updateFilters: function () {

@@ -23,6 +23,7 @@
 
 #filters th {
   font-weight: normal;
+  text-align: start;
 }
 
 #filters .btngroup:focus {
@@ -63,4 +64,18 @@
 #filter-pane p.hidden,
 #filter-spinner.hidden {
   display: none;
+}
+
+#filters .btngroup {
+  display: flex;
+}
+
+/* Craft 6 doesn’t style legacy .status dots */
+.cp-legacy-screen #filters .filter-ignore .status {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.6;
 }

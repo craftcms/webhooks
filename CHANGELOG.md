@@ -10,9 +10,11 @@
 - Fixed an error that occurred when a webhook’s URL, headers, debounce key format, or payload template referenced the event on Craft 6.
 - Fixed a bug where webhooks triggered from console commands and queue jobs were never sent on Craft 6.
 - Fixed a bug where default payloads contained raw date objects, and ignored “Extra Sender Attributes”, on Craft 6.
-- Fixed a bug where the Edit Webhook page’s event suggestions and event filters didn’t work on Craft 6.
+- Fixed a bug where the Edit Webhook page’s event filters didn’t work, and the Sender Class and Event Name fields didn’t list any suggestions, on Craft 6.
+- Fixed a bug where the Edit Webhook page’s event filter buttons were misaligned, and two of them had no icon, on Craft 6.
 - Fixed a bug where webhooks couldn’t be enabled or disabled from the Webhooks index page on Craft 6.
 - Fixed a bug where request details couldn’t be viewed from the Activity page on Craft 6.
+- Fixed a bug where request details on the Activity page were cut off, and their “Redeliver” and “Send now” buttons didn’t work, on Craft 6.
 
 ## 3.4.0.1 - 2026-10-11
 

@@ -11,3 +11,42 @@
   max-height: 500px;
   overflow: auto;
 }
+
+/* Craft 6 slideouts have no padding, and don’t style the legacy .meta layout */
+.cp-legacy-screen .webhook-activity-slideout {
+  padding: var(--c-spacing-lg);
+}
+
+.cp-legacy-screen .webhook-activity-slideout .meta {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--c-spacing-sm) var(--c-spacing-lg);
+  align-items: center;
+  margin: 0;
+}
+
+.cp-legacy-screen .webhook-activity-slideout .meta .data {
+  display: contents;
+}
+
+.cp-legacy-screen .webhook-activity-slideout .meta .heading {
+  font-weight: 700;
+}
+
+.cp-legacy-screen .webhook-activity-slideout .meta .value {
+  overflow-wrap: anywhere;
+}
+
+.cp-legacy-screen .webhook-activity-slideout hr {
+  margin-block: var(--c-spacing-lg);
+}
+
+.cp-legacy-screen .webhook-activity-slideout h4 {
+  margin-block: var(--c-spacing-lg) var(--c-spacing-sm);
+}
+
+.cp-legacy-screen .webhook-activity-slideout .pane {
+  padding: var(--c-spacing-md);
+  border-radius: var(--c-radius-sm);
+  background-color: var(--c-color-neutral-fill-quiet);
+}

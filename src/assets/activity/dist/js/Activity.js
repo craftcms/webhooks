@@ -35,7 +35,9 @@
   });
 
   function initSlideout(slideout, requestId) {
-    const $sendBtn = slideout.$container.find('.send-btn');
+    // Craft 6 slideouts expose their container as a plain element
+    const $container = slideout.$container || $(slideout.container);
+    const $sendBtn = $container.find('.send-btn');
     $sendBtn.on('click', function () {
       if (!$sendBtn.hasClass('disabled')) {
         $sendBtn.addClass('disabled');
@@ -48,7 +50,7 @@
           function (response, textStatus) {
             $spinner.addClass('hidden');
             if (textStatus === 'success') {
-              slideout.$container.html(response.html);
+              $container.html(response.html);
               initSlideout(slideout, requestId);
             }
           }
