@@ -7,7 +7,11 @@
     },
   });
 
-  Garnish.$doc.ready(function () {
+  // Craft 6 bridged screens mount their markup after document ready, and provide Craft.whenReady() for that
+  const whenReady =
+    Craft.whenReady || ((callback) => Garnish.$doc.ready(callback));
+
+  whenReady(function () {
     $('#activity a').on('click', function () {
       var $a = $(this);
       var requestId = $a.data('id');
@@ -31,7 +35,9 @@
   });
 
   function initSlideout(slideout, requestId) {
-    const $sendBtn = slideout.$container.find('.send-btn');
+    // Craft 6 slideouts expose their container as a plain element
+    const $container = slideout.$container || $(slideout.container);
+    const $sendBtn = $container.find('.send-btn');
     $sendBtn.on('click', function () {
       if (!$sendBtn.hasClass('disabled')) {
         $sendBtn.addClass('disabled');
@@ -44,7 +50,7 @@
           function (response, textStatus) {
             $spinner.addClass('hidden');
             if (textStatus === 'success') {
-              slideout.$container.html(response.html);
+              $container.html(response.html);
               initSlideout(slideout, requestId);
             }
           }

@@ -49,6 +49,7 @@
     class: 'code ltr',
     placeholder: 'craft\\elements\\Entry',
     value: webhook.class,
+    suggestions: [{data: classSuggestions}],
     errors: webhook.getErrors('class')
   }, with_context = false) %}
   {{ forms.field({
@@ -64,6 +65,7 @@
     class: 'code ltr',
     placeholder: 'afterSave',
     value: webhook.event,
+    suggestions: [{data: eventSuggestions}],
     errors: webhook.getErrors('event')
   }, with_context = false) %}
   {{ forms.field({
@@ -91,7 +93,7 @@
               <div class="btngroup" tabindex="0">
                 <div class="btn filter-no{% if filter.enabled and not filter.value %} active{% endif %}" data-icon="remove" title="{{ 'Prevents webhook execution.'|t('webhooks') }}"></div>
                 <div class="btn filter-ignore{% if not filter.enabled %} active{% endif %}" title="{{ 'No impact on webhook execution.'|t('webhooks') }}"><div class="status"></div></div>
-                <div class="btn filter-yes{% if filter.enabled and filter.value %} active{% endif %}" data-icon="checkmark" title="{{ 'Required for webhook execution.'|t('webhooks') }}"></div>
+                <div class="btn filter-yes{% if filter.enabled and filter.value %} active{% endif %}" data-icon="check" title="{{ 'Required for webhook execution.'|t('webhooks') }}"></div>
               </div>
               <input type="hidden" name="filters[{{ filter.class }}]"{% if filter.enabled %} value="{{ filter.value ? 'yes' : 'no' }}"{% endif %}>
             </td>

@@ -23,6 +23,7 @@
 
 #filters th {
   font-weight: normal;
+  text-align: start;
 }
 
 #filters .btngroup:focus {
@@ -57,4 +58,24 @@
   height: 100%;
   background: rgba(255, 255, 255, 0.85);
   z-index: 1;
+}
+
+/* Craft 6’s .hidden utility isn’t !important, so it needs to beat the ID selectors above */
+#filter-pane p.hidden,
+#filter-spinner.hidden {
+  display: none;
+}
+
+#filters .btngroup {
+  display: flex;
+}
+
+/* Craft 6 doesn’t style legacy .status dots */
+.cp-legacy-screen #filters .filter-ignore .status {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.6;
 }

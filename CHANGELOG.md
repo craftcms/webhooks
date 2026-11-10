@@ -1,5 +1,21 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+- Added Craft CMS 6 compatibility, via the `craftcms/yii2-adapter` package.
+- Webhook URLs can now be longer than 255 characters. ([#95](https://github.com/craftcms/webhooks/pull/95))
+- Installing the plugin now archives existing Webhooks tables, renaming them with an `_old` suffix, instead of dropping them. ([#98](https://github.com/craftcms/webhooks/pull/98))
+- Webhooks whose templates can’t be rendered are now skipped and logged, rather than causing an error in the action that triggered them.
+- The README’s payload template example no longer uses `json_encode`, which Craft’s Twig sandbox doesn’t allow. Payload templates that use it need to be rewritten on Craft 6.
+- Fixed an error that occurred when a webhook’s URL, headers, debounce key format, or payload template referenced the event on Craft 6.
+- Fixed a bug where webhooks triggered from console commands and queue jobs were never sent on Craft 6.
+- Fixed a bug where default payloads contained raw date objects, and ignored “Extra Sender Attributes”, on Craft 6.
+- Fixed a bug where the Edit Webhook page’s event filters didn’t work, and the Sender Class and Event Name fields didn’t list any suggestions, on Craft 6.
+- Fixed a bug where the Edit Webhook page’s event filter buttons were misaligned, and two of them had no icon, on Craft 6.
+- Fixed a bug where webhooks couldn’t be enabled or disabled from the Webhooks index page on Craft 6.
+- Fixed a bug where request details couldn’t be viewed from the Activity page on Craft 6.
+- Fixed a bug where request details on the Activity page were cut off, and their “Redeliver” and “Send now” buttons didn’t work, on Craft 6.
+
 ## 3.4.0.1 - 2026-10-11
 
 - Updated incorrect GHSA link.

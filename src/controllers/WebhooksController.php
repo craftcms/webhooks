@@ -97,12 +97,18 @@ class WebhooksController extends BaseController
             return $config;
         }, Plugin::getInstance()->getAllFilters());
 
+        // Craft 6 renders autosuggest inputs as comboboxes that only show the suggestions passed in
+        $classSuggestions = WebhookHelper::classSuggestions();
+        $eventSuggestions = $webhook->class ? WebhookHelper::eventSuggestions($webhook->class) : [];
+
         Craft::$app->getView()->registerAssetBundle(EditAsset::class);
 
         return $this->renderTemplate('webhooks/_manage/edit', compact(
             'groupOptions',
             'webhook',
             'allFilters',
+            'classSuggestions',
+            'eventSuggestions',
             'title',
             'crumbs'
         ));

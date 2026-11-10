@@ -17,10 +17,8 @@ class Install extends Migration
      */
     public function safeUp(): bool
     {
-        // Cleanup
-        $this->_dropTables();
-
         // Create the webhookgroups table
+        $this->archiveTableIfExists('{{%webhookgroups}}');
         $this->createTable('{{%webhookgroups}}', [
             'id' => $this->primaryKey(),
             'name' => $this->string()->notNull(),
@@ -30,6 +28,7 @@ class Install extends Migration
         ]);
 
         // Create the webhooks table
+        $this->archiveTableIfExists('{{%webhooks}}');
         $this->createTable('{{%webhooks}}', [
             'id' => $this->primaryKey(),
             'groupId' => $this->integer()->null(),
@@ -39,7 +38,7 @@ class Install extends Migration
             'filters' => $this->text(),
             'debounceKeyFormat' => $this->string(),
             'method' => $this->string(10)->notNull(),
-            'url' => $this->string()->notNull(),
+            'url' => $this->mediumText()->notNull(),
             'headers' => $this->text(),
             'userAttributes' => $this->text(),
             'senderAttributes' => $this->text(),
@@ -52,6 +51,7 @@ class Install extends Migration
         ]);
 
         // Create the webhookrequests table
+        $this->archiveTableIfExists('{{%webhookrequests}}');
         $this->createTable('{{%webhookrequests}}', [
             'id' => $this->primaryKey(),
             'webhookId' => $this->integer(),
@@ -59,7 +59,7 @@ class Install extends Migration
             'status' => $this->string()->notNull(),
             'attempts' => $this->tinyInteger(),
             'method' => $this->string(),
-            'url' => $this->string(),
+            'url' => $this->mediumText(),
             'requestHeaders' => $this->text(),
             'requestBody' => $this->mediumText(),
             'responseStatus' => $this->smallInteger(),
@@ -87,14 +87,10 @@ class Install extends Migration
      */
     public function safeDown(): bool
     {
-        $this->_dropTables();
-        return true;
-    }
-
-    private function _dropTables(): void
-    {
         $this->dropTableIfExists('{{%webhookrequests}}');
         $this->dropTableIfExists('{{%webhooks}}');
         $this->dropTableIfExists('{{%webhookgroups}}');
+
+        return true;
     }
 }

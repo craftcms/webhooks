@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d31a5a718eec36cd5142dcc66face20e",
+    "content-hash": "6ebedb3272752634ee70726cc3c7927c",
     "packages": [
         {
             "name": "cebe/markdown",
@@ -970,16 +970,16 @@
         },
         {
             "name": "craftcms/url-validator",
-            "version": "1.1.0",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/craftcms/url-validator.git",
-                "reference": "3918c21317a856d6313b3fbf40d70ce013cdd715"
+                "reference": "1e6a935fff86171e3ca8086b5c547071e5ceb3c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/craftcms/url-validator/zipball/3918c21317a856d6313b3fbf40d70ce013cdd715",
-                "reference": "3918c21317a856d6313b3fbf40d70ce013cdd715",
+                "url": "https://api.github.com/repos/craftcms/url-validator/zipball/1e6a935fff86171e3ca8086b5c547071e5ceb3c2",
+                "reference": "1e6a935fff86171e3ca8086b5c547071e5ceb3c2",
                 "shasum": ""
             },
             "require": {
@@ -987,10 +987,14 @@
                 "php": "^8.0.2"
             },
             "require-dev": {
+                "guzzlehttp/guzzle": "^7.0",
                 "laravel/pint": "^1.29",
                 "nunomaduro/collision": "^8.1",
                 "pestphp/pest": "^3.0",
                 "phpstan/phpstan": "^2.0"
+            },
+            "suggest": {
+                "guzzlehttp/guzzle": "Required to use GuzzleMiddleware"
             },
             "type": "library",
             "autoload": {
@@ -1020,9 +1024,10 @@
             ],
             "support": {
                 "issues": "https://github.com/craftcms/url-validator/issues",
-                "source": "https://github.com/craftcms/url-validator/tree/1.1.0"
+                "source": "https://github.com/craftcms/url-validator/tree/1.2.0"
             },
-            "time": "2026-07-06T20:35:29+00:00"
+            "time": "2026-10-09T22:39:23+00:00",
+            "published-time": "2026-10-09T22:40:36+00:00"
         },
         {
             "name": "creocoder/yii2-nested-sets",
@@ -7198,7 +7203,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-09-30T10:16:31+00:00"
+            "time": "2025-09-30T10:16:31+00:00",
+            "published-time": "2025-09-30T10:16:41+00:00"
         },
         {
             "name": "rector/rector",
@@ -7264,12 +7270,12 @@
             "version": "10.3.3",
             "source": {
                 "type": "git",
-                "url": "https://github.com/symplify/easy-coding-standard.git",
+                "url": "https://github.com/ecsphp/ecs.git",
                 "reference": "c93878b3c052321231519b6540e227380f90be17"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symplify/easy-coding-standard/zipball/c93878b3c052321231519b6540e227380f90be17",
+                "url": "https://api.github.com/repos/ecsphp/ecs/zipball/c93878b3c052321231519b6540e227380f90be17",
                 "reference": "c93878b3c052321231519b6540e227380f90be17",
                 "shasum": ""
             },
@@ -7331,5 +7337,5 @@
     "platform-overrides": {
         "php": "8.0.2"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
