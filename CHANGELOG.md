@@ -1,5 +1,9 @@
 # Release Notes for Webhooks for Craft CMS
 
+## 3.5.1 - 2026-11-10
+
+- Webhooks now suggests the `craftcms/yii2-adapter` package in its `composer.json`, so the Plugin Store installs it alongside Webhooks on Craft 6.
+
 ## 3.5.0 - 2026-11-10
 
 - Added Craft CMS 6 compatibility, via the `craftcms/yii2-adapter` package.
