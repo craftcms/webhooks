@@ -30,6 +30,9 @@
     "craftcms/cms": "^4.17.0|^5.9.0|^6.0.0-beta.1",
     "craftcms/url-validator": "^1.2"
   },
+  "suggest": {
+    "craftcms/yii2-adapter": "Required to use Webhooks with Craft CMS 6."
+  },
   "require-dev": {
     "craftcms/ecs": "dev-main",
     "craftcms/phpstan": "dev-main",
