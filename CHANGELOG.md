@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 3.5.0 - 2026-11-10
 
 - Added Craft CMS 6 compatibility, via the `craftcms/yii2-adapter` package.
 - Webhook URLs can now be longer than 255 characters. ([#95](https://github.com/craftcms/webhooks/pull/95))
