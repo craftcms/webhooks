@@ -13,6 +13,7 @@ use CraftCms\Webhooks\Filters\NewElementFilter;
 use CraftCms\Webhooks\Filters\RevisionFilter;
 use CraftCms\Webhooks\Jobs\SendRequest;
 use CraftCms\Webhooks\Models\WebhookRequest;
+use CraftCms\Webhooks\Settings;
 use CraftCms\Webhooks\Tests\TestCase;
 use CraftCms\Webhooks\Webhooks;
 use Illuminate\Http\Client\Request;
@@ -149,6 +150,21 @@ it('blocks requests to private addresses unless their host is allowed', function
     'redirect to a metadata IP' => [TestCase::RECEIVER_URL, 'http://metadata.test/latest/meta-data', false],
     'allowed private host' => ['http://internal.test/hook', null, true],
 ]);
+
+it('reports an invalid allowedPrivateHosts pattern when sending, rather than when Craft boots', function () {
+    Http::fake(['*' => Http::response('ok')]);
+    app(Settings::class)->allowedPrivateHosts = ['foo*'];
+    app()->forgetInstance(Webhooks::class);
+    webhook(['filters' => [RevisionFilter::class => false]]);
+
+    app(Webhooks::class)->registerListeners();
+    newsEntry();
+
+    Http::assertNothingSent();
+    expect(WebhookRequest::query()->sole())
+        ->status->toBe(RequestStatus::Done)
+        ->responseStatus->toBeNull();
+});
 
 it('purges old sent requests during garbage collection', function () {
     $webhooks = app(Webhooks::class);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CraftCms\Webhooks;
 
+use Closure;
 use CraftCms\Cms\Component\Component;
 use CraftCms\Cms\Support\Env;
 use CraftCms\Cms\Support\Facades\Security;
@@ -36,6 +37,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use Throwable;
 
 use function CraftCms\Cms\currentUserElement;
@@ -48,19 +50,28 @@ use function CraftCms\Cms\renderSandboxedString;
  */
 class Webhooks
 {
+    private ?UrlValidator $urlValidator = null;
+
+    /**
+     * @param  Closure(): UrlValidator  $makeUrlValidator  Creates the URL validator. It’s called the first time a URL
+     *                                                     is validated, so an invalid `allowedPrivateHosts` setting
+     *                                                     can’t stop Craft from booting.
+     */
     public function __construct(
         private readonly Settings $settings,
-        private readonly UrlValidator $urlValidator,
+        private readonly Closure $makeUrlValidator,
     ) {}
 
     /**
      * Returns the URL validator used for webhook URLs.
      *
      * Only the hosts listed in the `allowedPrivateHosts` setting can resolve to private IP addresses.
+     *
+     * @throws InvalidArgumentException if an `allowedPrivateHosts` entry isn’t a valid pattern
      */
     public function urlValidator(): UrlValidator
     {
-        return $this->urlValidator;
+        return $this->urlValidator ??= ($this->makeUrlValidator)();
     }
 
     /**
@@ -277,12 +288,12 @@ class Webhooks
                 $response = Http::create($this->settings->guzzleConfig)
                     ->withHeaders($headers)
                     // Validates the URL and every redirect target, and pins them to the validated IPs
-                    ->withMiddleware(GuzzleMiddleware::validateRequests($this->urlValidator))
+                    ->withMiddleware(GuzzleMiddleware::validateRequests($this->urlValidator()))
                     ->send(strtoupper($request->method), (string) Env::parse($request->url), $options);
             } catch (RequestException $e) {
                 $response = $e->response;
                 Log::warning("Unable to send webhook: {$e->getMessage()}");
-            } catch (ConnectionException|TransferException|UrlValidationException $e) {
+            } catch (ConnectionException|TransferException|UrlValidationException|InvalidArgumentException $e) {
                 Log::warning("Unable to send webhook: {$e->getMessage()}");
             }
 

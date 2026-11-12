@@ -10,6 +10,7 @@ use CraftCms\UrlValidator\UrlValidationException;
 use CraftCms\Webhooks\Webhooks;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use InvalidArgumentException;
 use Override;
 use Throwable;
 use Twig\Error\SyntaxError;
@@ -53,7 +54,7 @@ class SaveWebhookRequest extends FormRequest
 
                 try {
                     $webhooks->urlValidator()->validate($value);
-                } catch (UrlValidationException $e) {
+                } catch (UrlValidationException|InvalidArgumentException $e) {
                     $fail(t('Invalid URL. {reason}', ['reason' => $e->getMessage()], 'webhooks'));
                 }
             }],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CraftCms\Webhooks\Tests;
 
+use Closure;
 use CraftCms\Cms\Plugin\Testing\PluginTestCase;
 use CraftCms\UrlValidator\UrlValidator;
 use CraftCms\Webhooks\Settings;
@@ -35,8 +36,8 @@ abstract class TestCase extends PluginTestCase
         );
 
         $this->app->when(Webhooks::class)
-            ->needs(UrlValidator::class)
-            ->give(fn () => new UrlValidator(
+            ->needs(Closure::class)
+            ->give(fn () => fn () => new UrlValidator(
                 fn (string $host) => self::HOSTS[$host] ?? [],
                 ['allowedPrivateHosts' => $this->app->make(Settings::class)->allowedPrivateHosts],
             ));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CraftCms\Webhooks;
 
+use Closure;
 use CraftCms\Cms\Cp\Data\NavItem;
 use CraftCms\Cms\GarbageCollection\Events\RunningGarbageCollection;
 use CraftCms\Cms\Plugin\Plugin as BasePlugin;
@@ -47,8 +48,8 @@ class Plugin extends BasePlugin
         $this->app->singleton(Settings::class, fn () => $this->getSettings());
         $this->app->singleton(Webhooks::class);
         $this->app->when(Webhooks::class)
-            ->needs(UrlValidator::class)
-            ->give(fn () => new UrlValidator(options: [
+            ->needs(Closure::class)
+            ->give(fn () => fn () => new UrlValidator(options: [
                 'allowedPrivateHosts' => $this->getSettings()->allowedPrivateHosts,
             ]));
 
