@@ -264,6 +264,16 @@ readonly class WebhooksController
         $customPayload = (bool) ($values['customPayload'] ?? false);
         $envOrTwig = t('Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.', category: 'webhooks');
 
+        $filterTypes = class_exists($eventClass)
+            ? array_values(array_filter($this->webhooks->filterTypes(), fn (string $class) => $class::show($eventClass)))
+            : [];
+        $excludedFilters = $this->excludedFilters($filterTypes, $values['filters'] ?? []);
+
+        // Excluded filters are reset to “Any”, as they can’t be used alongside the filter that excludes them
+        foreach ($excludedFilters as $class) {
+            $values['filters'][$class] = '';
+        }
+
         $groupOptions = [['label' => t('(Ungrouped)', category: 'webhooks'), 'value' => '']];
 
         foreach (GroupModel::query()->orderBy('name')->get() as $group) {
@@ -291,7 +301,7 @@ readonly class WebhooksController
                     ->placeholder('CraftCms\\Cms\\Entry\\Elements\\Entry')
                     ->clearable(),
             )->instructions(t('If set, the event must carry an object of this class (e.g. the saved element), which is used as the payload’s `sender`.', category: 'webhooks')),
-            $this->filtersNode($eventClass, $values['filters'] ?? []),
+            $this->filtersNode($filterTypes, $excludedFilters),
             Field::make(t('Debounce Key Format', category: 'webhooks'), Text::make('debounceKeyFormat')->monospace())
                 ->instructions(t('Template that defines the webhook’s “debounce key” format. If two webhooks generate the same debounce key, only the latter will be sent.', category: 'webhooks').' '.$envOrTwig),
             Field::make(t('Request Method', category: 'webhooks'), Choice::make('method')->options([
@@ -330,23 +340,31 @@ readonly class WebhooksController
     }
 
     /**
+     * Returns the filters that are excluded by a filter set to “Yes”.
+     *
+     * @param  array<class-string<FilterInterface>>  $types  The filters shown for the event
      * @param  array<string, string>  $values
+     * @return array<class-string<FilterInterface>>
      */
-    private function filtersNode(string $eventClass, array $values): Group
+    private function excludedFilters(array $types, array $values): array
     {
-        $types = class_exists($eventClass)
-            ? array_values(array_filter($this->webhooks->filterTypes(), fn (string $class) => $class::show($eventClass)))
-            : [];
-
-        // Filters excluded by an active filter can’t be used alongside it
         $excluded = [];
 
         foreach ($types as $class) {
-            if (($values[$class] ?? '') !== '' && is_subclass_of($class, ExclusiveFilterInterface::class)) {
+            if (($values[$class] ?? '') === 'yes' && is_subclass_of($class, ExclusiveFilterInterface::class)) {
                 array_push($excluded, ...$class::excludes());
             }
         }
 
+        return array_values(array_intersect($types, $excluded));
+    }
+
+    /**
+     * @param  array<class-string<FilterInterface>>  $types  The filters shown for the event
+     * @param  array<class-string<FilterInterface>>  $excluded  The filters that can’t be used
+     */
+    private function filtersNode(array $types, array $excluded): Group
+    {
         $children = [];
 
         foreach ($types as $class) {
@@ -361,7 +379,7 @@ readonly class WebhooksController
                     ])
                     ->presentation(ChoicePresentation::Buttons)
                     ->withoutPlaceholder()
-                    ->mode(in_array($class, $excluded, true) && ($values[$class] ?? '') === '' ? ControlMode::Disabled : ControlMode::Editable)
+                    ->mode(in_array($class, $excluded, true) ? ControlMode::Disabled : ControlMode::Editable)
                     ->reactive(),
             );
         }

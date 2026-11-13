@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 use CraftCms\Cms\Edition;
 use CraftCms\Cms\Element\Events\ElementLifecycleSaved;
+use CraftCms\Cms\Element\Events\ElementSaved;
 use CraftCms\Cms\Entry\Elements\Entry;
 use CraftCms\Cms\User\Elements\User;
 use CraftCms\Cms\User\Models\User as UserModel;
 use CraftCms\Webhooks\Enums\RequestStatus;
 use CraftCms\Webhooks\Filters\DraftFilter;
+use CraftCms\Webhooks\Filters\FirstSaveFilter;
+use CraftCms\Webhooks\Filters\ProvisionalDraftFilter;
+use CraftCms\Webhooks\Filters\RevisionFilter;
 use CraftCms\Webhooks\Models\Webhook;
 use CraftCms\Webhooks\Models\WebhookRequest;
 use CraftCms\Webhooks\Tests\TestCase;
@@ -101,6 +105,44 @@ it('rejects invalid webhooks', function (array $overrides, string $field) {
     'metadata URL' => [['url' => 'http://metadata.test/'], 'url'],
     'template syntax error' => [['customPayload' => true, 'payloadTemplate' => '{{ event.name '], 'payloadTemplate'],
     'filter the sandbox doesn’t allow' => [['customPayload' => true, 'payloadTemplate' => '{{ event|json_encode }}'], 'payloadTemplate'],
+]);
+
+it('disables the filters that a filter set to “Yes” excludes, as Craft 5 did', function (array $filters, array $disabled) {
+    actingAs(User::find()->admin()->one());
+
+    $ui = postJson(route('webhooks.render-ui'), [
+        'values' => webhookForm(['event' => ElementSaved::class, 'filters' => $filters]),
+        'scope' => [],
+    ])->assertOk()->json('ui');
+
+    // Collect each filter control’s mode, from wherever it is in the node tree
+    $modes = [];
+    $collect = function (array $node) use (&$collect, &$modes): void {
+        if (isset($node['path'], $node['mode']) && ($node['path'][0] ?? null) === 'filters') {
+            $modes[$node['path'][1]] = $node['mode'];
+        }
+
+        foreach ($node as $child) {
+            if (is_array($child)) {
+                $collect($child);
+            }
+        }
+    };
+    $collect($ui['nodes']);
+
+    $disabledFilters = array_keys(array_filter($modes, fn (string $mode) => $mode === 'disabled'));
+    expect($disabledFilters)->toEqualCanonicalizing($disabled);
+
+    // Disabled filters are reset to “Any”
+    foreach ($disabled as $class) {
+        expect($ui['values']['filters'][$class])->toBe('');
+    }
+})->with([
+    'a filter set to “No”' => [[RevisionFilter::class => 'no'], []],
+    'a filter set to “Yes”' => [
+        [ProvisionalDraftFilter::class => 'yes', DraftFilter::class => 'no'],
+        [DraftFilter::class, RevisionFilter::class, FirstSaveFilter::class],
+    ],
 ]);
 
 it('offers to delete existing webhooks from their edit page', function () {
