@@ -1,6 +1,6 @@
 # Release Notes for Webhooks for Craft CMS
 
-## Unreleased
+## 4.0.0 - 2026-11-13
 
 - Webhooks now requires Craft CMS 6.0 or later and PHP 8.5 or later, and runs natively on Craft 6 without the `craftcms/yii2-adapter` package. See [UPGRADE.md](UPGRADE.md).
 - Webhooks now listen for Laravel event classes, with an optional subject class. Updating converts Craft 5 element and service events, and disables webhooks whose event has no Craft 6 equivalent.
