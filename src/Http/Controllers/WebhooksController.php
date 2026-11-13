@@ -33,6 +33,7 @@ use CraftCms\Webhooks\Models\Webhook;
 use CraftCms\Webhooks\Webhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Symfony\Component\HttpFoundation\Response;
 
 use function CraftCms\Cms\t;
@@ -186,11 +187,28 @@ readonly class WebhooksController
             ? ($webhook->name ?: t('Edit Webhook', category: 'webhooks'))
             : t('Create a new webhook', category: 'webhooks');
 
-        return new CpScreenResponse()
+        $response = new CpScreenResponse()
             ->title($title)
             ->selectedSubnavItem('manage')
             ->addCrumb(t('Webhooks', category: 'webhooks'), route('webhooks.index'))
-            ->redirectUrl(route('webhooks.index'))
+            ->redirectUrl(route('webhooks.index'));
+
+        if ($webhook->exists) {
+            $response->addAltAction(t('Delete', category: 'webhooks'), [
+                'variant' => 'danger',
+                'action' => [
+                    'type' => 'http',
+                    'method' => 'DELETE',
+                    'url' => route('webhooks.destroy', ['webhookId' => $webhook->id]),
+                    'body' => [
+                        'redirect' => Crypt::encrypt(route('webhooks.index')),
+                    ],
+                    'confirm' => t('Are you sure you want to delete the webhook “{name}”?', ['name' => $webhook->name], 'webhooks'),
+                ],
+            ]);
+        }
+
+        return $response
             ->ui($this->ui($this->values($webhook)), props: [
                 'submit' => [
                     'method' => 'post',

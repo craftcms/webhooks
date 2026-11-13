@@ -103,6 +103,15 @@ it('rejects invalid webhooks', function (array $overrides, string $field) {
     'filter the sandbox doesn’t allow' => [['customPayload' => true, 'payloadTemplate' => '{{ event|json_encode }}'], 'payloadTemplate'],
 ]);
 
+it('offers to delete existing webhooks from their edit page', function () {
+    actingAs(User::find()->admin()->one());
+    $webhook = webhook();
+    $confirm = 'Are you sure you want to delete the webhook';
+
+    get(route('webhooks.edit', ['webhookId' => $webhook->id]))->assertOk()->assertSee($confirm);
+    get(route('webhooks.create'))->assertOk()->assertDontSee($confirm);
+});
+
 it('only deletes requests that have been sent', function () {
     Queue::fake();
     actingAs(User::find()->admin()->one());
