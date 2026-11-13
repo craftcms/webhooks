@@ -16,6 +16,8 @@ use CraftCms\Webhooks\Models\WebhookRequest;
 use CraftCms\Webhooks\Settings;
 use CraftCms\Webhooks\Tests\TestCase;
 use CraftCms\Webhooks\Webhooks;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -192,3 +194,17 @@ it('skips requests that were deleted before their job ran', function () {
     Http::assertNothingSent();
     Queue::assertPushed(SendRequest::class, 1);
 });
+
+it('validates URLs when guzzleConfig sets a custom handler', function (string $url, bool $delivered) {
+    $handler = new MockHandler([new Response(200, [], 'ok')]);
+    app(Settings::class)->guzzleConfig = ['handler' => $handler];
+
+    $request = app(Webhooks::class)->request('post', $url, body: '{}');
+
+    // The mock handler’s queued response is only used up if the request reached it
+    expect($handler->count())->toBe($delivered ? 0 : 1)
+        ->and($request->fresh()->responseStatus)->toBe($delivered ? 200 : null);
+})->with([
+    'public URL' => [TestCase::RECEIVER_URL, true],
+    'private IP address' => ['http://10.0.0.5/hook', false],
+])->after(fn () => app(Settings::class)->guzzleConfig = []);

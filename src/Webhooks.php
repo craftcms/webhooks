@@ -31,6 +31,7 @@ use DateTimeInterface;
 use GuzzleHttp\Exception\TransferException;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
@@ -289,8 +290,15 @@ class Webhooks
             $start = hrtime(true);
             $response = null;
 
+            // A `handler` request option would replace the whole handler stack, skipping the URL validation
+            // middleware, so a custom handler goes at the bottom of the stack instead
+            $guzzleConfig = $this->settings->guzzleConfig;
+            $handler = $guzzleConfig['handler'] ?? null;
+            unset($guzzleConfig['handler']);
+
             try {
-                $response = Http::create($this->settings->guzzleConfig)
+                $response = Http::create($guzzleConfig)
+                    ->when($handler !== null, fn (PendingRequest $pendingRequest) => $pendingRequest->setHandler($handler))
                     ->withHeaders($headers)
                     // Validates the URL and every redirect target, and pins them to the validated IPs
                     ->withMiddleware(GuzzleMiddleware::validateRequests($this->urlValidator()))
