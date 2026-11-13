@@ -118,9 +118,9 @@ Webhooks can either send a GET request, or a POST request with a JSON body conta
 
 Some events can have filters applied to them, which prevent webhooks from being executed under certain conditions.
 
-<img src="./images/event-filters.png" width="560" height="830" alt="Screenshot of the Event Filters setting">
+<img src="./images/event-filters.png" width="560" height="837" alt="Screenshot of the Event Filters setting">
 
-Filters set to “Any” have no impact. Filters set to “Yes” are required for a webhook to execute, and filters set to “No” prevent it. Some filters can’t be combined, so setting one disables the filters it conflicts with.
+Filters set to “Any” have no impact. Filters set to “Yes” are required for a webhook to execute, and filters set to “No” prevent it. Some filters can’t be combined, so setting one to “Yes” disables the filters it conflicts with.
 
 Only events with an `element` property have any filters out of the box, but modules and plugins can register additional filters by listening for the `CraftCms\Webhooks\Events\FilterTypesResolving` event.
 
@@ -176,7 +176,7 @@ For example, if your webhook is for an entry (`CraftCms\Cms\Entry\Elements\Entry
 
 You can send custom headers along with webhook requests using the Custom Headers setting.
 
-<img src="./images/custom-headers.png" width="952" height="215" alt="Screenshot of the Custom Headers setting">
+<img src="./images/custom-headers.png" width="976" height="228" alt="Screenshot of the Custom Headers setting">
 
 Header values can be set to an environment variable using the `$VARIABLE_NAME` syntax, or a Twig template.
 
