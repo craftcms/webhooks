@@ -7,14 +7,17 @@ use CraftCms\Cms\Element\Events\ElementLifecycleSaved;
 use CraftCms\Cms\Entry\Elements\Entry;
 use CraftCms\Cms\User\Elements\User;
 use CraftCms\Cms\User\Models\User as UserModel;
+use CraftCms\Webhooks\Enums\RequestStatus;
 use CraftCms\Webhooks\Filters\DraftFilter;
 use CraftCms\Webhooks\Models\Webhook;
+use CraftCms\Webhooks\Models\WebhookRequest;
 use CraftCms\Webhooks\Tests\TestCase;
 use CraftCms\Webhooks\Webhooks;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\get;
 use function Pest\Laravel\postJson;
 
@@ -99,6 +102,19 @@ it('rejects invalid webhooks', function (array $overrides, string $field) {
     'template syntax error' => [['customPayload' => true, 'payloadTemplate' => '{{ event.name '], 'payloadTemplate'],
     'filter the sandbox doesn’t allow' => [['customPayload' => true, 'payloadTemplate' => '{{ event|json_encode }}'], 'payloadTemplate'],
 ]);
+
+it('only deletes requests that have been sent', function () {
+    Queue::fake();
+    actingAs(User::find()->admin()->one());
+    $webhooks = app(Webhooks::class);
+    $pending = $webhooks->request('post', TestCase::RECEIVER_URL);
+    $sent = $webhooks->request('post', TestCase::RECEIVER_URL);
+    $sent->update(['status' => RequestStatus::Done]);
+
+    deleteJson(route('webhooks.activity.destroy'), ['ids' => [$pending->id, $sent->id]])->assertOk();
+
+    expect(WebhookRequest::query()->pluck('id')->all())->toBe([$pending->id]);
+});
 
 it('redelivers requests', function () {
     Queue::fake();

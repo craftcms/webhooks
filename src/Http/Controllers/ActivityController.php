@@ -18,6 +18,7 @@ use CraftCms\Cms\Ui\Nodes\Field;
 use CraftCms\Cms\Ui\Nodes\Table;
 use CraftCms\Cms\Ui\Ui;
 use CraftCms\Cms\Ui\UiContext;
+use CraftCms\Webhooks\Enums\RequestStatus;
 use CraftCms\Webhooks\Models\WebhookRequest;
 use CraftCms\Webhooks\Webhooks;
 use DateTimeInterface;
@@ -84,7 +85,10 @@ readonly class ActivityController
                 'to' => $paginator->lastItem(),
             ])
             ->emptyMessage(t('No webhook requests have been sent yet.', category: 'webhooks'))
-            ->bulkDeletable(route('webhooks.activity.destroy'));
+            ->bulkDeletable(
+                route('webhooks.activity.destroy'),
+                t('Are you sure you want to delete the selected requests? Requests that haven’t been sent yet will be kept.', category: 'webhooks'),
+            );
 
         return new CpScreenResponse()
             ->title(t('Activity', category: 'webhooks'))
@@ -144,7 +148,7 @@ readonly class ActivityController
     }
 
     /**
-     * Deletes the selected requests.
+     * Deletes the selected requests that have been sent. Pending requests are kept, so their queued jobs can send them.
      */
     public function destroy(Request $request): Response
     {
@@ -154,7 +158,10 @@ readonly class ActivityController
             'id' => ['nullable', 'integer'],
         ]);
 
-        WebhookRequest::query()->whereKey($data['ids'] ?? [$data['id']])->delete();
+        WebhookRequest::query()
+            ->whereKey($data['ids'] ?? [$data['id']])
+            ->where('status', RequestStatus::Done)
+            ->delete();
 
         return $this->asSuccess(t('Requests deleted.', category: 'webhooks'));
     }

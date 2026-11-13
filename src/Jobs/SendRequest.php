@@ -33,9 +33,10 @@ class SendRequest extends Job
             return;
         }
 
-        $attempts = (int) WebhookRequest::query()->whereKey($this->requestId)->value('attempts');
+        $attempts = WebhookRequest::query()->whereKey($this->requestId)->value('attempts');
 
-        if ($attempts < $settings->maxAttempts) {
+        // No attempts are recorded if the request was deleted
+        if ($attempts !== null && $attempts < $settings->maxAttempts) {
             self::dispatch($this->requestId, $this->webhookId)->delay($settings->retryDelay);
         }
     }

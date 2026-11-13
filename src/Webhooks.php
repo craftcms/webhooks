@@ -256,11 +256,16 @@ class Webhooks
      *
      * Environment variables in the URL and header values are parsed now, so their values aren’t stored.
      *
-     * @return bool Whether the request came back with a 2xx response
+     * @return bool Whether the request came back with a 2xx response. False if the request no longer exists.
      */
     public function send(int $requestId): bool
     {
-        $request = WebhookRequest::query()->findOrFail($requestId);
+        $request = WebhookRequest::query()->find($requestId);
+
+        // It was deleted from the Activity page after its job was queued
+        if (! $request) {
+            return false;
+        }
 
         // Throws if another worker is already sending it
         $lock = Cache::lock($this->lockKey($requestId), 300);

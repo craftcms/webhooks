@@ -180,3 +180,15 @@ it('purges old sent requests during garbage collection', function () {
 
     expect(WebhookRequest::query()->pluck('id')->all())->toEqualCanonicalizing([$oldPending->id, $recent->id]);
 });
+
+it('skips requests that were deleted before their job ran', function () {
+    Http::fake(['*' => Http::response('ok')]);
+    Queue::fake();
+    $request = app(Webhooks::class)->request('post', TestCase::RECEIVER_URL, body: '{}');
+    $request->delete();
+
+    app()->call([new SendRequest($request->id), 'handle']);
+
+    Http::assertNothingSent();
+    Queue::assertPushed(SendRequest::class, 1);
+});
