@@ -124,6 +124,8 @@ Requests are stored as `CraftCms\Webhooks\Models\WebhookRequest` models, with a 
 
 Settings are read from `config/craft/webhooks.php`. The setting names and defaults didn’t change. `guzzleConfig` and `allowedPrivateHosts` can still only be set in the config file.
 
+The `attemptDelay` setting, the name `retryDelay` had before Webhooks 2.3, is no longer read. Rename it to `retryDelay` if your config file still uses it.
+
 ### Routes and action URLs
 
 The control panel pages keep their URLs (`webhooks`, `webhooks/new`, `webhooks/{id}` and `webhooks/activity`). The `webhooks/*` controller actions were replaced by Laravel routes named `webhooks.*`. The index page lists groups in a table, and each group is edited at `webhooks/groups/{id}`, which replaces the `webhooks/group/{id}` sidebar filter.
