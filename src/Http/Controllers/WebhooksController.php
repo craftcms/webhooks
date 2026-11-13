@@ -355,9 +355,9 @@ readonly class WebhooksController
                 $class::displayName(),
                 Choice::make(['filters', $class])
                     ->options([
+                        ['label' => t('No', category: 'webhooks'), 'value' => 'no'],
                         ['label' => t('Any', category: 'webhooks'), 'value' => ''],
                         ['label' => t('Yes', category: 'webhooks'), 'value' => 'yes'],
-                        ['label' => t('No', category: 'webhooks'), 'value' => 'no'],
                     ])
                     ->presentation(ChoicePresentation::Buttons)
                     ->withoutPlaceholder()
