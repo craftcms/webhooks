@@ -1,7 +1,15 @@
 includes:
-    - vendor/craftcms/phpstan/phpstan.neon
+    - vendor/larastan/larastan/extension.neon
 
 parameters:
     level: 4
     paths:
         - src
+        - routes
+    ignoreErrors:
+        # Craft registers `Http::create()` as a macro when it boots. Larastan only sees it when it can boot Craft.
+        -
+            identifier: staticMethod.notFound
+            message: '#^Call to an undefined static method Illuminate\\Support\\Facades\\Http::create\(\)\.$#'
+            path: src/Webhooks.php
+            reportUnmatched: false

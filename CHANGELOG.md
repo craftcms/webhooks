@@ -1,5 +1,36 @@
 # Release Notes for Webhooks for Craft CMS
 
+## 4.0.0 - 2026-11-13
+
+- Webhooks now requires Craft CMS 6.0 or later and PHP 8.5 or later, and runs natively on Craft 6 without the `craftcms/yii2-adapter` package. See [UPGRADE.md](UPGRADE.md).
+- Webhooks now listen for Laravel event classes, with an optional subject class. Updating converts Craft 5 element and service events, and disables webhooks whose event has no Craft 6 equivalent.
+- The plugin’s classes moved to the `CraftCms\Webhooks` namespace.
+- Plugin settings are now read from `config/craft/webhooks.php`. Run `php artisan vendor:publish --tag=webhooks` to create it.
+- Custom filters are now registered with the `CraftCms\Webhooks\Events\FilterTypesResolving` event, and `FilterInterface` methods receive the event class and event object.
+- Webhook requests are now sent by Laravel queue jobs with Laravel’s HTTP client. URLs and redirects are still validated against SSRF, and pinned to the validated IP addresses.
+- The Webhooks control panel pages are now built with Craft’s control panel UI components.
+- Saving a webhook now shows an error if its payload template uses a tag, filter or function that the Twig sandbox doesn’t allow.
+
+## 3.5.1 - 2026-11-10
+
+- Webhooks now suggests the `craftcms/yii2-adapter` package in its `composer.json`, so the Plugin Store installs it alongside Webhooks on Craft 6.
+
+## 3.5.0 - 2026-11-10
+
+- Added Craft CMS 6 compatibility, via the `craftcms/yii2-adapter` package.
+- Webhook URLs can now be longer than 255 characters. ([#95](https://github.com/craftcms/webhooks/pull/95))
+- Installing the plugin now archives existing Webhooks tables, renaming them with an `_old` suffix, instead of dropping them. ([#98](https://github.com/craftcms/webhooks/pull/98))
+- Webhooks whose templates can’t be rendered are now skipped and logged, rather than causing an error in the action that triggered them.
+- The README’s payload template example no longer uses `json_encode`, which Craft’s Twig sandbox doesn’t allow. Payload templates that use it need to be rewritten on Craft 6.
+- Fixed an error that occurred when a webhook’s URL, headers, debounce key format, or payload template referenced the event on Craft 6.
+- Fixed a bug where webhooks triggered from console commands and queue jobs were never sent on Craft 6.
+- Fixed a bug where default payloads contained raw date objects, and ignored “Extra Sender Attributes”, on Craft 6.
+- Fixed a bug where the Edit Webhook page’s event filters didn’t work, and the Sender Class and Event Name fields didn’t list any suggestions, on Craft 6.
+- Fixed a bug where the Edit Webhook page’s event filter buttons were misaligned, and two of them had no icon, on Craft 6.
+- Fixed a bug where webhooks couldn’t be enabled or disabled from the Webhooks index page on Craft 6.
+- Fixed a bug where request details couldn’t be viewed from the Activity page on Craft 6.
+- Fixed a bug where request details on the Activity page were cut off, and their “Redeliver” and “Send now” buttons didn’t work, on Craft 6.
+
 ## 3.4.0.1 - 2026-10-11
 
 - Updated incorrect GHSA link.
