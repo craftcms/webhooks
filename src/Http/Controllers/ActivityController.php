@@ -128,10 +128,14 @@ readonly class ActivityController
                     'request' => $this->message($webhookRequest->requestHeaders, $webhookRequest->requestBody),
                     'response' => $this->message($webhookRequest->responseHeaders, $webhookRequest->responseBody),
                 ]),
-                ['submit' => [
-                    'method' => 'post',
-                    'url' => route('webhooks.activity.redeliver', ['requestId' => $webhookRequest->id]),
-                ]],
+                [
+                    'submit' => [
+                        'method' => 'post',
+                        'url' => route('webhooks.activity.redeliver', ['requestId' => $webhookRequest->id]),
+                    ],
+                    // The submit button redelivers the request; there’s nothing to save and keep editing
+                    'defaultFormActions' => [],
+                ],
             );
     }
 
