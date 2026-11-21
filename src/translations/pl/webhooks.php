@@ -22,7 +22,7 @@ return [
     'Edit webhook' => 'Edytuj webhook',
     'Element is a draft' => 'Element jest szkicem',
     'Element is a provisional draft' => 'Element jest szkicem tymczasowym',
-    'Element is a revision' => 'Element jest zmianą',
+    'Element is a revision' => 'Element jest wersją',
     'Element is being bulk-resaved' => 'Element jest zbiorczo zapisywany ponownie',
     'Element is being duplicated' => 'Element jest powielany',
     'Element is being propagated' => 'Element jest propagowany',
