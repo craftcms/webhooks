@@ -126,8 +126,8 @@ class SaveWebhookRequest extends FormRequest
         return [
             'class' => t('Subject Class', category: 'webhooks'),
             'event' => t('Event', category: 'webhooks'),
-            'name' => t('Name', category: 'webhooks'),
-            'url' => t('URL', category: 'webhooks'),
+            'name' => t('Name'),
+            'url' => t('URL'),
         ];
     }
 

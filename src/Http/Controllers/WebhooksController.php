@@ -62,7 +62,7 @@ readonly class WebhooksController
             ->columns([
                 ['key' => 'name', 'label' => t('Webhook', category: 'webhooks')],
                 ['key' => 'event', 'label' => t('Event', category: 'webhooks')],
-                ['key' => 'group', 'label' => t('Group', category: 'webhooks')],
+                ['key' => 'group', 'label' => t('Group')],
             ])
             ->rows($webhooks->map(fn (Webhook $webhook) => [
                 'id' => $webhook->id,
@@ -79,14 +79,14 @@ readonly class WebhooksController
             ->searchable()
             ->statusFilter()
             ->statusActions([
-                ['label' => t('Enabled', category: 'webhooks'), 'url' => route('webhooks.status'), 'params' => ['enabled' => true], 'fill' => 'green'],
-                ['label' => t('Disabled', category: 'webhooks'), 'url' => route('webhooks.status'), 'params' => ['enabled' => false]],
+                ['label' => t('Enabled'), 'url' => route('webhooks.status'), 'params' => ['enabled' => true], 'fill' => 'green'],
+                ['label' => t('Disabled'), 'url' => route('webhooks.status'), 'params' => ['enabled' => false]],
             ])
             ->deletable();
 
         $groupsTable = Table::make('webhook-groups')
             ->columns([
-                ['key' => 'name', 'label' => t('Group', category: 'webhooks')],
+                ['key' => 'name', 'label' => t('Group')],
                 ['key' => 'webhooks', 'label' => t('Webhooks', category: 'webhooks')],
             ])
             ->rows($groups->map(fn (GroupModel $group) => [
@@ -94,10 +94,10 @@ readonly class WebhooksController
                 'name' => ['label' => $group->name, 'url' => route('webhooks.groups.edit', ['groupId' => $group->id])],
                 'webhooks' => $group->webhooks_count,
                 '_deleteUrl' => route('webhooks.groups.destroy', ['groupId' => $group->id]),
-                '_deleteConfirmMessage' => t('Are you sure you want to delete this group?', category: 'webhooks'),
+                '_deleteConfirmMessage' => t('Are you sure you want to delete this group?'),
             ]))
-            ->emptyMessage(t('No groups exist yet.', category: 'webhooks'))
-            ->createAction(t('New group', category: 'webhooks'), route('webhooks.groups.create'))
+            ->emptyMessage(t('No groups exist yet.'))
+            ->createAction(t('New group'), route('webhooks.groups.create'))
             ->deletable();
 
         return new CpScreenResponse()
@@ -194,7 +194,7 @@ readonly class WebhooksController
             ->redirectUrl(route('webhooks.index'));
 
         if ($webhook->exists) {
-            $response->addAltAction(t('Delete', category: 'webhooks'), [
+            $response->addAltAction(t('Delete'), [
                 'variant' => 'danger',
                 'action' => [
                     'type' => 'http',
@@ -281,11 +281,11 @@ readonly class WebhooksController
         }
 
         return $this->uiResolver->resolve(Ui::make([
-            Field::make(t('Name', category: 'webhooks'), Text::make('name')->autofocus())
+            Field::make(t('Name'), Text::make('name')->autofocus())
                 ->instructions(t('What the webhook will be called within the Control Panel.', category: 'webhooks'))
                 ->required(),
-            Field::make(t('Group', category: 'webhooks'), Choice::make('groupId')->options($groupOptions)->withoutPlaceholder()),
-            Field::make(t('Enabled', category: 'webhooks'), Lightswitch::make('enabled')),
+            Field::make(t('Group'), Choice::make('groupId')->options($groupOptions)->withoutPlaceholder()),
+            Field::make(t('Enabled'), Lightswitch::make('enabled')),
             Field::make(
                 t('Event', category: 'webhooks'),
                 Combobox::make('event')
@@ -309,12 +309,12 @@ readonly class WebhooksController
                 ['label' => 'POST', 'value' => 'post'],
                 ['label' => 'PUT', 'value' => 'put'],
             ])->withoutPlaceholder()->reactive())->required(),
-            Field::make(t('URL', category: 'webhooks'), Text::make('url')->placeholder('https://')->monospace())
+            Field::make(t('URL'), Text::make('url')->placeholder('https://')->monospace())
                 ->instructions(t('The URL that the webhook should send the request to.', category: 'webhooks').' '.$envOrTwig)
                 ->required(),
             Field::make(t('Custom Headers', category: 'webhooks'), TableControl::make('headers')->columns([
-                'name' => ['heading' => t('Name', category: 'webhooks'), 'type' => 'singleline', 'code' => true],
-                'value' => ['heading' => t('Value', category: 'webhooks'), 'type' => 'multiline', 'code' => true],
+                'name' => ['heading' => t('Name'), 'type' => 'singleline', 'code' => true],
+                'value' => ['heading' => t('Value'), 'type' => 'multiline', 'code' => true],
             ])->allowAdd()->allowDelete()->allowReorder())
                 ->instructions(t('Any custom headers that should be sent.', category: 'webhooks').' '.$envOrTwig),
             Group::make('payload', [
@@ -373,9 +373,9 @@ readonly class WebhooksController
                 $class::displayName(),
                 Choice::make(['filters', $class])
                     ->options([
-                        ['label' => t('No', category: 'webhooks'), 'value' => 'no'],
-                        ['label' => t('Any', category: 'webhooks'), 'value' => ''],
-                        ['label' => t('Yes', category: 'webhooks'), 'value' => 'yes'],
+                        ['label' => t('No'), 'value' => 'no'],
+                        ['label' => t('Any'), 'value' => ''],
+                        ['label' => t('Yes'), 'value' => 'yes'],
                     ])
                     ->presentation(ChoicePresentation::Buttons)
                     ->withoutPlaceholder()

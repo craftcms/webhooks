@@ -50,10 +50,10 @@ readonly class ActivityController
         $table = Table::make('webhook-requests')
             ->columns([
                 ['key' => 'request', 'label' => t('Request', category: 'webhooks')],
-                ['key' => 'status', 'label' => t('Status', category: 'webhooks')],
+                ['key' => 'status', 'label' => t('Status')],
                 ['key' => 'attempts', 'label' => t('Attempts', category: 'webhooks')],
-                ['key' => 'date', 'label' => t('Date', category: 'webhooks')],
-                ['key' => 'time', 'label' => t('Time', category: 'webhooks')],
+                ['key' => 'date', 'label' => t('Date')],
+                ['key' => 'time', 'label' => t('Time')],
                 ['key' => 'webhook', 'label' => t('Webhook', category: 'webhooks')],
             ])
             ->rows(collect($paginator->items())->map(fn (WebhookRequest $webhookRequest) => [
@@ -91,7 +91,7 @@ readonly class ActivityController
             );
 
         return new CpScreenResponse()
-            ->title(t('Activity', category: 'webhooks'))
+            ->title(t('Activity'))
             ->selectedSubnavItem('activity')
             ->ui(Ui::make([$table]));
     }
@@ -107,15 +107,15 @@ readonly class ActivityController
         return new CpScreenResponse()
             ->title($this->label($webhookRequest))
             ->selectedSubnavItem('activity')
-            ->addCrumb(t('Activity', category: 'webhooks'), route('webhooks.activity.index'))
+            ->addCrumb(t('Activity'), route('webhooks.activity.index'))
             ->submitButtonLabel(t('Redeliver', category: 'webhooks'))
             ->ui(
                 Ui::make([
-                    $readOnly(t('URL', category: 'webhooks'), 'url'),
-                    $readOnly(t('Status', category: 'webhooks'), 'status'),
+                    $readOnly(t('URL'), 'url'),
+                    $readOnly(t('Status'), 'status'),
                     $readOnly(t('Attempts', category: 'webhooks'), 'attempts'),
-                    $readOnly(t('Date', category: 'webhooks'), 'date'),
-                    $readOnly(t('Time', category: 'webhooks'), 'time'),
+                    $readOnly(t('Date'), 'date'),
+                    $readOnly(t('Time'), 'time'),
                     $readOnly(t('Request', category: 'webhooks'), 'request', true),
                     $readOnly(t('Response', category: 'webhooks'), 'response', true),
                 ]),
@@ -192,10 +192,14 @@ readonly class ActivityController
 
     private function statusLabel(WebhookRequest $webhookRequest): string
     {
-        return match (true) {
-            $webhookRequest->responseStatus !== null => (string) $webhookRequest->responseStatus,
-            $webhookRequest->status->value === 'done' => t('Failed', category: 'webhooks'),
-            default => t(ucfirst($webhookRequest->status->value), category: 'webhooks'),
+        if ($webhookRequest->responseStatus !== null) {
+            return (string) $webhookRequest->responseStatus;
+        }
+
+        return match ($webhookRequest->status) {
+            RequestStatus::Pending => t('Pending'),
+            RequestStatus::Requested => t('Requested', category: 'webhooks'),
+            RequestStatus::Done => t('Failed'),
         };
     }
 

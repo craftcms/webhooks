@@ -52,7 +52,7 @@ readonly class GroupsController
     {
         Group::query()->whereKey($groupId)->delete();
 
-        return $this->asSuccess(t('Group deleted.', category: 'webhooks'));
+        return $this->asSuccess(t('Group deleted.'));
     }
 
     private function save(Request $request, Group $group): Response
@@ -75,13 +75,13 @@ readonly class GroupsController
     private function editScreen(Group $group): CpScreenResponse
     {
         return new CpScreenResponse()
-            ->title($group->exists ? $group->name : t('New group', category: 'webhooks'))
+            ->title($group->exists ? $group->name : t('New group'))
             ->selectedSubnavItem('manage')
             ->addCrumb(t('Webhooks', category: 'webhooks'), route('webhooks.index'))
             ->redirectUrl(route('webhooks.index'))
             ->ui(
                 Ui::make([
-                    Field::make(t('Name', category: 'webhooks'), Text::make('name')->autofocus())->required(),
+                    Field::make(t('Name'), Text::make('name')->autofocus())->required(),
                 ]),
                 new UiContext(values: ['name' => $group->name]),
                 ['submit' => [
