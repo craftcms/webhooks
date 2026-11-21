@@ -23,7 +23,7 @@
     <div id="newgroupbtn" class="btn add icon">{{ "New group"|t('app') }}</div>
 
     {% if groupId %}
-      <div id="groupsettingsbtn" class="btn settings icon menubtn" title="{{ 'Settings' }}"></div>
+      <div id="groupsettingsbtn" class="btn settings icon menubtn" title="{{ 'Settings'|t('app') }}"></div>
       <div class="menu">
         <ul>
           <li><a data-action="rename" role="button">{{ "Rename selected group"|t('app') }}</a></li>
@@ -40,7 +40,7 @@
       <thead>
         <tr>
           <th>{{ 'Webhook'|t('webhooks') }}</th>
-          <th class="thin centeralign">{{ 'Enabled'|t('webhooks') }}</th>
+          <th class="thin centeralign">{{ 'Enabled'|t('app') }}</th>
         </tr>
       </thead>
       <tbody>

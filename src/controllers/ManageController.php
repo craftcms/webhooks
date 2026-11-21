@@ -75,7 +75,7 @@ class ManageController extends BaseController
     {
         $id = $this->request->getRequiredBodyParam('id');
         Plugin::getInstance()->getWebhookManager()->deleteGroupById($id);
-        Craft::$app->getSession()->setNotice(Craft::t('webhooks', 'Group deleted.'));
+        Craft::$app->getSession()->setNotice(Craft::t('app', 'Group deleted.'));
         return $this->asJson([
             'success' => true,
         ]);

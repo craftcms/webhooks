@@ -1,5 +1,5 @@
 {% extends '_layouts/cp' %}
-{% set title = 'Activity'|t('webhooks') %}
+{% set title = 'Activity'|t('app') %}
 {% set selectedSubnavItem = 'activity' %}
 
 {% import 'webhooks/_activity/macros' as macros %}
@@ -10,10 +10,10 @@
     <thead>
     <tr>
       <th>{{ 'Request'|t('webhooks') }}</th>
-      <th>{{ 'Status'|t('webhooks') }}</th>
+      <th>{{ 'Status'|t('app') }}</th>
       <th>{{ 'Attempts'|t('webhooks') }}</th>
-      <th>{{ 'Date'|t('webhooks') }}</th>
-      <th>{{ 'Time'|t('webhooks') }}</th>
+      <th>{{ 'Date'|t('app') }}</th>
+      <th>{{ 'Time'|t('app') }}</th>
       <th>{{ 'Webhook'|t('webhooks') }}</th>
     </tr>
     </thead>
@@ -30,7 +30,7 @@
           {{ request.name }}
           <a href="{{ url('webhooks/' ~ request.webhookId) }}" class="go" title="{{ 'Edit webhook'|t('webhooks') }}"></a>
         {% else %}
-          <span class="light">{{ 'None'|t('webhooks') }}</span>
+          <span class="light">{{ 'None'|t('app') }}</span>
         {% endif %}
       </td>
     </tr>
@@ -41,13 +41,13 @@
   {% include '_includes/pagination' with {
     prevLabel: 'Newer requests'|t('webhooks'),
     nextLabel: 'Older requests'|t('webhooks'),
-    noResultsLabel: 'No requests logged'|t('webhook')
+    noResultsLabel: 'No requests logged'|t('webhooks')
   } %}
 
 {% endblock %}
 
 {% block actionButton %}
   {% if requests|length %}
-    <a class="btn" href="{{ actionUrl('webhooks/activity/clear') }}">{{ 'Clear'|t('webhooks') }}</a>
+    <a class="btn" href="{{ actionUrl('webhooks/activity/clear') }}">{{ 'Clear'|t('app') }}</a>
   {% endif %}
 {% endblock %}

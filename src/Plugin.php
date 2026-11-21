@@ -301,7 +301,7 @@ class Plugin extends \craft\base\Plugin
         $item = parent::getCpNavItem();
         $item['subnav'] = [
             'manage' => ['label' => Craft::t('webhooks', 'Manage Webhooks'), 'url' => 'webhooks'],
-            'activity' => ['label' => Craft::t('webhooks', 'Activity'), 'url' => 'webhooks/activity'],
+            'activity' => ['label' => Craft::t('app', 'Activity'), 'url' => 'webhooks/activity'],
         ];
         return $item;
     }

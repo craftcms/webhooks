@@ -7,7 +7,6 @@
 /.gitignore export-ignore
 /.lintstagedrc.json export-ignore
 /.nvmrc export-ignore
-/crowdin.yml export-ignore
 /CHANGELOG.md export-ignore
 /README.md export-ignore
 /SECURITY.md export-ignore
@@ -33,3 +32,6 @@
 
 # Auto detect text files and perform LF normalization
 * text=auto
+
+/src/translations/*/webhooks.php linguist-generated=true
+/src/translations/en/webhooks.php -linguist-generated
