@@ -1,5 +1,10 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+- Added translations for all 33 languages Craft ships with. The existing Chinese translations are now complete.
+- Strings that Craft already translates, such as “Name” and “Status”, now use Craft’s translations.
+
 ## 4.0.0 - 2026-11-13
 
 - Webhooks now requires Craft CMS 6.0 or later and PHP 8.5 or later, and runs natively on Craft 6 without the `craftcms/yii2-adapter` package. See [UPGRADE.md](UPGRADE.md).

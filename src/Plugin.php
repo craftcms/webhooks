@@ -63,7 +63,7 @@ class Plugin extends BasePlugin
     {
         return parent::getCpNavItem()->subnav([
             new NavItem()->label(t('Manage Webhooks', category: 'webhooks'))->href(route('webhooks.index')),
-            new NavItem()->label(t('Activity', category: 'webhooks'))->href(route('webhooks.activity.index')),
+            new NavItem()->label(t('Activity'))->href(route('webhooks.activity.index')),
         ]);
     }
 
