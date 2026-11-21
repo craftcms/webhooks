@@ -32,3 +32,6 @@
 
 # Auto detect text files and perform LF normalization
 * text=auto
+
+/src/translations/*/webhooks.php linguist-generated=true
+/src/translations/en/webhooks.php -linguist-generated
