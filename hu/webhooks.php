@@ -16,7 +16,7 @@ return [
     'Edit Webhook' => 'Webhook szerkesztése',
     'Element is a draft' => 'Az elem vázlat',
     'Element is a provisional draft' => 'Az elem ideiglenes vázlat',
-    'Element is a revision' => 'Az elem verzió',
+    'Element is a revision' => 'Az elem revízió',
     'Element is being bulk-resaved' => 'Az elem tömeges újramentése folyamatban',
     'Element is being duplicated' => 'Az elem duplikálása folyamatban',
     'Element is being propagated' => 'Az elem propagálása folyamatban',

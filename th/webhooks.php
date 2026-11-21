@@ -16,7 +16,7 @@ return [
     'Edit Webhook' => 'แก้ไข Webhook',
     'Element is a draft' => 'องค์ประกอบเป็นแบบร่าง',
     'Element is a provisional draft' => 'องค์ประกอบเป็นแบบร่างชั่วคราว',
-    'Element is a revision' => 'องค์ประกอบเป็นการแก้ไข',
+    'Element is a revision' => 'องค์ประกอบเป็นฉบับแก้ไข',
     'Element is being bulk-resaved' => 'องค์ประกอบกำลังถูกบันทึกใหม่แบบกลุ่ม',
     'Element is being duplicated' => 'องค์ประกอบกำลังถูกทำซ้ำ',
     'Element is being propagated' => 'องค์ประกอบกำลังถูกเผยแพร่',
