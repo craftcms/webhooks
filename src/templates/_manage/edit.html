@@ -34,7 +34,7 @@
 
   {{ forms.textField({
     first: true,
-    label: 'Name'|t('webhooks'),
+    label: 'Name'|t('app'),
     required: true,
     instructions: 'What the webhook will be called within the Control Panel.'|t('webhooks'),
     id: 'name',
@@ -161,13 +161,13 @@
     instructions: 'Any custom headers that should be sent.'|t('webhooks'),
     cols: {
       name: {
-        heading: 'Name'|t('webhooks'),
+        heading: 'Name'|t('app'),
         type: 'singleline',
         code: true,
         placeholder: 'X-Foo-Bar',
       },
       value: {
-        heading: 'Value'|t('webhooks'),
+        heading: 'Value'|t('app'),
         info: 'Can be set to an environment variable (`$VARIABLE_NAME`) or Twig code.'|t('webhooks'),
         type: 'multiline',
         code: true,
@@ -247,7 +247,7 @@
     {% if groupOptions|length > 1 %}
       {{ forms.selectField({
         first: true,
-        label: 'Group'|t('webhooks'),
+        label: 'Group'|t('app'),
         id: 'group',
         name: 'groupId',
         value: webhook.groupId,
@@ -256,7 +256,7 @@
     {% endif %}
 
     {{ forms.lightswitchField({
-      label: 'Enabled'|t('webhooks'),
+      label: 'Enabled'|t('app'),
       id: 'enabled',
       name: 'enabled',
       on: webhook.enabled

@@ -1,12 +1,12 @@
 {% macro status(request) %}
   {% if request.status == 'pending' %}
-    <span class="light">{{ 'Pending'|t('webhooks') }}</span>
+    <span class="light">{{ 'Pending'|t('app') }}</span>
   {% elseif request.status == 'requested' %}
     <span class="light">{{ 'Requested'|t('webhooks') }}</span>
   {% else %}
     {% apply spaceless %}
       <span class="status {{ request.responseStatus >= 200 and request.responseStatus < 300 ? 'green' : 'red' }}"></span>
-      <span class="code">{{ request.responseStatus ?? 'Unknown'|t('webhooks') }}</span>
+      <span class="code">{{ request.responseStatus ?? 'Unknown'|t('app') }}</span>
     {% endapply %}
   {% endif %}
 {% endmacro %}

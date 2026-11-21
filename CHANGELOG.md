@@ -1,5 +1,11 @@
 # Release Notes for Webhooks for Craft CMS
 
+## Unreleased
+
+- Added translations for all 33 languages Craft ships with. The existing Chinese translations are now complete.
+- Strings that Craft already translates, such as “Name” and “Status”, now use Craft’s translations.
+- Fixed a bug where the “No requests logged” message and the group settings button’s title weren’t translatable.
+
 ## 3.5.1 - 2026-11-10
 
 - Webhooks now suggests the `craftcms/yii2-adapter` package in its `composer.json`, so the Plugin Store installs it alongside Webhooks on Craft 6.

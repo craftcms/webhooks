@@ -55,7 +55,7 @@
                 );
               } else {
                 Craft.cp.displayError(
-                  Craft.t('app', 'An unknown error occurred.')
+                  Craft.t('webhooks', 'An unknown error occurred.')
                 );
               }
             }
@@ -84,7 +84,7 @@
               } else if (response.errors) {
                 var errors = this.flattenErrors(response.errors);
                 alert(
-                  Craft.t('webhooks', 'Could not create the group:') +
+                  Craft.t('app', 'Could not create the group:') +
                     '\n\n' +
                     errors.join('\n')
                 );
@@ -114,11 +114,11 @@
             if (textStatus === 'success') {
               if (response.success) {
                 this.$selectedGroup.text(response.group.name);
-                Craft.cp.displayNotice(Craft.t('webhooks', 'Group renamed.'));
+                Craft.cp.displayNotice(Craft.t('app', 'Group renamed.'));
               } else if (response.errors) {
                 var errors = this.flattenErrors(response.errors);
                 alert(
-                  Craft.t('webhooks', 'Could not rename the group:') +
+                  Craft.t('app', 'Could not rename the group:') +
                     '\n\n' +
                     errors.join('\n')
                 );
@@ -133,16 +133,14 @@
 
     promptForGroupName: function (oldName) {
       return prompt(
-        Craft.t('webhooks', 'What do you want to name the group?'),
+        Craft.t('app', 'What do you want to name the group?'),
         oldName
       );
     },
 
     deleteSelectedGroup: function () {
       if (
-        confirm(
-          Craft.t('webhooks', 'Are you sure you want to delete this group?')
-        )
+        confirm(Craft.t('app', 'Are you sure you want to delete this group?'))
       ) {
         var data = {
           id: this.$selectedGroup.data('id'),

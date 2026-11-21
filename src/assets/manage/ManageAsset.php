@@ -37,12 +37,15 @@ class ManageAsset extends AssetBundle
         parent::registerAssetFiles($view);
 
         if ($view instanceof View) {
-            $view->registerTranslations('webhooks', [
+            $view->registerTranslations('app', [
                 'Could not create the group:',
                 'Group renamed.',
                 'Could not rename the group:',
                 'What do you want to name the group?',
                 'Are you sure you want to delete this group?',
+            ]);
+            $view->registerTranslations('webhooks', [
+                'An unknown error occurred.',
                 'Webhook enabled.',
                 'Webhook disabled.',
             ]);

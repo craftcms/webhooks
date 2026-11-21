@@ -103,8 +103,8 @@ class Webhook extends Model
         return [
             'class' => Craft::t('webhooks', 'Sender Class'),
             'event' => Craft::t('webhooks', 'Event Name'),
-            'name' => Craft::t('webhooks', 'Name'),
-            'url' => Craft::t('webhooks', 'URL'),
+            'name' => Craft::t('app', 'Name'),
+            'url' => Craft::t('app', 'URL'),
         ];
     }
 
