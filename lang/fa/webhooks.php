@@ -16,7 +16,7 @@ return [
     'Edit Webhook' => 'ویرایش وب‌هوک',
     'Element is a draft' => 'مؤلفه یک پیش‌نویس است',
     'Element is a provisional draft' => 'مؤلفه یک پیش‌نویس موقت است',
-    'Element is a revision' => 'مؤلفه یک بازبینی است',
+    'Element is a revision' => 'مؤلفه یک نگارش است',
     'Element is being bulk-resaved' => 'مؤلفه در حال ذخیره کردن دوباره گروهی است',
     'Element is being duplicated' => 'مؤلفه در حال کپی برداری است',
     'Element is being propagated' => 'مؤلفه در حال انتشار است',

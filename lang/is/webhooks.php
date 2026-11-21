@@ -16,7 +16,7 @@ return [
     'Edit Webhook' => 'Breyta vefkrók',
     'Element is a draft' => 'Þátturinn er drög',
     'Element is a provisional draft' => 'Þátturinn er bráðabirgðadrög',
-    'Element is a revision' => 'Þátturinn er endurskoðun',
+    'Element is a revision' => 'Þátturinn er vistuð útgáfa',
     'Element is being bulk-resaved' => 'Verið er að endurvista þáttinn í magnvinnslu',
     'Element is being duplicated' => 'Verið er að afrita þáttinn',
     'Element is being propagated' => 'Verið er að breiða þáttinn út',
